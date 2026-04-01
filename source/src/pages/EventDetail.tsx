@@ -121,6 +121,7 @@ export default function EventDetail() {
           src={heroImage}
           alt={event.title}
           className="w-full h-full object-cover"
+          loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e23] via-transparent to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />

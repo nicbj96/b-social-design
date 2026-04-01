@@ -328,7 +328,7 @@ export default function Feed() {
                     <div className="flex gap-3 overflow-x-auto pb-2">
                       {section.events.map(event => (
                         <Link key={event.id} href={`/event/${event.id}`} className="glass-card rounded-xl overflow-hidden hover:ring-1 hover:ring-[#4ECDC4]/30 transition-all group min-w-[180px] max-w-[220px] flex-shrink-0">
-                          <img src={getEventImage(event)} alt={event.title} className="w-full h-28 object-cover" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                          <img src={getEventImage(event)} alt={event.title} className="w-full h-28 object-cover" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
                           <div className="p-3">
                             <p className="text-xs text-white/40 mb-1">{formatDanishDate(event.date)}</p>
                             <h3 className="text-sm font-semibold leading-snug line-clamp-2">{event.title}</h3>
@@ -401,7 +401,7 @@ export default function Feed() {
                   <div className="flex gap-3 overflow-x-auto pb-2">
                     {section.events.map(event => (
                       <Link key={event.id} href={`/event/${event.id}`} className="glass-card rounded-xl overflow-hidden hover:ring-1 hover:ring-[#4ECDC4]/30 transition-all group min-w-[180px] max-w-[220px] flex-shrink-0">
-                        <img src={getEventImage(event)} alt={event.title} className="w-full h-28 object-cover" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                        <img src={getEventImage(event)} alt={event.title} className="w-full h-28 object-cover" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
                         <div className="p-3">
                           <p className="text-xs text-white/40 mb-1">{formatDanishDate(event.date)}</p>
                           <h3 className="text-sm font-semibold leading-snug line-clamp-2">{event.title}</h3>

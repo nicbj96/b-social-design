@@ -440,7 +440,7 @@ export default function FirmaRekruttering() {
                                   <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-white/3 hover:bg-white/5 transition-colors">
                                     <div className="flex items-center gap-3">
                                       {c.avatar_url ? (
-                                        <img src={c.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                                        <img src={c.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" loading="lazy" />
                                       ) : (
                                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
                                           {(c.name || "?")[0].toUpperCase()}
@@ -565,7 +565,7 @@ export default function FirmaRekruttering() {
                         <div key={c.id} className="px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors">
                           <div className="flex items-center gap-3">
                             {c.avatar_url ? (
-                              <img src={c.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                              <img src={c.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" loading="lazy" />
                             ) : (
                               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                                 {(c.name || "?")[0].toUpperCase()}
@@ -726,7 +726,7 @@ export default function FirmaRekruttering() {
                       <div className="flex -space-x-2">
                         {getMatchedCandidates(newTags).slice(0, 5).map((c) => (
                           c.avatar_url ? (
-                            <img key={c.id} src={c.avatar_url} alt="" className="w-8 h-8 rounded-full border-2 border-background object-cover" />
+                            <img key={c.id} src={c.avatar_url} alt="" className="w-8 h-8 rounded-full border-2 border-background object-cover" loading="lazy" />
                           ) : (
                             <div key={c.id} className="w-8 h-8 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-xs font-bold text-primary">
                               {(c.name || "?")[0].toUpperCase()}

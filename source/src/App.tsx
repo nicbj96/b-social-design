@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { JoinProvider } from "@/context/JoinContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { useReferralCapture } from "@/hooks/useReferral";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Layout — always loaded (wraps every main page)
 import DesktopAppLayout from "@/components/DesktopAppLayout";
 // ── Loading fallback ──
@@ -115,23 +116,25 @@ function RootRouter() {
 function App() {
   useReferralCapture();
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TagProvider>
-          <NotificationProvider>
-            <JoinProvider>
-              <Router>
-                <RootRouter />
-              </Router>
-              <Toaster />
-              <AIChatWidget />
-              <EmailCaptureFooter />
-              <EmailCaptureExitIntent />
-            </JoinProvider>
-          </NotificationProvider>
-        </TagProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TagProvider>
+            <NotificationProvider>
+              <JoinProvider>
+                <Router>
+                  <RootRouter />
+                </Router>
+                <Toaster />
+                <AIChatWidget />
+                <EmailCaptureFooter />
+                <EmailCaptureExitIntent />
+              </JoinProvider>
+            </NotificationProvider>
+          </TagProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 export default App;

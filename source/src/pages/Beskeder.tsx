@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { fetchNews, formatNewsTime, type NewsItem } from "@/lib/newsEngine";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { logger } from "@/lib/logger";
 
 /* ── Types ── */
 
@@ -335,7 +336,7 @@ export default function Beskeder() {
   const [convoError, setConvoError] = useState<string | null>(null);
 
   const startConversation = async (otherUserId: string) => {
-    console.log("[Beskeder] startConversation called", { otherUserId, myId });
+    logger.log("[Beskeder] startConversation called", { otherUserId, myId });
     if (!myId) {
       setConvoError("Du er ikke logget ind. Prøv at genindlæse siden.");
       console.error("[Beskeder] myId is null — user not logged in");
@@ -346,12 +347,12 @@ export default function Beskeder() {
 
     try {
       // Check if conversation already exists
-      console.log("[Beskeder] Checking existing conversations...");
+      logger.log("[Beskeder] Checking existing conversations...");
       const { data: myConvos, error: fetchErr } = await supabase
         .from("conversation_participants")
         .select("conversation_id")
         .eq("user_id", myId);
-      console.log("[Beskeder] My convos:", myConvos?.length, "error:", fetchErr?.message);
+      logger.log("[Beskeder] My convos:", myConvos?.length, "error:", fetchErr?.message);
 
       if (myConvos) {
         for (const mc of myConvos) {
@@ -373,13 +374,13 @@ export default function Beskeder() {
       }
 
       // Create new conversation
-      console.log("[Beskeder] Creating new conversation...");
+      logger.log("[Beskeder] Creating new conversation...");
       const { data: newConvo, error: convoErr } = await supabase
         .from("conversations")
         .insert({})
         .select("id")
         .single();
-      console.log("[Beskeder] Create result:", { newConvo, convoErr: convoErr?.message });
+      logger.log("[Beskeder] Create result:", { newConvo, convoErr: convoErr?.message });
 
       if (convoErr || !newConvo) {
         setConvoError("Kunne ikke oprette samtale: " + (convoErr?.message || "ukendt fejl"));
@@ -508,6 +509,7 @@ export default function Beskeder() {
                     src={convo.otherUser.avatar_url || defaultAvatar(convo.otherUser.name)}
                     alt={convo.otherUser.name ?? ""}
                     className="w-11 h-11 rounded-xl object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <div className="flex-1 min-w-0 text-left">
@@ -541,6 +543,7 @@ export default function Beskeder() {
                   src={activeConvo.otherUser.avatar_url || defaultAvatar(activeConvo.otherUser.name)}
                   alt={activeConvo.otherUser.name ?? ""}
                   className="w-9 h-9 rounded-xl object-cover"
+                  loading="lazy"
                 />
                 <div>
                   <h3 className="font-bold text-sm leading-none mb-1">
@@ -669,7 +672,7 @@ export default function Beskeder() {
                 >
                   {news.image && (
                     <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                      <img src={news.image} alt="" className="w-full h-full object-cover opacity-80" />
+                      <img src={news.image} alt="" className="w-full h-full object-cover opacity-80" loading="lazy" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -743,6 +746,7 @@ export default function Beskeder() {
                           src={u.avatar_url || defaultAvatar(u.name)}
                           alt={u.name ?? ""}
                           className="w-10 h-10 rounded-xl object-cover"
+                          loading="lazy"
                         />
                       )}
                       <span className="text-white/80 text-sm font-medium">

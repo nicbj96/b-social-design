@@ -228,7 +228,7 @@ export default function FirmaEvents() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                          {event.image ? <img src={event.image} alt="" className="w-full h-full object-cover" /> : <CalendarPlus size={18} className="text-primary" />}
+                          {event.image ? <img src={event.image} alt="" className="w-full h-full object-cover" loading="lazy" /> : <CalendarPlus size={18} className="text-primary" />}
                         </div>
                         <div>
                           <p className="text-sm font-medium">{event.title}</p>

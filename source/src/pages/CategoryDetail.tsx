@@ -320,7 +320,7 @@ function ActiveUsers({ count }: { count: number }) {
     <div className="flex items-center gap-1.5">
       <div className="flex -space-x-2">
         {AVATARS.map((a, i) => (
-          <img key={i} src={a} alt="" className="w-5 h-5 rounded-full border-2 border-[#0d1117] object-cover" />
+          <img key={i} src={a} alt="" className="w-5 h-5 rounded-full border-2 border-[#0d1117] object-cover" loading="lazy" />
         ))}
       </div>
       <span className="text-white/40 text-xs">+{count} {t('category.active_users')}</span>
@@ -570,6 +570,7 @@ export default function CategoryDetail() {
           src={subInfo?.heroImage || heroImg || ""}
           alt={label}
           className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1a] via-black/40 to-black/20" />
         <button

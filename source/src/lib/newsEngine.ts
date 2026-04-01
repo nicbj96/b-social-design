@@ -6,6 +6,7 @@
 
 import { TAG_TREE, type TagNode } from "./tagTree";
 import { getRelatedTags, getTagNode } from "./tagEngine";
+import { logger } from "./logger";
 
 // --- Types ---
 export interface NewsItem {
@@ -200,6 +201,7 @@ const RSS_FEEDS: FeedConfig[] = [
     source: "GAFFA",
     sourceEmoji: "🎸",
     tags: ["musik", "koncert", "festival"],
+    // Note: If this feed fails silently, check CORS or endpoint changes
   },
 
   // --- Dansk film og TV ---
@@ -637,10 +639,18 @@ function parseRSS(xml: string, config: FeedConfig): NewsItem[] {
 }
 
 // --- Strip HTML tags from string ---
+// Safe HTML stripping without innerHTML (avoids XSS from RSS feeds)
 function stripHtml(html: string): string {
-  const tmp = document.createElement("div");
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || "";
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .trim();
 }
 
 // --- Flatten all tags for keyword matching ---
@@ -741,11 +751,19 @@ export async function fetchNews(): Promise<NewsItem[]> {
       const res = await fetch(PROXY + encodeURIComponent(config.url), {
         signal: AbortSignal.timeout(8000),
       });
-      if (!res.ok) return [];
+      if (!res.ok) {
+        logger.warn(`[NewsEngine] HTTP ${res.status} from ${config.source}`);
+        return [];
+      }
       const xml = await res.text();
-      return parseRSS(xml, config);
-    } catch {
-      console.warn(`[NewsEngine] Failed to fetch ${config.source}`);
+      const items = parseRSS(xml, config);
+      // Log if major feed returns nothing
+      if (items.length === 0 && ['GAFFA', 'DR Sporten', 'Nordjyske'].includes(config.source)) {
+        logger.warn(`[NewsEngine] ${config.source} returned no items (may be endpoint/CORS issue)`);
+      }
+      return items;
+    } catch (err) {
+      logger.warn(`[NewsEngine] Failed to fetch ${config.source}:`, err instanceof Error ? err.message : String(err));
       return [];
     }
   });

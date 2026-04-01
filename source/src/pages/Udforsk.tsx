@@ -505,7 +505,7 @@ export default function Udforsk() {
                 <div className="space-y-2">
                   {matchedUsers.map(b => (
                     <div key={b.name} className="flex items-center gap-3 p-2.5 rounded-xl glass-card hover:bg-white/8 transition-colors cursor-pointer">
-                      <img src={b.avatar} alt={b.name} className="w-8 h-8 rounded-full object-cover" />
+                      <img src={b.avatar} alt={b.name} className="w-8 h-8 rounded-full object-cover" loading="lazy" />
                       <span className="text-white text-xs font-medium">{b.name}</span>
                     </div>
                   ))}

@@ -85,7 +85,7 @@ export default function TestMinSide() {
         </div>
         <div className="flex items-center gap-4">
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt={displayName} className="w-20 h-20 rounded-full object-cover border-2 border-white/30" />
+            <img src={profile.avatar_url} alt={displayName} className="w-20 h-20 rounded-full object-cover border-2 border-white/30" loading="lazy" />
           ) : (
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-[#4ECDC4] text-3xl font-bold">
               {displayInitial}
@@ -161,7 +161,7 @@ export default function TestMinSide() {
           <div className="space-y-3">
             {upcomingEvents.map(event => (
               <Link key={event.id} href={`/event/${event.id}`} className="flex gap-3 hover:bg-white/5 rounded-xl p-1.5 -mx-1.5 transition-colors">
-                <img src={getEventImage(event)} alt={event.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                <img src={getEventImage(event)} alt={event.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" loading="lazy" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{event.title}</p>
                   <p className="text-xs text-white/40">{formatDanishDate(event.date)}</p>

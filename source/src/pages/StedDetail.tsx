@@ -116,7 +116,7 @@ export default function StedDetail() {
     <div className="relative min-h-svh pb-24" style={{ background: "#0D1220" }} data-testid="sted-detail-page">
       {/* Hero image */}
       <div className="relative w-full h-56 overflow-hidden">
-        <img src={heroImg} alt={place.name} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroImg} alt={place.name} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1a] via-black/30 to-transparent" />
         <button onClick={() => window.history.back()} className="absolute top-12 left-5 w-9 h-9 rounded-full glass-card flex items-center justify-center z-10">
           <ArrowLeft size={18} className="text-white/70" />

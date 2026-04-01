@@ -1,6 +1,7 @@
 // Live data layer — fetches from Supabase with static JSON fallback
 import { supabase } from "./supabase";
 import staticEvents from "@/data/events.json";
+import { logger } from "./logger";
 
 export type Event = {
   id: string;
@@ -48,7 +49,7 @@ export async function getEvents(): Promise<Event[]> {
         .or("status.eq.active,status.is.null")
         .order("date", { ascending: true })
         .range(from, from + PAGE - 1);
-      if (error) { console.warn("Supabase fetch error:", error); break; }
+      if (error) { logger.warn("Supabase fetch error:", error); break; }
       if (!data || data.length === 0) break;
       all.push(...(data as Event[]));
       if (data.length < PAGE) break;
@@ -62,7 +63,7 @@ export async function getEvents(): Promise<Event[]> {
       return _cachedEvents;
     }
   } catch (e) {
-    console.warn("Supabase fetch failed, using static fallback:", e);
+    logger.warn("Supabase fetch failed, using static fallback:", e);
   }
 
   // Fallback: static JSON sorted by date, filter out past events
