@@ -77,7 +77,7 @@ export default function TestMinSide() {
     <div className="min-h-screen bg-[#060a0f] text-white pb-20">
       <div className="bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] p-6 pb-16">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">{t('profile.my_page')}</h1>
+          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('profile.my_page')}</h1>
           <Link href="/indstillinger">
             <button className="p-2 bg-white/20 rounded-xl hover:bg-white/30">
               <Settings size={20} />

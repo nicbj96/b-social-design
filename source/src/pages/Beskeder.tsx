@@ -793,7 +793,7 @@ export default function Beskeder() {
       <div className="flex h-full bg-[#0a0f1a] text-white items-center justify-center">
         <div className="text-center space-y-4 max-w-sm px-6">
           <MessageCircle size={48} className="text-[#4ECDC4] mx-auto" />
-          <h2 className="text-xl font-bold">{t('beskeder.title')}</h2>
+          <h2 className="text-xl font-serif" style={{ fontWeight: 400 }}>{t('beskeder.title')}</h2>
           <p className="text-white/50 text-sm">{t('beskeder.login_prompt')}</p>
           <Link href="/auth" className="mt-4 px-5 py-2.5 rounded-xl bg-[#4ECDC4] text-[#0a0f1a] text-sm font-semibold hover:bg-[#3dbdb5] transition-all inline-block">
             Log ind
@@ -809,7 +809,7 @@ export default function Beskeder() {
       <div className={`w-full md:w-72 border-r border-white/10 flex flex-col flex-shrink-0 ${activeConvoId ? 'hidden md:flex' : 'flex'}`}>
         <div className="px-6 pt-8 pb-4 border-b border-white/10">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold">{t('beskeder.title')}</h1>
+            <h1 className="text-xl font-serif" style={{ fontWeight: 400 }}>{t('beskeder.title')}</h1>
             <button
               onClick={() => setShowNewConvo(true)}
               className="w-8 h-8 rounded-lg bg-[#4ECDC4]/15 text-[#4ECDC4] flex items-center justify-center hover:bg-[#4ECDC4]/25 transition-colors"
@@ -837,8 +837,10 @@ export default function Beskeder() {
             </div>
           ) : filteredConvos.length === 0 ? (
             <div className="text-center py-12 px-4 space-y-3">
-              <MessageCircle size={32} className="text-white/15 mx-auto" />
-              <p className="text-white/30 text-sm">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center">
+                <MessageCircle size={32} className="text-white/20" />
+              </div>
+              <p className="text-white/40 text-sm">
                 {conversations.length === 0
                   ? t('beskeder.no_messages_yet')
                   : t('beskeder.no_results')}
@@ -857,8 +859,10 @@ export default function Beskeder() {
               <button
                 key={convo.id}
                 onClick={() => setActiveConvoId(convo.id)}
-                className={`w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors ${
-                  activeConvoId === convo.id ? "bg-white/5" : ""
+                className={`w-full flex items-center gap-3 p-4 mx-2 my-1 rounded-2xl backdrop-blur-md transition-all ${
+                  activeConvoId === convo.id
+                    ? "bg-white/10 border border-white/20 shadow-lg shadow-[#4ECDC4]/10"
+                    : "bg-white/5 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-md"
                 }`}
               >
                 <div className="relative flex-shrink-0">
@@ -910,7 +914,7 @@ export default function Beskeder() {
                   loading="lazy"
                 />
                 <div>
-                  <h3 className="font-bold text-sm leading-none">
+                  <h3 className="font-bold text-sm leading-none font-serif">
                     {activeConvo.otherUser.display_name ?? t('beskeder.unknown_user')}
                   </h3>
                 </div>
@@ -938,7 +942,7 @@ export default function Beskeder() {
                     <MoreVertical size={16} />
                   </button>
                   {showChatMenu && (
-                    <div className="absolute right-0 top-full mt-1 bg-[#0d1225] border border-white/10 rounded-xl shadow-lg z-50 overflow-hidden">
+                    <div className="absolute right-0 top-full mt-1 bg-[#0d1225] border border-white/15 rounded-xl shadow-xl shadow-black/40 z-50 overflow-hidden backdrop-blur-md">
                       <button
                         onClick={handleDeleteConversation}
                         className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors"
@@ -977,7 +981,12 @@ export default function Beskeder() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-white/20 text-sm">{t('beskeder.write_first_message')}</p>
+                  <div className="text-center space-y-3">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center">
+                      <MessageCircle size={32} className="text-white/15" />
+                    </div>
+                    <p className="text-white/30 text-sm">{t('beskeder.write_first_message')}</p>
+                  </div>
                 </div>
               ) : (
                 messages.map(msg => {
@@ -1076,7 +1085,7 @@ export default function Beskeder() {
             {/* Message input */}
             <div className="p-4 border-t border-white/10 flex-shrink-0 relative">
               {showEmojiPicker && (
-                <div ref={emojiPickerRef} className="absolute bottom-20 left-4 right-4 bg-[#0d1225] border border-white/10 rounded-2xl shadow-lg z-40 max-h-80 flex flex-col">
+                <div ref={emojiPickerRef} className="absolute bottom-20 left-4 right-4 bg-[#0d1225] border border-white/15 rounded-2xl shadow-xl shadow-black/40 z-40 max-h-80 flex flex-col backdrop-blur-md">
                   {/* Category tabs */}
                   <div className="flex gap-1 p-2 border-b border-white/10 overflow-x-auto flex-shrink-0">
                     {Object.keys(EMOJI_CATEGORIES).map(category => (
@@ -1110,7 +1119,7 @@ export default function Beskeder() {
               )}
               <form
                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                className="bg-white/5 border border-white/10 rounded-2xl px-3 py-2 flex items-center gap-2"
+                className="bg-white/5 border border-white/15 rounded-2xl px-3 py-2 flex items-center gap-2 backdrop-blur-md shadow-lg shadow-black/20 transition-all hover:border-white/25 hover:bg-white/8"
               >
                 <button
                   type="button"
@@ -1151,9 +1160,11 @@ export default function Beskeder() {
           /* No conversation selected */
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-4 max-w-xs">
-              <MessageCircle size={48} className="text-white/10 mx-auto" />
-              <h3 className="text-white/40 font-semibold">{t('beskeder.select_conversation')}</h3>
-              <p className="text-white/20 text-sm">
+              <div className="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center">
+                <MessageCircle size={48} className="text-white/15" />
+              </div>
+              <h3 className="text-white/50 font-semibold font-serif text-lg">{t('beskeder.select_conversation')}</h3>
+              <p className="text-white/30 text-sm">
                 {t('beskeder.or_start_new')}
               </p>
               <button
@@ -1185,13 +1196,13 @@ export default function Beskeder() {
 
       {/* ── Right Column - News Sidebar ── */}
       <div className="w-80 px-6 py-8 space-y-6 overflow-y-auto hidden xl:flex flex-col custom-scrollbar border-l border-white/10">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+        <div className="bg-white/5 border border-white/15 rounded-2xl p-5 backdrop-blur-md shadow-lg shadow-black/20">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Newspaper size={16} className="text-[#4ECDC4]" />
               <h3 className="text-sm font-bold">{t('beskeder.latest_news')}</h3>
             </div>
-            <span className="text-[11px] font-bold text-[#4ECDC4] bg-[#4ECDC4]/10 px-2 py-0.5 rounded-full">LIVE</span>
+            <span className="text-[11px] font-bold text-[#4ECDC4] bg-[#4ECDC4]/15 px-2 py-0.5 rounded-full border border-[#4ECDC4]/20">LIVE</span>
           </div>
           {newsLoading ? (
             <div className="space-y-3">
@@ -1203,14 +1214,14 @@ export default function Beskeder() {
               ))}
             </div>
           ) : allNews.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {allNews.slice(0, 6).map(news => (
                 <a
                   key={news.link}
                   href={news.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex gap-3 hover:bg-white/5 rounded-xl p-1.5 -mx-1.5 transition-all"
+                  className="group flex gap-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl p-2 transition-all backdrop-blur-sm shadow-sm"
                 >
                   {news.image && (
                     <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
@@ -1236,9 +1247,9 @@ export default function Beskeder() {
 
       {/* ── New Conversation Modal ── */}
       {showNewConvo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onKeyDown={(e) => { if (e.key === 'Escape') { setShowNewConvo(false); setUserSearch(''); setUserResults([]); } }} tabIndex={-1}>
-          <div className="bg-[#0d1225] border border-white/10 rounded-2xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md" onKeyDown={(e) => { if (e.key === 'Escape') { setShowNewConvo(false); setUserSearch(''); setUserResults([]); } }} tabIndex={-1}>
+          <div className="bg-[#060a0f] border border-white/15 rounded-2xl w-full max-w-md mx-4 overflow-hidden backdrop-blur-xl shadow-2xl shadow-black/60">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
               <h2 className="text-white font-bold">{t('beskeder.new_conversation')}</h2>
               <button
                 onClick={() => { setShowNewConvo(false); setUserSearch(""); setUserResults([]); }}
@@ -1279,7 +1290,7 @@ export default function Beskeder() {
                       key={u.user_id}
                       onClick={() => startConversation(u.user_id)}
                       disabled={startingConvo === u.user_id}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left ${startingConvo === u.user_id ? "opacity-50 cursor-wait" : ""}`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-left ${startingConvo === u.user_id ? "opacity-50 cursor-wait" : ""}`}
                     >
                       {startingConvo === u.user_id ? (
                         <Loader2 size={20} className="w-10 h-10 animate-spin text-[#4ECDC4]" />
@@ -1311,8 +1322,8 @@ export default function Beskeder() {
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; transition: background 0.2s; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
         @keyframes fade-in-out {
           0%, 100% { opacity: 0; }
           10%, 90% { opacity: 1; }

@@ -185,7 +185,7 @@ export default function FirmaTargeting() {
     <FirmaLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">{t('firma.targeting_title')}</h1>
+          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('firma.targeting_title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('firma.targeting_subtitle')}
             {totalUsers > 0 && <span className="ml-1">({totalUsers.toLocaleString()} {t('firma.targeting_users_in_database')})</span>}

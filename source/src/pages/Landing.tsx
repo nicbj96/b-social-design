@@ -54,7 +54,7 @@ export default function Landing() {
           </div>
 
           <div>
-            <h1 className="text-4xl font-bold text-white tracking-tight">
+            <h1 className="text-4xl font-serif text-white tracking-tight" style={{ fontWeight: 400 }}>
               B-Social
             </h1>
             <p className="text-[#34D399] text-sm font-semibold mt-1 tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">

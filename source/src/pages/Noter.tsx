@@ -108,7 +108,7 @@ export default function Noter() {
     >
       <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent)" }}>
         <button onClick={() => setLocation("/min-side")} className="w-9 h-9 rounded-full glass-card flex items-center justify-center"><ArrowLeft size={18} className="text-white" /></button>
-        <h1 className="text-white text-xl font-bold flex-1">{t('notes.title')}</h1>
+        <h1 className="text-white text-xl font-serif flex-1" style={{ fontWeight: 400 }}>{t('notes.title')}</h1>
         <button className="w-9 h-9 rounded-full bg-[#4ECDC4] flex items-center justify-center">
           <Plus size={18} className="text-white" />
         </button>

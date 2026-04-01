@@ -205,7 +205,7 @@ export default function FirmaFakturering() {
     <FirmaLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">{t('pricing.billing_title')}</h1>
+          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('pricing.billing_title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('pricing.billing_desc')}
           </p>

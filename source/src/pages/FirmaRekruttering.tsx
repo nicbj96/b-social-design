@@ -280,7 +280,7 @@ export default function FirmaRekruttering() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
+            <h1 className="text-2xl font-serif flex items-center gap-2" style={{ fontWeight: 400 }}>
               <Users size={24} className="text-primary" />
               {t('recruitment.title')}
             </h1>

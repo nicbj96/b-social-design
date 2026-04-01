@@ -97,10 +97,10 @@ export default function AIChatWidget() {
       <div className="absolute inset-0 bg-black/40 md:hidden" onClick={() => setOpen(false)} />
 
       {/* Chat window */}
-      <div className="relative w-full h-full md:w-[380px] md:h-[520px] md:max-h-[80vh] bg-[#0d1225] md:rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative w-full h-full md:w-[380px] md:h-[520px] md:max-h-[80vh] bg-[#060a0f] md:rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0d1225]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#060a0f]">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#4ECDC4]/20 flex items-center justify-center">
               <Bot size={16} className="text-[#4ECDC4]" />
@@ -186,7 +186,7 @@ export default function AIChatWidget() {
         </div>
 
         {/* Input */}
-        <div className="px-3 py-3 border-t border-white/10 bg-[#0d1225]">
+        <div className="px-3 py-3 border-t border-white/10 bg-[#060a0f]">
           <form
             onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
             className="flex items-center gap-2"

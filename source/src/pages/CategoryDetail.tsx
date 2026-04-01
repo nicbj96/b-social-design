@@ -601,7 +601,7 @@ export default function CategoryDetail() {
           {activeSub && subInfo ? (
             <>
               <p className="text-white/50 text-[11px] mb-0.5">{emoji} {label}</p>
-              <h1 className="text-white text-xl font-bold">{subInfo.emoji} {subInfo.label}</h1>
+              <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{subInfo.emoji} {subInfo.label}</h1>
               <p className="text-white/50 text-xs mt-0.5">{subInfo.description}</p>
             </>
           ) : (

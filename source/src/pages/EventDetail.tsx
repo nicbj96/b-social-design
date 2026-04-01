@@ -201,7 +201,7 @@ export default function EventDetail() {
 
       {/* Content */}
       <div className="px-5 pt-5 pb-32">
-        <h1 className="text-white text-2xl font-bold leading-tight mb-4">{event.title}</h1>
+        <h1 className="text-white text-2xl font-serif leading-tight mb-4" style={{ fontWeight: 400 }}>{event.title}</h1>
 
         {/* Info pills */}
         <div className="flex flex-col gap-2 mb-5">

@@ -279,6 +279,7 @@ export default function Notifikationer() {
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <div>
           <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('notifications.title')}</h1>
+          {/* Already has serif styling */}
           {unreadCount > 0 && (
             <p className="text-white/40 text-xs mt-0.5">{unreadCount} {t('notifications.unread')}</p>
           )}
