@@ -5,12 +5,10 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 interface UserProfile {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
-  city: string | null;
+  user_id: string;
+  display_name: string | null;
+  home_city: string | null;
   interests: string[];
-  bio: string | null;
 }
 
 interface FriendRequest {
@@ -19,15 +17,6 @@ interface FriendRequest {
   receiver_id: string;
   status: "pending" | "accepted" | "rejected";
   created_at: string;
-}
-
-interface MyFriend {
-  friend_id: string;
-  user_id: string;
-}
-
-interface PageParams {
-  id: string;
 }
 
 export default function PublicProfile() {
@@ -39,9 +28,9 @@ export default function PublicProfile() {
   const [friendStatus, setFriendStatus] = useState<"not_friends" | "friends" | "pending_sent" | "pending_received">("not_friends");
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Extract id from URL (simplified for demo)
-  const pathParts = typeof window !== "undefined" ? window.location.pathname.split("/") : [];
-  const profileId = pathParts[pathParts.length - 1];
+  // Hash-based routing: extract ID from window.location.hash (#/profil/UUID)
+  const hashParts = typeof window !== "undefined" ? window.location.hash.replace("#", "").split("/") : [];
+  const profileId = hashParts[hashParts.length - 1];
 
   useEffect(() => {
     if (!profileId) {
@@ -54,8 +43,8 @@ export default function PublicProfile() {
         // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
           .from("user_profiles")
-          .select("id, name, avatar_url, city, interests, bio")
-          .eq("id", profileId)
+          .select("user_id, display_name, home_city, interests")
+          .eq("user_id", profileId)
           .single();
 
         if (profileError) throw profileError;
@@ -166,20 +155,7 @@ export default function PublicProfile() {
         .eq("status", "pending");
 
       if (updateError) throw updateError;
-
-      // Add to my_friends for both directions
-      const { error: friendError1 } = await supabase.from("my_friends").insert({
-        user_id: user.id,
-        friend_id: profileId,
-      });
-
-      const { error: friendError2 } = await supabase.from("my_friends").insert({
-        user_id: profileId,
-        friend_id: user.id,
-      });
-
-      if (friendError1 || friendError2) throw friendError1 || friendError2;
-
+      // my_friends is a VIEW derived from friend_requests — no insert needed
       setFriendStatus("friends");
     } catch (err) {
       console.error("Error accepting request:", err);
@@ -240,8 +216,8 @@ export default function PublicProfile() {
     }
   };
 
-  const displayInitial = profile?.name
-    ? profile.name[0]?.toUpperCase()
+  const displayInitial = profile?.display_name
+    ? profile.display_name[0]?.toUpperCase()
     : "?";
 
   if (loading) {
@@ -278,10 +254,10 @@ export default function PublicProfile() {
           <ArrowLeft size={20} />
         </button>
         <div className="flex items-center gap-4">
-          {profile.avatar_url ? (
+          {false /* no avatar_url column */ ? (
             <img
-              src={profile.avatar_url}
-              alt={profile.name || "Bruger"}
+              src={false /* no avatar_url column */}
+              alt={profile.display_name || "Bruger"}
               className="w-20 h-20 rounded-full object-cover border-2 border-white/30"
               loading="lazy"
             />
@@ -291,10 +267,10 @@ export default function PublicProfile() {
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-bold">{profile.name || "Bruger"}</h1>
-            {profile.city && (
+            <h1 className="text-2xl font-bold">{profile.display_name || "Bruger"}</h1>
+            {profile.home_city && (
               <p className="text-white/80 flex items-center gap-1 text-sm">
-                <MapPin size={14} /> {profile.city}
+                <MapPin size={14} /> {profile.home_city}
               </p>
             )}
           </div>
@@ -317,9 +293,9 @@ export default function PublicProfile() {
         </div>
 
         {/* Bio */}
-        {profile.bio && (
+        {false /* no bio column */ && (
           <div className="glass-card rounded-2xl p-4 mb-6">
-            <p className="text-sm text-white/70">{profile.bio}</p>
+            <p className="text-sm text-white/70">{false /* no bio column */}</p>
           </div>
         )}
 

@@ -113,8 +113,8 @@ function FriendRequestCard({ req, onUpdate }: { req: FriendRequest; onUpdate: ()
   const [, setLocation] = useLocation();
   const [updating, setUpdating] = useState(false);
 
-  const displayName = req.sender?.name || "Ukendt bruger";
-  const displayCity = req.sender?.city || "";
+  const displayName = req.sender?.display_name || "Ukendt bruger";
+  const displayCity = req.sender?.home_city || "";
 
   async function handleAccept() {
     setUpdating(true);
@@ -221,9 +221,9 @@ export default function Notifikationer() {
         const requestsWithProfiles = await Promise.all(
           requests.map(async (req) => {
             const { data: profile } = await supabase
-              .from("profiles")
-              .select("id, name, city, avatar_url")
-              .eq("id", req.sender_id)
+              .from("user_profiles")
+              .select("user_id, display_name, home_city")
+              .eq("user_id", req.sender_id)
               .single();
 
             return {
