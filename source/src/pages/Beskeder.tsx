@@ -781,7 +781,7 @@ export default function Beskeder() {
   /* ── Loading state ── */
   if (authLoading) {
     return (
-      <div className="flex h-full bg-[#0a0f1a] text-white items-center justify-center">
+      <div className="flex h-full bg-[#060a0f] text-white items-center justify-center">
         <Loader2 size={24} className="animate-spin text-[#4ECDC4]" />
       </div>
     );
@@ -790,7 +790,7 @@ export default function Beskeder() {
   /* ── Not logged in state ── */
   if (!isLoggedIn) {
     return (
-      <div className="flex h-full bg-[#0a0f1a] text-white items-center justify-center">
+      <div className="flex h-full bg-[#060a0f] text-white items-center justify-center">
         <div className="text-center space-y-4 max-w-sm px-6">
           <MessageCircle size={48} className="text-[#4ECDC4] mx-auto" />
           <h2 className="text-xl font-serif" style={{ fontWeight: 400 }}>{t('beskeder.title')}</h2>
@@ -804,7 +804,7 @@ export default function Beskeder() {
   }
 
   return (
-    <div className="flex h-full bg-[#0a0f1a] text-white overflow-hidden">
+    <div className="flex h-full bg-[#060a0f] text-white overflow-hidden">
       {/* ── Conversation list (left panel) ── */}
       <div className={`w-full md:w-72 border-r border-white/10 flex flex-col flex-shrink-0 ${activeConvoId ? 'hidden md:flex' : 'flex'}`}>
         <div className="px-6 pt-8 pb-4 border-b border-white/10">
@@ -942,7 +942,7 @@ export default function Beskeder() {
                     <MoreVertical size={16} />
                   </button>
                   {showChatMenu && (
-                    <div className="absolute right-0 top-full mt-1 bg-[#0d1225] border border-white/15 rounded-xl shadow-xl shadow-black/40 z-50 overflow-hidden backdrop-blur-md">
+                    <div className="absolute right-0 top-full mt-1 bg-[#060a0f] border border-white/15 rounded-xl shadow-xl shadow-black/40 z-50 overflow-hidden backdrop-blur-md">
                       <button
                         onClick={handleDeleteConversation}
                         className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors"
@@ -1085,7 +1085,7 @@ export default function Beskeder() {
             {/* Message input */}
             <div className="p-4 border-t border-white/10 flex-shrink-0 relative">
               {showEmojiPicker && (
-                <div ref={emojiPickerRef} className="absolute bottom-20 left-4 right-4 bg-[#0d1225] border border-white/15 rounded-2xl shadow-xl shadow-black/40 z-40 max-h-80 flex flex-col backdrop-blur-md">
+                <div ref={emojiPickerRef} className="absolute bottom-20 left-4 right-4 bg-[#060a0f] border border-white/15 rounded-2xl shadow-xl shadow-black/40 z-40 max-h-80 flex flex-col backdrop-blur-md">
                   {/* Category tabs */}
                   <div className="flex gap-1 p-2 border-b border-white/10 overflow-x-auto flex-shrink-0">
                     {Object.keys(EMOJI_CATEGORIES).map(category => (

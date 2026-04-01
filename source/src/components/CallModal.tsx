@@ -165,7 +165,7 @@ export default function CallModal({
       `}</style>
 
       {/* Full screen modal overlay — z-[10000] to cover CalmBottomNav (z-[9999]) */}
-      <div className="fixed inset-0 bg-[#0a0f1a] z-[10000] flex flex-col">
+      <div className="fixed inset-0 bg-[#060a0f] z-[10000] flex flex-col">
         {/* Video Call - Connected State */}
         {isVideo && callState === 'connected' && (
           <>

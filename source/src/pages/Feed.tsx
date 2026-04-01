@@ -355,8 +355,10 @@ export default function Feed() {
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-2">
                       {section.events.map(event => (
-                        <Link key={event.id} href={`/event/${event.id}`} className="glass-card rounded-xl overflow-hidden hover:ring-1 hover:ring-[#4ECDC4]/30 transition-all group min-w-[180px] max-w-[220px] flex-shrink-0">
-                          <img src={getEventImage(event)} alt={event.title} className="w-full h-28 object-cover" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                        <Link key={event.id} href={`/event/${event.id}`} className="glass-card premium-event-card rounded-xl overflow-hidden hover:ring-1 hover:ring-[#4ECDC4]/30 group min-w-[180px] max-w-[220px] flex-shrink-0">
+                          <div className="overflow-hidden">
+                            <img src={getEventImage(event)} alt={event.title} className="premium-event-img w-full h-28 object-cover" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                          </div>
                           <div className="p-3">
                             <p className="text-xs text-white/40 mb-1">{formatDanishDate(event.date)}</p>
                             <h3 className="text-sm font-semibold leading-snug line-clamp-2">{event.title}</h3>
@@ -419,7 +421,7 @@ export default function Feed() {
               ) : filteredTagSections.map(section => (
                 <div key={section.tag} className="mb-10">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold">
+                    <h2 className="text-xl font-serif" style={{ fontWeight: 400, letterSpacing: "-0.3px" }}>
                       {section.emoji}&nbsp;&nbsp;{section.label}
                     </h2>
                     <Link href="/udforsk" className="text-sm text-[#4ECDC4] hover:underline flex items-center gap-1 py-2 px-3 min-h-[44px]">
@@ -428,8 +430,10 @@ export default function Feed() {
                   </div>
                   <div className="flex gap-3 overflow-x-auto pb-2">
                     {section.events.map(event => (
-                      <Link key={event.id} href={`/event/${event.id}`} className="glass-card rounded-xl overflow-hidden hover:ring-1 hover:ring-[#4ECDC4]/30 transition-all group min-w-[180px] max-w-[220px] flex-shrink-0">
-                        <img src={getEventImage(event)} alt={event.title} className="w-full h-28 object-cover" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                      <Link key={event.id} href={`/event/${event.id}`} className="glass-card premium-event-card rounded-xl overflow-hidden hover:ring-1 hover:ring-[#4ECDC4]/30 group min-w-[180px] max-w-[220px] flex-shrink-0">
+                        <div className="overflow-hidden">
+                          <img src={getEventImage(event)} alt={event.title} className="premium-event-img w-full h-28 object-cover" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                        </div>
                         <div className="p-3">
                           <p className="text-xs text-white/40 mb-1">{formatDanishDate(event.date)}</p>
                           <h3 className="text-sm font-semibold leading-snug line-clamp-2">{event.title}</h3>
