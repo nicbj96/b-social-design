@@ -34,6 +34,7 @@ export default function CallModal({
 }: CallModalProps) {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const [displayDuration, setDisplayDuration] = useState('00:00');
 
   // Only render if not idle
@@ -53,6 +54,13 @@ export default function CallModal({
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
+
+  // Attach remote stream to audio element for audio-only calls
+  useEffect(() => {
+    if (remoteAudioRef.current && remoteStream) {
+      remoteAudioRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
   // Format call duration as MM:SS
   useEffect(() => {
@@ -79,6 +87,14 @@ export default function CallModal({
 
   return (
     <>
+      {/* Hidden audio element for audio-only calls */}
+      <audio
+        ref={remoteAudioRef}
+        autoPlay
+        playsInline
+        style={{ display: 'none' }}
+      />
+
       <style>{`
         @keyframes pulse-ring {
           0% {

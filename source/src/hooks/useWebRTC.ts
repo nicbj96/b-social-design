@@ -212,9 +212,7 @@ export function useWebRTC(
       });
 
       // Set remote description
-      await peerConnection.current.setRemoteDescription(
-        new RTCSessionDescription(remoteOfferRef.current),
-      );
+      await peerConnection.current.setRemoteDescription(remoteOfferRef.current);
 
       // Create and send answer
       const answer = await peerConnection.current.createAnswer();
@@ -238,7 +236,9 @@ export function useWebRTC(
 
   // End call
   const endCall = () => {
-    sendSignalingMessage({ type: 'end-call' });
+    if (channel.current) {
+      sendSignalingMessage({ type: 'end-call' });
+    }
     closePeerConnection();
     stopMediaTracks(localStream);
     stopMediaTracks(remoteStream);
@@ -303,7 +303,7 @@ export function useWebRTC(
           console.log('[WebRTC] Received answer');
           if (peerConnection.current && payload.sdp) {
             peerConnection.current
-              .setRemoteDescription(new RTCSessionDescription(payload.sdp))
+              .setRemoteDescription(payload.sdp)
               .then(() => {
                 setCallState('connected');
                 startDurationTimer();
@@ -324,8 +324,11 @@ export function useWebRTC(
       },
     );
 
-    channel.current.subscribe(status => {
-      console.log(`[WebRTC] Channel subscription status: ${status}`);
+    channel.current.subscribe((status) => {
+      console.log(`[WebRTC] Channel status: ${status}`);
+      if (status === 'CHANNEL_ERROR') {
+        console.error('[WebRTC] Channel subscription failed');
+      }
     });
 
     return () => {

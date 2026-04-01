@@ -26,7 +26,7 @@ function getPersonalizedGreeting(name: string | null | undefined, isAnonymous: b
 export default function Feed() {
   const { t } = useTranslation();
   const { profile, user } = useAuth();
-  const { selectedTags, city } = useTags();
+  const { selectedTags, setSelectedTags, city } = useTags();
   const { unreadCount } = useNotifications();
   const [tagEditorOpen, setTagEditorOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -234,6 +234,32 @@ export default function Feed() {
             >
               <X size={12} />
               Ryd
+            </button>
+          </div>
+        )}
+
+        {/* Active tags filter bar */}
+        {selectedTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-4 px-1">
+            <span className="text-xs text-white/40">Aktive tags:</span>
+            {selectedTags.map(tag => {
+              const node = getTagNode(tag);
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                  className="flex items-center gap-1 text-xs bg-[#4ECDC4]/20 text-[#4ECDC4] px-2.5 py-1 rounded-full hover:bg-[#4ECDC4]/30 transition-colors"
+                >
+                  {node?.emoji || "🏷️"} {node?.label || tag}
+                  <span className="ml-0.5 text-[10px]">✕</span>
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setSelectedTags([])}
+              className="text-[10px] text-white/30 hover:text-white/60 ml-1 transition-colors"
+            >
+              Ryd alle
             </button>
           </div>
         )}
@@ -464,10 +490,25 @@ export default function Feed() {
                 {trendingTags.map(({ tag, count }) => {
                   const node = getTagNode(tag);
                   return (
-                    <span key={tag} className="text-xs bg-white/5 text-white/50 px-3 py-1.5 rounded-full hover:bg-white/10 cursor-pointer transition-colors">
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        const isActive = selectedTags.includes(tag);
+                        if (isActive) {
+                          setSelectedTags(selectedTags.filter(t => t !== tag));
+                        } else {
+                          setSelectedTags([...selectedTags, tag]);
+                        }
+                      }}
+                      className={`text-xs px-3 py-1.5 rounded-full transition-all ${
+                        selectedTags.includes(tag)
+                          ? "bg-[#4ECDC4] text-[#0a0f1a] font-semibold shadow-lg shadow-[#4ECDC4]/20"
+                          : "bg-white/5 text-white/50 hover:bg-white/10"
+                      }`}
+                    >
                       {node?.emoji || "🏷️"} #{node?.label || tag}
-                      <span className="ml-1 text-white/25">{count}</span>
-                    </span>
+                      <span className={`ml-1 ${selectedTags.includes(tag) ? "text-[#0a0f1a]/50" : "text-white/25"}`}>{count}</span>
+                    </button>
                   );
                 })}
               </div>
