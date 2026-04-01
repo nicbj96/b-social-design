@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 
-// Leaflet CSS is now loaded in index.html head for better performance
-// Previously loaded dynamically - see index.html <head> section
+// Leaflet core CSS — must be imported directly so Vite bundles it correctly
+import "leaflet/dist/leaflet.css";
 
 import { MapContainer, TileLayer, Marker, useMap, CircleMarker, useMapEvents } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
