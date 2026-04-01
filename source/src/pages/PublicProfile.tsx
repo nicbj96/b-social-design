@@ -28,9 +28,9 @@ export default function PublicProfile() {
   const [friendStatus, setFriendStatus] = useState<"not_friends" | "friends" | "pending_sent" | "pending_received">("not_friends");
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Hash-based routing: extract ID from window.location.hash (#/profil/UUID)
-  const hashParts = typeof window !== "undefined" ? window.location.hash.replace("#", "").split("/") : [];
-  const profileId = hashParts[hashParts.length - 1];
+  // Extract profile ID from URL path (/profil/UUID)
+  const pathParts = typeof window !== "undefined" ? window.location.pathname.split("/") : [];
+  const profileId = pathParts[pathParts.length - 1];
 
   useEffect(() => {
     if (!profileId) {
