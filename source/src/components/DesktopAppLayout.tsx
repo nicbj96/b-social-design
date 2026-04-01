@@ -55,13 +55,12 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
         href={href}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all mb-0.5 ${opts?.mt ? "mt-4" : ""} ${
           isActive
-            ? "bg-[#4ECDC4]/15 text-[#4ECDC4] font-medium"
-            : "text-white/50 hover:text-white/80 hover:bg-white/5"
+            ? "text-[#4ECDC4] font-medium"
+            : "text-white/45 hover:text-white/75 hover:bg-white/[0.03]"
         }`}
+        style={isActive ? { background: "rgba(78,205,196,0.08)", border: "1px solid rgba(78,205,196,0.1)" } : undefined}
       >
-        <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center ${
-          isActive ? "bg-[#4ECDC4]/20" : ""
-        }`} style={isActive ? { boxShadow: "0 0 12px rgba(78,205,196,0.3)" } : undefined}>
+        <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center`} style={isActive ? { opacity: 1 } : { opacity: 0.7 }}>
           <Icon size={18} />
           {opts?.badge && opts.badge > 0 ? (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
@@ -78,13 +77,16 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
     <div className="dsk-app dark">
       {/* Desktop sidebar */}
       <aside className="dsk-sidebar">
-        {/* Logo */}
-        <Link href="/feed" className="block p-5 mb-2 cursor-pointer">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#4ECDC4]/20 flex items-center justify-center">
-              <span className="text-[#4ECDC4] font-bold text-sm">B</span>
+        {/* Logo — premium serif */}
+        <Link href="/feed" className="block px-5 py-6 mb-1 cursor-pointer border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg text-[#060a0f]" style={{ background: "linear-gradient(135deg, #4ECDC4, #93c5fd)" , boxShadow: "0 2px 12px rgba(78,205,196,0.2)" }}>
+              B
             </div>
-            <span className="font-bold text-sm">B-Social</span>
+            <div>
+              <span className="font-serif text-xl tracking-tight" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>B-Social</span>
+              <span className="block text-[10px] uppercase tracking-[2px] text-[#4ECDC4]/60 font-semibold mt-0.5">Norden</span>
+            </div>
           </div>
         </Link>
 
@@ -148,7 +150,8 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
           ) : (
             <Link
               href="/auth"
-              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#4ECDC4]/15 text-[#4ECDC4] text-sm font-medium hover:bg-[#4ECDC4]/25 transition-all"
+              className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[#060a0f] text-sm font-semibold hover:opacity-90 transition-all"
+              style={{ background: "linear-gradient(135deg, #4ECDC4, #93c5fd)", boxShadow: "0 4px 20px rgba(78,205,196,0.2)" }}
             >
               <LogIn size={16} />
               Log ind / Opret konto

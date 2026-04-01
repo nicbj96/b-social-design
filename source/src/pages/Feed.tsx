@@ -168,18 +168,18 @@ export default function Feed() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0e23] flex items-center justify-center">
+      <div className="min-h-screen bg-[#060a0f] flex items-center justify-center">
         <p className="text-white/50">{t('feed.loading_events')}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e23] text-white">
+    <div className="min-h-screen bg-[#060a0f] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold truncate">{greeting}</h1>
+            <h1 className="text-2xl sm:text-3xl truncate" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.5px" }}>{greeting}</h1>
             <p className="text-white/50 mt-1 text-sm truncate">{subtitle}</p>
           </div>
           <div className="flex items-center gap-2 ml-3 flex-shrink-0">
@@ -278,57 +278,50 @@ export default function Feed() {
           </button>
         </div>
 
-        {/* Hero for anonymous users — visual punch */}
+        {/* Hero for anonymous users — premium serif style */}
         {isAnonymous && tagSections.length === 0 && (
-          <div className="relative mb-10 rounded-2xl overflow-hidden">
-            {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#4ECDC4]/15 via-[#0a0e23] to-[#4ECDC4]/5" />
-            <div className="absolute top-0 right-0 w-40 h-40 bg-[#4ECDC4]/8 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#4ECDC4]/5 rounded-full blur-2xl" />
-            
-            <div className="relative px-5 py-8">
+          <div className="relative mb-10 rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
+            {/* Hero background image */}
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&auto=format&fit=crop" alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(6,10,15,0.3) 0%, rgba(6,10,15,0.85) 60%, rgba(6,10,15,0.98) 100%)" }} />
+
+            <div className="relative px-6 md:px-10 pt-32 pb-10">
               {/* Live badge */}
-              <div className="flex items-center gap-2 mb-4">
-                <span className="relative flex h-2.5 w-2.5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5" style={{ background: "rgba(78,205,196,0.1)", border: "1px solid rgba(78,205,196,0.15)", backdropFilter: "blur(8px)" }}>
+                <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ECDC4] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#4ECDC4]" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ECDC4]" />
                 </span>
-                <span className="text-xs text-[#4ECDC4] font-medium tracking-wide uppercase">Live i dag</span>
+                <span className="text-[11px] text-[#4ECDC4] font-semibold tracking-[1px] uppercase">Live i dag</span>
               </div>
 
-              <h2 className="text-[26px] font-extrabold leading-tight mb-2">Find din næste<br/><span className="text-[#4ECDC4]">oplevelse</span></h2>
-              <p className="text-white/50 text-sm leading-relaxed mb-5 max-w-xs">
-                Events, steder og aktiviteter i hele verden — alt samlet ét sted.
+              <h2 className="text-[32px] md:text-[42px] leading-[1.1] mb-3" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.8px" }}>Find din næste<br/><em className="text-[#4ECDC4]" style={{ fontStyle: "italic" }}>store oplevelse</em></h2>
+              <p className="text-white/50 text-[15px] leading-relaxed mb-7 max-w-md">
+                Events, steder og aktiviteter overalt i verden — alt samlet ét sted. Fra Nyhavn til nordlyset.
               </p>
 
               {/* Stats row */}
-              <div className="flex gap-3 mb-6">
-                <div className="flex-1 bg-white/5 backdrop-blur rounded-xl px-3 py-2.5 text-center border border-white/5">
-                  <p className="text-lg font-bold text-[#4ECDC4]">95K+</p>
-                  <p className="text-[10px] text-white/40 mt-0.5">Steder</p>
-                </div>
-                <div className="flex-1 bg-white/5 backdrop-blur rounded-xl px-3 py-2.5 text-center border border-white/5">
-                  <p className="text-lg font-bold text-[#4ECDC4]">6.4K</p>
-                  <p className="text-[10px] text-white/40 mt-0.5">Events</p>
-                </div>
-                <div className="flex-1 bg-white/5 backdrop-blur rounded-xl px-3 py-2.5 text-center border border-white/5">
-                  <p className="text-lg font-bold text-[#4ECDC4]">117</p>
-                  <p className="text-[10px] text-white/40 mt-0.5">Lande</p>
-                </div>
+              <div className="grid grid-cols-3 gap-3 mb-7">
+                {[["95K+","Steder"],["6.4K","Events"],["117","Lande"]].map(([num, label]) => (
+                  <div key={label} className="rounded-xl px-3 py-3 text-center transition-all hover:translate-y-[-2px]" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", backdropFilter: "blur(8px)" }}>
+                    <p className="text-xl font-bold" style={{ fontFamily: "'Instrument Serif', Georgia, serif", background: "linear-gradient(135deg, #4ECDC4, #93c5fd)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{num}</p>
+                    <p className="text-[10px] text-white/35 mt-0.5 font-medium uppercase tracking-wide">{label}</p>
+                  </div>
+                ))}
               </div>
 
               {/* CTA buttons */}
-              <div className="flex flex-col gap-3">
-                <Link href="/auth" className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#4ECDC4] text-[#0a0f1a] text-sm font-bold hover:bg-[#3dbdb5] transition-all min-h-[44px] shadow-lg shadow-[#4ECDC4]/20">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/auth" className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-[#060a0f] text-sm font-bold transition-all min-h-[44px] hover:translate-y-[-1px]" style={{ background: "linear-gradient(135deg, #4ECDC4, #93c5fd)", boxShadow: "0 6px 24px rgba(78,205,196,0.25)" }}>
                   Kom i gang gratis →
                 </Link>
-                <Link href="/udforsk" className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-medium hover:bg-white/10 transition-all min-h-[44px]">
-                  Udforsk uden konto
+                <Link href="/udforsk" className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-white/70 text-sm font-medium hover:border-[#4ECDC4]/30 hover:text-[#4ECDC4] transition-all min-h-[44px]" style={{ border: "1px solid rgba(255,255,255,0.12)" }}>
+                  Se events →
                 </Link>
               </div>
 
-              {/* Email capture - smaller, below CTAs */}
-              <div className="mt-5 pt-5 border-t border-white/5">
+              {/* Email capture */}
+              <div className="mt-6 pt-5 border-t border-white/5">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs text-white/30">📨 Få ugentlige event-tips direkte i din indbakke</span>
                 </div>
@@ -353,7 +346,7 @@ export default function Feed() {
                 ) : filteredDemoSections.map(section => (
                   <div key={section.tag} className="mb-10">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-bold">
+                      <h2 className="text-xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.3px" }}>
                         {section.emoji}&nbsp;&nbsp;{section.label}
                       </h2>
                       <Link href="/udforsk" className="text-sm text-[#4ECDC4] hover:underline flex items-center gap-1 py-2 px-3 min-h-[44px]">

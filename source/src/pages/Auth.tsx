@@ -78,7 +78,7 @@ export default function Auth() {
       className="relative min-h-svh flex flex-col"
       data-testid="auth-page"
       style={{
-        background: "#0D1220",
+        background: "#060a0f",
       }}
     >
       {/* Subtle teal gradient glow at top */}
@@ -112,7 +112,7 @@ export default function Auth() {
               <circle cx="20" cy="20" r="2" fill="#4ECDC4" />
             </svg>
           </div>
-          <h1 className="text-white text-2xl font-bold">
+          <h1 className="text-white text-2xl font-serif" style={{ fontWeight: 400 }}>
             {mode === "login" ? t('auth.login') : t('auth.signup')}
           </h1>
           <p className="text-white/50 text-sm mt-1">

@@ -30,13 +30,13 @@ export default function Vilkaar() {
   return (
     <div
       className="relative min-h-svh pb-16"
-      style={{ background: "#0D1220" }}
+      style={{ background: "#060a0f" }}
       data-testid="vilkaar-page"
     >
       {/* Header */}
       <div
         className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3"
-        style={{ background: "linear-gradient(to bottom, rgba(10,14,35,0.97) 60%, transparent)" }}
+        style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.97) 60%, transparent)" }}
       >
         <button
           onClick={() => setLocation(-1 as unknown as string)}
@@ -45,7 +45,7 @@ export default function Vilkaar() {
         >
           <ArrowLeft size={18} className="text-white" />
         </button>
-        <h1 className="text-white text-xl font-bold flex-1">{t('legal.terms_title')}</h1>
+        <h1 className="text-white text-xl font-serif flex-1" style={{ fontWeight: 400 }}>{t('legal.terms_title')}</h1>
         <LanguageSwitcher variant="toggle" />
       </div>
 

@@ -17,7 +17,7 @@ import DesktopAppLayout from "@/components/DesktopAppLayout";
 // ── Loading fallback ──
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ background: "#0D1220" }}>
+    <div className="flex items-center justify-center min-h-screen" style={{ background: "#060a0f" }}>
       <div className="w-8 h-8 border-2 border-[#4ECDC4]/30 border-t-[#4ECDC4] rounded-full animate-spin" />
     </div>
   );

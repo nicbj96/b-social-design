@@ -97,7 +97,7 @@ export default function EventDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-svh" style={{ background: "hsl(230,35%,8%)" }}>
+      <div className="min-h-svh" style={{ background: "#060a0f" }}>
         <Skeleton className="w-full h-72 bg-white/5" />
         <div className="px-5 pt-5 space-y-3">
           <Skeleton className="h-8 w-3/4 bg-white/5" />
@@ -143,7 +143,7 @@ export default function EventDetail() {
           className="w-full h-full object-cover"
           loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e23] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#060a0f] via-transparent to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
 
         {/* Top controls */}

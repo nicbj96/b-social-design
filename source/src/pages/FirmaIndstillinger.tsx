@@ -81,14 +81,14 @@ export default function FirmaIndstillinger() {
   return (
     <div
       className="relative min-h-svh pb-8"
-      style={{ background: "#0D1220" }}
+      style={{ background: "#060a0f" }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(10,14,35,0.95) 60%, transparent)" }}>
+      <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent)" }}>
         <button onClick={() => setLocation("/firma")} className="w-9 h-9 rounded-full glass-card flex items-center justify-center">
           <ArrowLeft size={18} className="text-white" />
         </button>
-        <h1 className="text-white text-xl font-bold">{t('firma.settings_title')}</h1>
+        <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('firma.settings_title')}</h1>
       </div>
 
       <div className="px-5 mt-2 space-y-5">

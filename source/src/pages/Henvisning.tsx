@@ -84,14 +84,14 @@ export default function Henvisning() {
   // ─── Anonymous view ───────────────────────────────────────────────────────
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0D1220] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#060a0f] flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           {/* Icon + headline */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/20 mb-6">
               <CircleDollarSign size={38} className="text-emerald-400" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-3">Tjen penge med B-Social</h1>
+            <h1 className="text-3xl font-serif text-white mb-3" style={{ fontWeight: 400 }}>Tjen penge med B-Social</h1>
             <p className="text-white/50 text-base leading-relaxed max-w-xs mx-auto">
               Del dit link — og tjen provision hver gang dine henvisninger bruger platformen.
             </p>
@@ -135,9 +135,9 @@ export default function Henvisning() {
 
   // ─── Logged-in view ───────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0D1220] text-white">
+    <div className="min-h-screen bg-[#060a0f] text-white">
       {/* Header */}
-      <div className="border-b border-white/8 bg-[#0D1220]/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-white/8 bg-[#060a0f]/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-5 h-16 flex items-center gap-4">
           <button
             onClick={() => setLocation("/feed")}
@@ -155,7 +155,7 @@ export default function Henvisning() {
       <div className="max-w-2xl mx-auto px-5 py-8 space-y-5">
 
         {/* Hero banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900/50 via-teal-900/30 to-[#0D1220] border border-emerald-500/20 p-6">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900/50 via-teal-900/30 to-[#060a0f] border border-emerald-500/20 p-6">
           {/* Decorative glow */}
           <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
           <div className="relative">

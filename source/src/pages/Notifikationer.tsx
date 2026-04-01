@@ -252,7 +252,7 @@ export default function Notifikationer() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0e23] flex items-center justify-center">
+      <div className="min-h-screen bg-[#060a0f] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-[#4ECDC4]/30 border-t-[#4ECDC4] rounded-full animate-spin" />
       </div>
     );
@@ -260,7 +260,7 @@ export default function Notifikationer() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#0a0e23] flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen bg-[#060a0f] flex flex-col items-center justify-center px-6">
         <Inbox size={48} className="text-white/20 mb-4" />
         <p className="text-white/50 text-sm">{t('notifications.login_to_see')}</p>
         <button
@@ -274,11 +274,11 @@ export default function Notifikationer() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e23] text-white">
+    <div className="min-h-screen bg-[#060a0f] text-white">
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <div>
-          <h1 className="text-2xl font-bold">{t('notifications.title')}</h1>
+          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('notifications.title')}</h1>
           {unreadCount > 0 && (
             <p className="text-white/40 text-xs mt-0.5">{unreadCount} {t('notifications.unread')}</p>
           )}
@@ -357,7 +357,7 @@ export default function Notifikationer() {
       {/* User Search Modal */}
       {showUserSearch && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a0f1a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-[#060a0f] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
             <UserSearch onClose={() => setShowUserSearch(false)} />
           </div>
         </div>

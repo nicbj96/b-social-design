@@ -15,7 +15,7 @@ export default function Landing() {
       className="relative min-h-svh flex flex-col items-center justify-center overflow-hidden"
       style={{
         backgroundImage: `
-          linear-gradient(to bottom, rgba(10,14,35,0.55) 0%, rgba(10,14,35,0.45) 40%, rgba(10,14,35,0.75) 100%),
+          linear-gradient(to bottom, rgba(6,10,15,0.55) 0%, rgba(6,10,15,0.45) 40%, rgba(6,10,15,0.75) 100%),
           url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&auto=format&fit=crop')
         `,
         backgroundSize: "cover",
@@ -24,7 +24,7 @@ export default function Landing() {
       data-testid="landing-page"
     >
       {/* Gradient overlay bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#0a0e23] to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#060a0f] to-transparent pointer-events-none" />
 
       <div className="relative z-10 flex flex-col items-center text-center px-8 pt-20 pb-16 w-full">
         {/* Logo */}

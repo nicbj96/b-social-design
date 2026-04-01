@@ -83,8 +83,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
-        serif: ["var(--font-serif)"],
+        sans: ["'DM Sans'", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        serif: ["'Instrument Serif'", "Georgia", "serif"],
         mono: ["var(--font-mono)"],
       },
       keyframes: {

@@ -397,7 +397,7 @@ export default function Onboarding() {
   return (
     <div
       className="relative min-h-svh flex flex-col"
-      style={{ background: "#0D1220" }}
+      style={{ background: "#060a0f" }}
       data-testid="onboarding-page"
     >
       <div className="flex gap-2 px-8 pt-14 pb-2">
@@ -418,7 +418,7 @@ export default function Onboarding() {
                 <MapPin size={20} className="text-[#4ECDC4]" />
               </div>
               <div>
-                <h1 className="text-white text-xl font-bold">{t('onboarding.where_experience')}</h1>
+                <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('onboarding.where_experience')}</h1>
                 <p className="text-white/40 text-sm">{t('onboarding.select_cities')}</p>
               </div>
             </div>
@@ -510,7 +510,7 @@ export default function Onboarding() {
                 <Sparkles size={20} className="text-[#4ECDC4]" />
               </div>
               <div>
-                <h1 className="text-white text-xl font-bold">{t('onboarding.what_interests')}</h1>
+                <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('onboarding.what_interests')}</h1>
                 <p className="text-white/40 text-sm">{t('onboarding.select_interests')}</p>
               </div>
             </div>
@@ -589,7 +589,7 @@ export default function Onboarding() {
                 <Compass size={20} className="text-[#4ECDC4]" />
               </div>
               <div>
-                <h1 className="text-white text-xl font-bold">{t('onboarding.how_far')}</h1>
+                <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('onboarding.how_far')}</h1>
                 <p className="text-white/40 text-sm">{t('onboarding.set_radius')}</p>
               </div>
             </div>

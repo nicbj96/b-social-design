@@ -59,7 +59,7 @@ export default function UserSearch({ open, onClose }: UserSearchProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20">
-      <div className="bg-[#0a0f1a] text-white rounded-2xl shadow-2xl w-11/12 max-w-md max-h-96 flex flex-col overflow-hidden">
+      <div className="bg-[#060a0f] text-white rounded-2xl shadow-2xl w-11/12 max-w-md max-h-96 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h2 className="font-semibold">Søg efter bruger</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">

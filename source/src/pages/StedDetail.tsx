@@ -89,7 +89,7 @@ export default function StedDetail() {
 
   if (loading) {
     return (
-      <div className="relative min-h-svh pb-24 flex items-center justify-center" style={{ background: "#0D1220" }}>
+      <div className="relative min-h-svh pb-24 flex items-center justify-center" style={{ background: "#060a0f" }}>
         <div className="w-8 h-8 border-2 border-[#4ECDC4]/30 border-t-[#4ECDC4] rounded-full animate-spin" />
       </div>
     );
@@ -97,7 +97,7 @@ export default function StedDetail() {
 
   if (error || !place) {
     return (
-      <div className="relative min-h-svh pb-24 flex items-center justify-center" style={{ background: "#0D1220" }}>
+      <div className="relative min-h-svh pb-24 flex items-center justify-center" style={{ background: "#060a0f" }}>
         <div className="text-center">
           <span className="text-4xl mb-3 block">🔍</span>
           <p className="text-white/60 text-sm mb-4">{t('place.not_found')}</p>
@@ -113,11 +113,11 @@ export default function StedDetail() {
   const mainCat = (place.main_categories || [])[0] || "";
 
   return (
-    <div className="relative min-h-svh pb-24" style={{ background: "#0D1220" }} data-testid="sted-detail-page">
+    <div className="relative min-h-svh pb-24" style={{ background: "#060a0f" }} data-testid="sted-detail-page">
       {/* Hero image */}
       <div className="relative w-full h-56 overflow-hidden">
         <img src={heroImg} alt={place.name} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1a] via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#060a0f] via-black/30 to-transparent" />
         <button onClick={() => window.history.back()} className="absolute top-12 left-5 w-9 h-9 rounded-full glass-card flex items-center justify-center z-10">
           <ArrowLeft size={18} className="text-white/70" />
         </button>
@@ -131,7 +131,7 @@ export default function StedDetail() {
 
       {/* Content */}
       <div className="px-5 -mt-8 relative z-10">
-        <h1 className="text-white text-xl font-bold mb-1 leading-tight">{place.name}</h1>
+        <h1 className="text-white text-xl font-serif mb-1 leading-tight" style={{ fontWeight: 400 }}>{place.name}</h1>
 
         {/* Location + rating */}
         <div className="flex items-center gap-3 mb-3 flex-wrap">

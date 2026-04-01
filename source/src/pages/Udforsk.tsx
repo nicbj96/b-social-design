@@ -58,9 +58,9 @@ function PopularCard({ event }: { event: Event }) {
   const isGratis = !event.price || event.price === 0;
   return (
     <Link href={`/event/${event.id}`} className="block flex-shrink-0">
-      <div className="min-w-[170px] max-w-[170px] rounded-2xl overflow-hidden glass-card cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform">
-        <div className="relative h-28">
-          <img src={getEventImage(event)} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
+      <div className="min-w-[170px] max-w-[170px] rounded-2xl overflow-hidden glass-card premium-event-card cursor-pointer active:scale-[0.98] transition-transform">
+        <div className="relative h-28 overflow-hidden">
+          <img src={getEventImage(event)} alt={event.title} className="w-full h-full object-cover premium-event-img" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <span className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold ${isGratis ? "bg-[#4ECDC4]/80 text-white" : "bg-amber-500/80 text-white"}`}>
             {isGratis ? t('events.free') : `${event.price} kr`}
@@ -83,9 +83,9 @@ function CalendarListCard({ event }: { event: Event }) {
   const isGratis = !event.price || event.price === 0;
   return (
     <Link href={`/event/${event.id}`} className="block">
-      <div className="glass-card rounded-2xl overflow-hidden cursor-pointer hover:bg-white/8 active:opacity-80 transition-all flex gap-3 pr-3">
-        <div className="relative w-20 h-20 flex-shrink-0">
-          <img src={getEventImage(event)} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
+      <div className="glass-card premium-event-card rounded-2xl overflow-hidden cursor-pointer active:opacity-80 transition-all flex gap-3 pr-3">
+        <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden">
+          <img src={getEventImage(event)} alt={event.title} className="w-full h-full object-cover premium-event-img" loading="lazy" />
         </div>
         <div className="flex flex-col justify-center py-2 min-w-0 flex-1">
           <div className="flex items-center gap-1.5 mb-0.5">
@@ -114,7 +114,7 @@ function TrendingCard({ activity }: { activity: SocialActivity }) {
   const { t } = useTranslation();
   return (
     <Link href={`/social/${activity.id}`} className="block">
-      <div className="glass-card rounded-2xl p-3 flex items-center gap-3 cursor-pointer hover:bg-white/8 active:opacity-80 transition-all">
+      <div className="glass-card premium-event-card rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:opacity-80 transition-all">
         <div className="w-10 h-10 rounded-xl bg-[#4ECDC4]/15 flex items-center justify-center flex-shrink-0 text-xl">
           {activity.emoji}
         </div>
@@ -147,9 +147,9 @@ function PlaceCard({ place }: { place: Place }) {
   const emoji = catEmoji[place.main_categories?.[0] || "natur"] || "📍";
   return (
     <Link href={`/sted/${place.id}`}>
-      <div className="min-w-[200px] max-w-[200px] rounded-2xl overflow-hidden glass-card cursor-pointer hover:scale-[1.02] transition-transform flex-shrink-0" data-testid={`place-card-${place.id}`}>
-        <div className="relative h-28">
-          <img src={catImg} alt={place.name} className="w-full h-full object-cover" loading="lazy" />
+      <div className="min-w-[200px] max-w-[200px] rounded-2xl overflow-hidden glass-card premium-event-card cursor-pointer transition-transform flex-shrink-0" data-testid={`place-card-${place.id}`}>
+        <div className="relative h-28 overflow-hidden">
+          <img src={catImg} alt={place.name} className="w-full h-full object-cover premium-event-img" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-[#4ECDC4]/80 text-white text-xs font-semibold">
             {emoji} {place.main_categories?.[0] || "Sted"}
@@ -385,7 +385,7 @@ export default function Udforsk() {
     <div
       className="relative min-h-svh pb-24"
       style={{
-        background: "#0D1220",
+        background: "#060a0f",
       }}
       data-testid="udforsk-page"
     >
@@ -393,9 +393,9 @@ export default function Udforsk() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] rounded-full pointer-events-none" style={{ background: "radial-gradient(ellipse at center, rgba(78,205,196,0.08) 0%, transparent 70%)" }} />
 
       {/* ── Header ── */}
-      <div className="sticky top-0 z-30 pt-12 pb-3 px-5" style={{ background: "linear-gradient(to bottom, #0D1220 80%, transparent)" }}>
+      <div className="sticky top-0 z-30 pt-12 pb-3 px-5" style={{ background: "linear-gradient(to bottom, #060a0f 80%, transparent)" }}>
         <div className="mb-3">
-          <h1 className="text-white text-2xl font-bold">{t('udforsk.title')}</h1>
+          <h1 className="text-white text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.5px" }}>{t('udforsk.title')}</h1>
           <p className="text-white/50 text-sm">{t('udforsk.subtitle')}</p>
         </div>
 

@@ -578,7 +578,7 @@ export default function CategoryDetail() {
   return (
     <div
       className="relative min-h-svh pb-24"
-      style={{ background: "#0D1220" }}
+      style={{ background: "#060a0f" }}
       data-testid="category-detail-page"
     >
       {/* ── Compact Hero ── */}

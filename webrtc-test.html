@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebRTC 2-Person Test</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui; background: #0a0f1a; color: #fff; padding: 20px; }
+  h1 { text-align: center; margin-bottom: 20px; color: #4ECDC4; }
+  .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .peer { flex: 1; min-width: 300px; max-width: 500px; border: 2px solid #333; border-radius: 12px; padding: 16px; }
+  .peer h2 { color: #4ECDC4; margin-bottom: 12px; }
+  .videos { display: flex; gap: 8px; margin-bottom: 12px; }
+  .vid-box { flex: 1; }
+  .vid-box label { display: block; font-size: 12px; color: #aaa; margin-bottom: 4px; }
+  video, canvas { width: 100%; border-radius: 8px; background: #000; }
+  canvas { display: none; }
+  .log { background: #111; border-radius: 8px; padding: 8px; height: 220px; overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.4; }
+  .log .info { color: #4ECDC4; }
+  .log .error { color: #ff6b6b; }
+  .log .warn { color: #ffd93d; }
+  .log .track { color: #a78bfa; }
+  .log .success { color: #10b981; font-weight: bold; }
+  button { background: #4ECDC4; color: #0a0f1a; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 4px; }
+  button:hover { background: #3db8af; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #controls { text-align: center; margin-bottom: 20px; }
+  .status { font-size: 14px; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+  .status.idle { background: #333; }
+  .status.calling { background: #f59e0b33; color: #f59e0b; }
+  .status.ringing { background: #8b5cf633; color: #8b5cf6; }
+  .status.connected { background: #10b98133; color: #10b981; }
+  .result { text-align: center; margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; display: none; }
+  .result.pass { display: block; background: #10b98133; color: #10b981; border: 2px solid #10b981; }
+  .result.fail { display: block; background: #ff6b6b33; color: #ff6b6b; border: 2px solid #ff6b6b; }
+</style>
+</head>
+<body>
+
+<h1>WebRTC Video Call Test — 2 Peers (Fake Streams)</h1>
+
+<div id="controls">
+  <button id="btnStart" onclick="startTest()">Start Video Call (A → B)</button>
+  <button id="btnEnd" onclick="endTest()" disabled>End Call</button>
+</div>
+
+<div id="resultBox" class="result"></div>
+
+<div class="container">
+  <div class="peer">
+    <h2>Peer A (Caller)</h2>
+    <div class="status idle" id="statusA">idle</div>
+    <div class="videos">
+      <div class="vid-box">
+        <label>LOCAL (own camera)</label>
+        <video id="a-local" autoplay playsinline muted></video>
+      </div>
+      <div class="vid-box">
+        <label>REMOTE (should show B's stream)</label>
+        <video id="a-remote" autoplay playsinline></video>
+      </div>
+    </div>
+    <div class="log" id="logA"></div>
+  </div>
+
+  <div class="peer">
+    <h2>Peer B (Callee)</h2>
+    <div class="status idle" id="statusB">idle</div>
+    <div class="videos">
+      <div class="vid-box">
+        <label>LOCAL (own camera)</label>
+        <video id="b-local" autoplay playsinline muted></video>
+      </div>
+      <div class="vid-box">
+        <label>REMOTE (should show A's stream)</label>
+        <video id="b-remote" autoplay playsinline></video>
+      </div>
+    </div>
+    <div class="log" id="logB"></div>
+  </div>
+</div>
+
+<!-- Hidden canvases for generating fake video -->
+<canvas id="canvasA" width="320" height="240"></canvas>
+<canvas id="canvasB" width="320" height="240"></canvas>
+
+<script>
+const ICE_SERVERS = [{ urls: ['stun:stun.l.google.com:19302'] }];
+
+let pcA = null, pcB = null;
+let localStreamA = null, localStreamB = null;
+let remoteStreamRefA = new MediaStream();
+let remoteStreamRefB = new MediaStream();
+let iceBufA = [], iceBufB = [];
+let remoteDescSetA = false, remoteDescSetB = false;
+let animFrameA = null, animFrameB = null;
+
+function log(peer, msg, type = 'info') {
+  const el = document.getElementById(`log${peer}`);
+  const line = document.createElement('div');
+  line.className = type;
+  line.textContent = `[${new Date().toISOString().slice(11,19)}] ${msg}`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+  console.log(`[Peer ${peer}][${type}] ${msg}`);
+}
+
+function setStatus(peer, status) {
+  const el = document.getElementById(`status${peer}`);
+  el.textContent = status;
+  el.className = `status ${status}`;
+}
+
+function showResult(pass, msg) {
+  const el = document.getElementById('resultBox');
+  el.textContent = msg;
+  el.className = `result ${pass ? 'pass' : 'fail'}`;
+}
+
+// Create a fake video stream with colored moving rectangle + label
+function createFakeStream(label, color) {
+  const canvasId = label === 'A' ? 'canvasA' : 'canvasB';
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  let x = 0;
+
+  function draw() {
+    ctx.fillStyle = color === 'blue' ? '#1a237e' : '#1b5e20';
+    ctx.fillRect(0, 0, 320, 240);
+
+    // Moving rectangle
+    x = (x + 2) % 280;
+    ctx.fillStyle = color === 'blue' ? '#42a5f5' : '#66bb6a';
+    ctx.fillRect(x, 80, 40, 80);
+
+    // Label
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`PEER ${label}`, 160, 40);
+    ctx.font = '16px sans-serif';
+    ctx.fillText(`${color} stream`, 160, 220);
+
+    if (label === 'A') animFrameA = requestAnimationFrame(draw);
+    else animFrameB = requestAnimationFrame(draw);
+  }
+  draw();
+
+  const stream = canvas.captureStream(30);
+  // Add a fake audio track via oscillator
+  const audioCtx = new AudioContext();
+  const osc = audioCtx.createOscillator();
+  osc.frequency.value = label === 'A' ? 440 : 660;
+  const dest = audioCtx.createMediaStreamDestination();
+  osc.connect(dest);
+  osc.start();
+  stream.addTrack(dest.stream.getAudioTracks()[0]);
+
+  return stream;
+}
+
+// Signaling: direct function calls
+function sendToB(message) {
+  setTimeout(() => {
+    log('B', `Received ${message.type} from A`, 'info');
+    handleSignalingB(message);
+  }, 10);
+}
+function sendToA(message) {
+  setTimeout(() => {
+    log('A', `Received ${message.type} from B`, 'info');
+    handleSignalingA(message);
+  }, 10);
+}
+
+async function flushIceBuffer(peer) {
+  const pc = peer === 'A' ? pcA : pcB;
+  const buf = peer === 'A' ? iceBufA : iceBufB;
+  const items = [...buf];
+  if (peer === 'A') iceBufA = []; else iceBufB = [];
+  for (const c of items) {
+    try {
+      await pc.addIceCandidate(new RTCIceCandidate(c));
+      log(peer, `Flushed buffered ICE candidate`, 'info');
+    } catch (e) {
+      log(peer, `Error flushing ICE: ${e.message}`, 'error');
+    }
+  }
+}
+
+function createPC(peer) {
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      log(peer, `Sending ICE candidate`, 'info');
+      if (peer === 'A') sendToB({ type: 'ice-candidate', candidate: e.candidate.toJSON() });
+      else sendToA({ type: 'ice-candidate', candidate: e.candidate.toJSON() });
+    }
+  };
+
+  pc.ontrack = (event) => {
+    log(peer, `ontrack: ${event.track.kind} (id: ${event.track.id.slice(0,8)}), streams: ${event.streams.length}`, 'track');
+
+    const remoteStreamRef = peer === 'A' ? remoteStreamRefA : remoteStreamRefB;
+    remoteStreamRef.addTrack(event.track);
+
+    const videoEl = document.getElementById(`${peer.toLowerCase()}-remote`);
+    const newStream = new MediaStream(remoteStreamRef.getTracks());
+    videoEl.srcObject = newStream;
+
+    log(peer, `Remote stream: ${remoteStreamRef.getTracks().map(t => `${t.kind}(${t.readyState})`).join(', ')}`, 'track');
+
+    event.track.onunmute = () => log(peer, `${event.track.kind} UNMUTED ✓`, 'success');
+    event.track.onended = () => log(peer, `${event.track.kind} ENDED`, 'error');
+  };
+
+  pc.oniceconnectionstatechange = () => {
+    const state = pc.iceConnectionState;
+    log(peer, `ICE: ${state}`, state === 'connected' || state === 'completed' ? 'success' : 'warn');
+  };
+
+  pc.onconnectionstatechange = () => {
+    const state = pc.connectionState;
+    log(peer, `Connection: ${state}`, state === 'connected' ? 'success' : 'warn');
+    if (state === 'connected') {
+      setStatus(peer, 'connected');
+      // Verify after 1 second
+      setTimeout(() => verifyStreams(), 1000);
+    }
+  };
+
+  return pc;
+}
+
+function verifyStreams() {
+  const aRemote = document.getElementById('a-remote');
+  const bRemote = document.getElementById('b-remote');
+
+  const aHasRemote = aRemote.srcObject && aRemote.srcObject.getVideoTracks().length > 0;
+  const bHasRemote = bRemote.srcObject && bRemote.srcObject.getVideoTracks().length > 0;
+
+  const aTrackLive = aHasRemote && aRemote.srcObject.getVideoTracks()[0].readyState === 'live';
+  const bTrackLive = bHasRemote && bRemote.srcObject.getVideoTracks()[0].readyState === 'live';
+
+  log('A', `Verify: remote has video=${aHasRemote}, live=${aTrackLive}`, aTrackLive ? 'success' : 'error');
+  log('B', `Verify: remote has video=${bHasRemote}, live=${bTrackLive}`, bTrackLive ? 'success' : 'error');
+
+  // Check track IDs to ensure they're different streams
+  const aLocalId = localStreamA?.getVideoTracks()[0]?.id;
+  const aRemoteId = aRemote.srcObject?.getVideoTracks()[0]?.id;
+  const bLocalId = localStreamB?.getVideoTracks()[0]?.id;
+  const bRemoteId = bRemote.srcObject?.getVideoTracks()[0]?.id;
+
+  log('A', `Local track: ${aLocalId?.slice(0,8)}, Remote track: ${aRemoteId?.slice(0,8)}`, 'info');
+  log('B', `Local track: ${bLocalId?.slice(0,8)}, Remote track: ${bRemoteId?.slice(0,8)}`, 'info');
+
+  const aCorrect = aRemoteId && aLocalId !== aRemoteId;
+  const bCorrect = bRemoteId && bLocalId !== bRemoteId;
+
+  log('A', `Remote is different from local: ${aCorrect}`, aCorrect ? 'success' : 'error');
+  log('B', `Remote is different from local: ${bCorrect}`, bCorrect ? 'success' : 'error');
+
+  if (aTrackLive && bTrackLive && aCorrect && bCorrect) {
+    showResult(true, '✓ SUCCESS: Both peers receive each other\'s video correctly!');
+  } else {
+    let msg = '✗ FAILED: ';
+    if (!aTrackLive) msg += 'A has no live remote video. ';
+    if (!bTrackLive) msg += 'B has no live remote video. ';
+    if (!aCorrect) msg += 'A remote = A local (showing self!). ';
+    if (!bCorrect) msg += 'B remote = B local (showing self!). ';
+    showResult(false, msg);
+  }
+}
+
+async function handleSignalingA(msg) {
+  if (msg.type === 'answer') {
+    try {
+      await pcA.setRemoteDescription(msg.sdp);
+      remoteDescSetA = true;
+      log('A', 'Remote description (answer) set ✓', 'success');
+      await flushIceBuffer('A');
+      setStatus('A', 'connected');
+    } catch (e) {
+      log('A', `Error setting remote desc: ${e.message}`, 'error');
+    }
+  } else if (msg.type === 'ice-candidate') {
+    if (!remoteDescSetA) {
+      iceBufA.push(msg.candidate);
+      log('A', 'Buffered ICE candidate', 'warn');
+    } else {
+      try { await pcA.addIceCandidate(new RTCIceCandidate(msg.candidate)); }
+      catch (e) { log('A', `ICE error: ${e.message}`, 'error'); }
+    }
+  }
+}
+
+async function handleSignalingB(msg) {
+  if (msg.type === 'offer') {
+    pcB = createPC('B');
+    setStatus('B', 'ringing');
+    log('B', 'Auto-accepting in 300ms...', 'warn');
+    setTimeout(() => acceptCallB(msg.sdp), 300);
+  } else if (msg.type === 'ice-candidate') {
+    if (!remoteDescSetB) {
+      iceBufB.push(msg.candidate);
+      log('B', 'Buffered ICE candidate', 'warn');
+    } else {
+      try { await pcB.addIceCandidate(new RTCIceCandidate(msg.candidate)); }
+      catch (e) { log('B', `ICE error: ${e.message}`, 'error'); }
+    }
+  }
+}
+
+async function acceptCallB(offerSdp) {
+  log('B', 'Accepting call...', 'info');
+  try {
+    // STEP 1: Set remote description FIRST
+    await pcB.setRemoteDescription(offerSdp);
+    remoteDescSetB = true;
+    log('B', 'Remote description (offer) set ✓', 'success');
+    await flushIceBuffer('B');
+
+    // STEP 2: Get fake media (GREEN stream = peer B)
+    localStreamB = createFakeStream('B', 'green');
+    document.getElementById('b-local').srcObject = localStreamB;
+    log('B', `Local stream: ${localStreamB.getTracks().map(t => t.kind).join(', ')}`, 'info');
+
+    // STEP 3: Add tracks
+    localStreamB.getTracks().forEach(track => {
+      pcB.addTrack(track, localStreamB);
+      log('B', `Added ${track.kind} track`, 'info');
+    });
+
+    // STEP 4: Create answer
+    const answer = await pcB.createAnswer();
+    await pcB.setLocalDescription(answer);
+    log('B', 'Answer sent ✓', 'success');
+    setStatus('B', 'connected');
+    sendToA({ type: 'answer', sdp: answer });
+  } catch (e) {
+    log('B', `Error: ${e.message}`, 'error');
+  }
+}
+
+async function startTest() {
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnEnd').disabled = false;
+  document.getElementById('resultBox').className = 'result';
+  document.getElementById('resultBox').textContent = '';
+  remoteStreamRefA = new MediaStream();
+  remoteStreamRefB = new MediaStream();
+  iceBufA = []; iceBufB = [];
+  remoteDescSetA = false; remoteDescSetB = false;
+
+  try {
+    // Peer A: create BLUE fake stream
+    log('A', 'Creating fake media stream (BLUE)...', 'info');
+    localStreamA = createFakeStream('A', 'blue');
+    document.getElementById('a-local').srcObject = localStreamA;
+    log('A', `Local stream: ${localStreamA.getTracks().map(t => t.kind).join(', ')}`, 'info');
+
+    pcA = createPC('A');
+    setStatus('A', 'calling');
+
+    localStreamA.getTracks().forEach(track => {
+      pcA.addTrack(track, localStreamA);
+      log('A', `Added ${track.kind} track`, 'info');
+    });
+
+    const offer = await pcA.createOffer();
+    await pcA.setLocalDescription(offer);
+    log('A', 'Offer sent ✓', 'success');
+    sendToB({ type: 'offer', sdp: offer });
+  } catch (e) {
+    log('A', `Error: ${e.message}`, 'error');
+  }
+}
+
+function endTest() {
+  if (pcA) { pcA.close(); pcA = null; }
+  if (pcB) { pcB.close(); pcB = null; }
+  if (animFrameA) cancelAnimationFrame(animFrameA);
+  if (animFrameB) cancelAnimationFrame(animFrameB);
+  localStreamA = null; localStreamB = null;
+  remoteStreamRefA = new MediaStream();
+  remoteStreamRefB = new MediaStream();
+  ['a-local','a-remote','b-local','b-remote'].forEach(id => {
+    document.getElementById(id).srcObject = null;
+  });
+  setStatus('A', 'idle'); setStatus('B', 'idle');
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnEnd').disabled = true;
+}
+</script>
+</body>
+</html>

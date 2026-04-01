@@ -89,10 +89,10 @@ export default function Kalender() {
   return (
     <div
       className="relative min-h-svh pb-24"
-      style={{ backgroundImage: `linear-gradient(to bottom, rgba(10,14,35,0.85), rgba(10,14,35,0.95)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop')`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}
+      style={{ backgroundImage: `linear-gradient(to bottom, rgba(6,10,15,0.85), rgba(6,10,15,0.95)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop')`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}
       data-testid="kalender-page"
     >
-      <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(10,14,35,0.95) 60%, transparent)" }}>
+      <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent)" }}>
         <button onClick={() => setLocation("/min-side")} className="w-9 h-9 rounded-full glass-card flex items-center justify-center"><ArrowLeft size={18} className="text-white" /></button>
         <h1 className="text-white text-xl font-bold">{t('calendar.title')}</h1>
         {isLoading && <Loader2 size={14} className="animate-spin text-[#4ECDC4]" />}

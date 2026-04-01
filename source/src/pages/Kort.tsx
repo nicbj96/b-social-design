@@ -684,7 +684,7 @@ export default function Kort() {
   return (
     <div className="relative w-full h-svh pb-[72px]" data-testid="kort-page">
       {/* ── Search bar + Gratis / Premium ── */}
-      <div className="absolute top-0 left-0 right-0 z-[1000] px-4 pb-2" style={{ background: "linear-gradient(to bottom, rgba(10,14,35,0.92) 60%, transparent)", paddingTop: "max(env(safe-area-inset-top, 12px), 48px)" }}>
+      <div className="absolute top-0 left-0 right-0 z-[1000] px-4 pb-2" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.92) 60%, transparent)", paddingTop: "max(env(safe-area-inset-top, 12px), 48px)" }}>
         <div className="flex gap-2 items-center">
           <div className="relative flex-1">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
@@ -793,7 +793,7 @@ export default function Kort() {
         zoom={12}
         zoomControl={false}
         attributionControl={false}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#0D1220" }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#060a0f" }}
       >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

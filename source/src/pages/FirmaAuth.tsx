@@ -162,7 +162,7 @@ export default function FirmaAuth() {
     <div
       className="relative min-h-svh flex flex-col"
       style={{
-        background: "#0D1220",
+        background: "#060a0f",
       }}
     >
       {/* Subtle teal gradient glow at top */}

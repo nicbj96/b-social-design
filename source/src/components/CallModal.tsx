@@ -86,7 +86,7 @@ export default function CallModal({
 
   const avatarUrl = `https://ui-avatars.com/api/?name=${getUserInitials(
     otherUserName
-  )}&background=4ECDC4&color=0a0f1a&size=120&bold=true`;
+  )}&background=4ECDC4&color=060a0f&size=120&bold=true`;
 
   return (
     <>

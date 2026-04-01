@@ -66,7 +66,7 @@ export default function InviterVenner() {
   // ─── Anonymous view ───────────────────────────────────────────────────────
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0D1220] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#060a0f] flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#4ECDC4]/30 to-[#4ECDC4]/10 border border-[#4ECDC4]/20 mb-6">
@@ -116,9 +116,9 @@ export default function InviterVenner() {
 
   // ─── Logged-in view ───────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0D1220] text-white">
+    <div className="min-h-screen bg-[#060a0f] text-white">
       {/* Header */}
-      <div className="border-b border-white/8 bg-[#0D1220]/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-white/8 bg-[#060a0f]/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-xl mx-auto px-5 h-16 flex items-center gap-4">
           <button
             onClick={() => setLocation("/feed")}

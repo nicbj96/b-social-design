@@ -222,7 +222,7 @@ export default function PublicProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#060a0f] text-white flex items-center justify-center">
         <div className="text-white/50">Indlæser...</div>
       </div>
     );
@@ -230,7 +230,7 @@ export default function PublicProfile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] text-white flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-[#060a0f] text-white flex flex-col items-center justify-center">
         <p className="text-white/50 mb-4">Profil ikke fundet</p>
         <button
           onClick={() => navigate("/")}
@@ -244,7 +244,7 @@ export default function PublicProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white pb-20">
+    <div className="min-h-screen bg-[#060a0f] text-white pb-20">
       {/* Header with back button */}
       <div className="bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] p-6 pb-16">
         <button
