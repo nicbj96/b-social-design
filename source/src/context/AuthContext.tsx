@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import type { ReactNode } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
 
 export type UserRole = "user" | "firma" | "admin";
 
@@ -126,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      console.log("[AuthContext] getSession result:", s ? "HAS SESSION for " + s.user?.email : "NO SESSION");
+      logger.log("[AuthContext] getSession result:", s ? "HAS SESSION for " + s.user?.email : "NO SESSION");
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {

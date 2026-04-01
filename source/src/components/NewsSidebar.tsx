@@ -69,6 +69,7 @@ export default function NewsSidebar() {
                   src={item.image}
                   alt={item.title}
                   className="w-16 h-16 rounded-lg object-cover shadow-sm group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-lg">

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import i18n from "./i18n";
 
 // Supabase credentials — loaded from environment variables
 // For local development, create a .env file with:
@@ -199,6 +200,36 @@ export async function fetchNewestPlaces(limit = 5): Promise<Place[]> {
   return data || [];
 }
 
+export type MapBounds = {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+};
+
+/** Fetch places within viewport bounds (lightweight columns, limit 500) */
+export async function fetchPlacesInViewport(bounds: MapBounds, country?: string): Promise<Place[]> {
+  let query = supabase
+    .from("places")
+    .select("id,name,latitude,longitude,city,country,main_categories,tags,rating_avg")
+    .not("latitude", "is", null)
+    .not("longitude", "is", null)
+    .gte("latitude", bounds.south)
+    .lte("latitude", bounds.north)
+    .gte("longitude", bounds.west)
+    .lte("longitude", bounds.east)
+    .order("rating_avg", { ascending: false, nullsFirst: false })
+    .limit(500);
+
+  if (country && country !== 'ALL') {
+    query = query.eq("country", country);
+  }
+
+  const { data, error } = await query;
+  if (error) { console.error("fetchPlacesInViewport error:", error); return []; }
+  return (data as Place[]) || [];
+}
+
 /** Fetch places with optional limit */
 // Paginate ALL places for map view (lightweight columns only)
 export async function fetchAllPlacesForMap(country?: string): Promise<Place[]> {
@@ -255,10 +286,11 @@ export async function createNotification(
 
 export async function createTagMatchNotification(userId: string, event: Event) {
   const tag = event.interest_tags?.[0] || event.category;
+  const title = i18n.t("notifications.tag_match_title", { tag });
   return createNotification(
     userId,
     "tag_match",
-    `Nyt #${tag} event nær dig`,
+    title,
     event.title,
     { link: `/event/${event.id}`, event_id: event.id },
   );
@@ -270,10 +302,11 @@ export async function createEventInviteNotification(
   eventId: string,
   inviterName: string,
 ) {
+  const title = i18n.t("notifications.event_invite_title", { name: inviterName });
   return createNotification(
     userId,
     "event_invite",
-    `${inviterName} har inviteret dig`,
+    title,
     eventTitle,
     { link: `/event/${eventId}`, event_id: eventId },
   );
@@ -284,11 +317,13 @@ export async function createFriendRequestNotification(
   fromName: string,
   fromId: string,
 ) {
+  const title = i18n.t("notifications.friend_request_title", { name: fromName });
+  const body = i18n.t("notifications.friend_request_body");
   return createNotification(
     userId,
     "friend_request",
-    `${fromName} vil følge dig`,
-    "Tryk for at acceptere eller afvise",
+    title,
+    body,
     { link: `/profil/${fromId}`, from_user_id: fromId },
   );
 }

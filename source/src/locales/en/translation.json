@@ -930,7 +930,11 @@
     "unread": "unread",
     "mark_all_read": "Mark all as read",
     "no_notifications": "No notifications yet",
-    "we_will_notify": "We'll notify you when something happens"
+    "we_will_notify": "We'll notify you when something happens",
+    "tag_match_title": "New #{{tag}} event near you",
+    "event_invite_title": "{{name}} invited you",
+    "friend_request_title": "{{name}} wants to follow you",
+    "friend_request_body": "Tap to accept or decline"
   },
   "onboarding": {
     "welcome": "Welcome to B-Social",

@@ -212,136 +212,140 @@ export default function FirmaAuth() {
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {error && (
-            <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm text-center">
-              {error}
-            </div>
-          )}
+        {isLoggedIn && (
+          <>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {error && (
+                <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm text-center">
+                  {error}
+                </div>
+              )}
 
-          {/* Company info */}
-          <div className="space-y-4">
-            <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">{t('firma.company_info')}</h2>
+              {/* Company info */}
+              <div className="space-y-4">
+                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">{t('firma.company_info')}</h2>
 
-            <div className="space-y-1">
-              <label className="text-white/60 text-xs font-medium pl-1">{t('firma.company_name')}</label>
-              <input
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="F.eks. Aalborg Fitness"
-                required
-                className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
-              />
-            </div>
+                <div className="space-y-1">
+                  <label className="text-white/60 text-xs font-medium pl-1">{t('firma.company_name')}</label>
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="F.eks. Aalborg Fitness"
+                    required
+                    className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                  />
+                </div>
 
-            <div className="space-y-1">
-              <label className="text-white/60 text-xs font-medium pl-1">{t('firma.cvr')}</label>
-              <input
-                type="text"
-                value={cvr}
-                onChange={(e) => setCvr(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                placeholder="12345678"
-                required
-                maxLength={8}
-                className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
-              />
-            </div>
+                <div className="space-y-1">
+                  <label className="text-white/60 text-xs font-medium pl-1">{t('firma.cvr')}</label>
+                  <input
+                    type="text"
+                    value={cvr}
+                    onChange={(e) => setCvr(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                    placeholder="12345678"
+                    required
+                    maxLength={8}
+                    className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-white/60 text-xs font-medium pl-1">{t('firma.company_email')}</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="kontakt@firma.dk"
-                  required
-                  className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-white/60 text-xs font-medium pl-1">{t('firma.company_email')}</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="kontakt@firma.dk"
+                      required
+                      className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-white/60 text-xs font-medium pl-1">{t('firma.phone_optional')}</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+45 12 34 56 78"
+                      className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-white/60 text-xs font-medium pl-1">{t('firma.phone_optional')}</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+45 12 34 56 78"
-                  className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
-                />
+
+              {/* Plan selection — 3 new tiers */}
+              <div className="space-y-3">
+                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">{t('firma.choose_plan')}</h2>
+                <p className="text-white/30 text-xs">{t('firma.all_plans_free')}</p>
+                <div className="grid grid-cols-1 gap-3">
+                  {PLANS.map((plan) => {
+                    const Icon = plan.icon;
+                    return (
+                      <button
+                        key={plan.id}
+                        type="button"
+                        onClick={() => setSelectedPlan(plan.id)}
+                        className={`relative p-4 rounded-2xl border text-left transition-all ${
+                          selectedPlan === plan.id
+                            ? "bg-[#4ECDC4]/15 border-[#4ECDC4]/50 ring-1 ring-[#4ECDC4]/30"
+                            : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
+                        }`}
+                      >
+                        {selectedPlan === plan.id && (
+                          <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#4ECDC4] flex items-center justify-center">
+                            <Check size={12} className="text-white" />
+                          </div>
+                        )}
+                        {plan.highlight && (
+                          <div className="absolute top-3 right-10 px-2 py-0.5 rounded-full bg-[#4ECDC4]/20 text-[#4ECDC4] text-[11px] font-bold uppercase">
+                            {t('pricing.popular')}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon size={16} className={plan.color} />
+                          <span className="text-white font-semibold text-sm">{t(plan.nameKey)}</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                            {t('pricing.free_badge')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 mb-2">
+                          <Sparkles size={12} className={plan.color} />
+                          <span className="text-white/70 text-xs font-medium">
+                            {plan.revenueSharePct === 0
+                              ? t('pricing.no_revenue_share')
+                              : t('pricing.revenue_share_of', { pct: plan.revenueShare })}
+                          </span>
+                        </div>
+                        <ul className="space-y-1">
+                          {plan.features.map((f) => (
+                            <li key={f} className="text-white/40 text-xs flex items-center gap-1.5">
+                              <Check size={10} className="text-[#4ECDC4] shrink-0" />
+                              {t(f)}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-white/25 text-xs mt-2">{t('pricing.ideal_for', { audience: t(plan.idealForKey) })}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Plan selection — 3 new tiers */}
-          <div className="space-y-3">
-            <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">{t('firma.choose_plan')}</h2>
-            <p className="text-white/30 text-xs">{t('firma.all_plans_free')}</p>
-            <div className="grid grid-cols-1 gap-3">
-              {PLANS.map((plan) => {
-                const Icon = plan.icon;
-                return (
-                  <button
-                    key={plan.id}
-                    type="button"
-                    onClick={() => setSelectedPlan(plan.id)}
-                    className={`relative p-4 rounded-2xl border text-left transition-all ${
-                      selectedPlan === plan.id
-                        ? "bg-[#4ECDC4]/15 border-[#4ECDC4]/50 ring-1 ring-[#4ECDC4]/30"
-                        : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
-                    }`}
-                  >
-                    {selectedPlan === plan.id && (
-                      <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#4ECDC4] flex items-center justify-center">
-                        <Check size={12} className="text-white" />
-                      </div>
-                    )}
-                    {plan.highlight && (
-                      <div className="absolute top-3 right-10 px-2 py-0.5 rounded-full bg-[#4ECDC4]/20 text-[#4ECDC4] text-[11px] font-bold uppercase">
-                        {t('pricing.popular')}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mb-1">
-                      <Icon size={16} className={plan.color} />
-                      <span className="text-white font-semibold text-sm">{t(plan.nameKey)}</span>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-                        {t('pricing.free_badge')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1 mb-2">
-                      <Sparkles size={12} className={plan.color} />
-                      <span className="text-white/70 text-xs font-medium">
-                        {plan.revenueSharePct === 0
-                          ? t('pricing.no_revenue_share')
-                          : t('pricing.revenue_share_of', { pct: plan.revenueShare })}
-                      </span>
-                    </div>
-                    <ul className="space-y-1">
-                      {plan.features.map((f) => (
-                        <li key={f} className="text-white/40 text-xs flex items-center gap-1.5">
-                          <Check size={10} className="text-[#4ECDC4] shrink-0" />
-                          {t(f)}
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="text-white/25 text-xs mt-2">{t('pricing.ideal_for', { audience: t(plan.idealForKey) })}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading || !isLoggedIn}
-            className="w-full py-4 rounded-2xl bg-[#4ECDC4] text-[#0a0f1a] font-semibold text-base hover:bg-[#3dbdb5] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-[#4ECDC4]/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2"
-          >
-            {loading && <Loader2 size={18} className="animate-spin" />}
-            {loading ? t('firma.creating_company') : t('firma.create_account_free')}
-          </button>
-        </form>
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading || !isLoggedIn}
+                className="w-full py-4 rounded-2xl bg-[#4ECDC4] text-[#0a0f1a] font-semibold text-base hover:bg-[#3dbdb5] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-[#4ECDC4]/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2"
+              >
+                {loading && <Loader2 size={18} className="animate-spin" />}
+                {loading ? t('firma.creating_company') : t('firma.create_account_free')}
+              </button>
+            </form>
+          </>
+        )}
 
         <p className="text-center text-white/30 text-xs mt-6 leading-relaxed">
           {t('auth.terms')}{" "}

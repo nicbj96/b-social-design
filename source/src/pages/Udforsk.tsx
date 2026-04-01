@@ -195,7 +195,7 @@ const PLACE_CAT_EMOJI: Record<string, string> = {
   loeb: "🏃", mtb: "🚵", vandring: "🥾", mad: "🍽️", fitness: "💪", outdoor: "🌲",
 };
 
-function SupabasePlacesSection() {
+function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   const { t } = useTranslation();
   const [dbFilter, setDbFilter] = useState<string | null>(null);
   const { data: places, isLoading } = useQuery<Place[]>({
@@ -206,14 +206,26 @@ function SupabasePlacesSection() {
 
   const filteredPlaces = useMemo(() => {
     if (!places) return [];
-    if (!dbFilter) return places;
-    return places.filter(p => {
+
+    // Filter by country first
+    let countryFiltered = places;
+    if (activeCountry === 'ALL') {
+      countryFiltered = places;
+    } else if (activeCountry === 'EUROPE') {
+      countryFiltered = places.filter(p => !p.country || EUROPE_CODES.includes(p.country));
+    } else {
+      countryFiltered = places.filter(p => !p.country || p.country === activeCountry);
+    }
+
+    // Then filter by category if dbFilter is set
+    if (!dbFilter) return countryFiltered;
+    return countryFiltered.filter(p => {
       const cats = (p.main_categories || []).map(c => c.toLowerCase());
       const tags = (p.tags || []).map(tag => tag.toLowerCase());
       const all = [...cats, ...tags];
       return all.some(item => item.includes(dbFilter));
     });
-  }, [places, dbFilter]);
+  }, [places, dbFilter, activeCountry]);
 
   if (isLoading) return (
     <section className="px-5">
@@ -597,7 +609,7 @@ export default function Udforsk() {
           )}
 
           {/* ═══ STEDER FRA DATABASEN ═══ */}
-          {!activeCategory && <SupabasePlacesSection />}
+          {!activeCategory && <SupabasePlacesSection activeCountry={activeCountry} />}
 
           {/* ── Trending nær dig ── */}
           <section className="px-5">

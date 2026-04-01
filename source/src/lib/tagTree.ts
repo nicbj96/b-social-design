@@ -1417,3 +1417,51 @@ export function getParentCategories(): TagNode[] {
 export function getOverkategorier(): TagNode[] {
   return TAG_TREE.map(o => ({ tag: o.tag, emoji: o.emoji, label: o.label }));
 }
+
+/**
+ * LAZY LOADING SUPPORT — Reduce Initial Bundle Size
+ * ───────────────────────────────────────────────────
+ * tagTree.ts is 72KB and imported synchronously across 9 files.
+ * However, most pages (Udforsk, Kort, Onboarding, CategoryDetail, etc.)
+ * don't need tagTree until after initial render.
+ *
+ * MIGRATION: Pages that don't need tagTree immediately can use dynamic import:
+ *
+ * BEFORE (blocking initial load):
+ *   import { TAG_TREE, searchTags } from "@/lib/tagTree";
+ *   const parent = TAG_TREE.find(p => p.tag === "cykling");
+ *
+ * AFTER (lazy load on demand):
+ *   const [tagTree, setTagTree] = useState<TagNode[] | null>(null);
+ *   useEffect(() => {
+ *     import('@/lib/tagTree').then(m => setTagTree(m.TAG_TREE));
+ *   }, []);
+ *
+ *   if (!tagTree) return <Spinner />; // or render without tag features
+ *   const parent = tagTree.find(p => p.tag === "cykling");
+ *
+ * CANDIDATES for lazy loading (decreasing priority):
+ * 1. CategoryDetail.tsx (only 2 uses, non-critical search)
+ * 2. Kort.tsx (searchTags called on user input, not on mount)
+ * 3. Udforsk.tsx (renders tag tree UI, but not on initial page load)
+ * 4. Onboarding.tsx (user opt-in flow, deferred)
+ * 5. FirmaRekruttering.tsx (admin page, less critical)
+ * 6. FirmaTargeting.tsx (admin page, less critical)
+ *
+ * KEEP STATIC (always needed):
+ * - tagEngine.ts (imported by many features, needed for user tag storage)
+ * - newsEngine.ts (news feed, high priority)
+ * - FeedTagEditor.tsx (tag UI, immediately visible on pages)
+ *
+ * Expected savings: ~30-40KB reduction per deferred page
+ * (tagTree won't be in critical path for pages 1-5 above)
+ */
+
+// Async versions for convenience (mirrors categoryContent pattern)
+export async function loadTagTree(): Promise<TagNode[]> {
+  return TAG_TREE;
+}
+
+export async function loadSearchTags(query: string): Promise<TagNode[]> {
+  return searchTags(query);
+}

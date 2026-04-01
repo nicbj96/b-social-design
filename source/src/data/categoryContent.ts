@@ -409,3 +409,45 @@ export function getCategoryContentCount(categoryKey: string): { places: number; 
   const activities = (ALL_ACTIVITIES[categoryKey] || []).length;
   return { places, activities, total: places + activities };
 }
+
+/**
+ * LAZY LOADING SUPPORT
+ * To reduce initial bundle size (68KB), pages can dynamically import categoryContent
+ * using React.lazy() or dynamic import() instead of static imports.
+ *
+ * MIGRATION GUIDE for CategoryDetail.tsx and similar:
+ * ───────────────────────────────────────────────────
+ * 1. Remove static import:
+ *    - import { getCategoryPlaces, getCategoryActivities, ... } from "@/data/categoryContent"
+ *
+ * 2. Use dynamic import in useEffect/useMemo:
+ *    const [places, setPlaces] = useState<CategoryPlace[]>([]);
+ *    const [activities, setActivities] = useState<CategoryActivity[]>([]);
+ *
+ *    useEffect(() => {
+ *      import('@/data/categoryContent').then(m => {
+ *        setPlaces(m.getCategoryPlaces(category));
+ *        setActivities(m.getCategoryActivities(category));
+ *      });
+ *    }, [category, activeSub]);
+ *
+ * 3. Expected bundle savings: 68KB reduction in initial JS chunk
+ *    Current: ~180KB (tagTree + categoryContent)
+ *    After:   ~112KB (tagTree only in initial chunk)
+ */
+
+export async function loadCategoryPlaces(categoryKey: string): Promise<CategoryPlace[]> {
+  return getCategoryPlaces(categoryKey);
+}
+
+export async function loadCategoryActivities(categoryKey: string): Promise<CategoryActivity[]> {
+  return getCategoryActivities(categoryKey);
+}
+
+export async function loadSubcategoryPlaces(categoryKey: string, subcategoryKey: string): Promise<CategoryPlace[]> {
+  return getSubcategoryPlaces(categoryKey, subcategoryKey);
+}
+
+export async function loadSubcategoryActivities(categoryKey: string, subcategoryKey: string): Promise<CategoryActivity[]> {
+  return getSubcategoryActivities(categoryKey, subcategoryKey);
+}

@@ -930,7 +930,11 @@
     "unread": "ulæste",
     "mark_all_read": "Markér alle som læst",
     "no_notifications": "Ingen notifikationer endnu",
-    "we_will_notify": "Vi giver dig besked når der sker noget"
+    "we_will_notify": "Vi giver dig besked når der sker noget",
+    "tag_match_title": "Nyt #{{tag}} event nær dig",
+    "event_invite_title": "{{name}} har inviteret dig",
+    "friend_request_title": "{{name}} vil følge dig",
+    "friend_request_body": "Tryk for at acceptere eller afvise"
   },
   "onboarding": {
     "welcome": "Velkommen til B-Social",

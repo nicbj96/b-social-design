@@ -3,11 +3,11 @@ import { useState, useMemo, useEffect, useRef } from "react";
 // Leaflet CSS is now loaded in index.html head for better performance
 // Previously loaded dynamically - see index.html <head> section
 
-import { MapContainer, TileLayer, Marker, useMap, CircleMarker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap, CircleMarker, useMapEvents } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllPlacesForMap, fetchEvents, type Place, type Event as SupabaseEvent } from "@/lib/supabase";
+import { fetchPlacesInViewport, fetchEvents, type Place, type Event as SupabaseEvent, type MapBounds } from "@/lib/supabase";
 import { useTranslation } from 'react-i18next';
 
 // Prevent Leaflet from injecting default marker image (red pin)
@@ -421,6 +421,23 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): num
 }
 
 /* ── Map internal components ── */
+
+// Component to listen for map movement and trigger viewport-based loading
+function MapEventListener({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
+  const map = useMapEvents({
+    moveend: () => {
+      const bounds = map.getBounds();
+      onBoundsChange({
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest(),
+      });
+    },
+  });
+  return null;
+}
+
 function ZoomControls() {
   const { t } = useTranslation();
   const map = useMap();
@@ -651,14 +668,59 @@ export default function Kort() {
   // Dynamic user location from profile city
   const [USER_LAT, USER_LNG] = CITY_COORDS[city] || [DEFAULT_LAT, DEFAULT_LNG];
 
-  // Fetch ALL Supabase places (paginated, lightweight columns)
-  const { data: supabasePlaces } = useQuery<Place[]>({
-    queryKey: ["supabase-places-map-all", mapCountry],
-    queryFn: () => fetchAllPlacesForMap(
-      mapCountry && mapCountry !== 'ALL' ? (mapCountry === 'DK' ? 'Denmark' : mapCountry) : undefined
-    ),
-    staleTime: 10 * 60 * 1000,
-  });
+  // Viewport-based loading state
+  const [supabasePlaces, setSupabasePlaces] = useState<Place[]>([]);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+  const [isLoadingViewport, setIsLoadingViewport] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cachedPlaceIdsRef = useRef<Set<string>>(new Set());
+
+  // Fetch places within current viewport bounds with debounce
+  const fetchViewportPlaces = async (bounds: MapBounds) => {
+    try {
+      setIsLoadingViewport(true);
+      const newPlaces = await fetchPlacesInViewport(
+        bounds,
+        mapCountry && mapCountry !== 'ALL' ? (mapCountry === 'DK' ? 'Denmark' : mapCountry) : undefined
+      );
+
+      // Merge with existing places, avoiding duplicates
+      setSupabasePlaces((prevPlaces) => {
+        const existingIds = new Set(prevPlaces.map(p => p.id));
+        const newUnique = newPlaces.filter(p => !existingIds.has(p.id));
+        return [...prevPlaces, ...newUnique];
+      });
+
+      // Track cached place IDs to avoid re-fetching
+      newPlaces.forEach(p => cachedPlaceIdsRef.current.add(p.id));
+    } catch (error) {
+      console.error("Error fetching viewport places:", error);
+    } finally {
+      setIsLoadingViewport(false);
+    }
+  };
+
+  // Handle map movement with debounce (500ms)
+  const handleMapBoundsChange = (bounds: MapBounds) => {
+    setMapBounds(bounds);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      fetchViewportPlaces(bounds);
+    }, 500);
+  };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Fetch Supabase events
   const { data: supabaseEvents } = useQuery<SupabaseEvent[]>({
@@ -884,6 +946,9 @@ export default function Kort() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
         />
 
+        {/* Map event listener for viewport-based loading */}
+        <MapEventListener onBoundsChange={handleMapBoundsChange} />
+
         {/* User location pulse */}
         <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
         <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
@@ -926,6 +991,14 @@ export default function Kort() {
       >
         <Navigation size={18} />
       </button>
+
+      {/* ── Loading Indicator for Viewport Loading ── */}
+      {isLoadingViewport && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[999] px-4 py-2 rounded-full bg-[#0f142d]/90 backdrop-blur-md border border-white/10 flex items-center gap-2" data-testid="loading-viewport">
+          <div className="w-3 h-3 rounded-full bg-[#4ECDC4] animate-pulse" />
+          <span className="text-white/70 text-xs font-medium">Loading places...</span>
+        </div>
+      )}
 
       {/* ── Pin Detail ── */}
       {selectedPin && <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />}

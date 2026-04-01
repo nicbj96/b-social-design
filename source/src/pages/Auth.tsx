@@ -197,14 +197,15 @@ export default function Auth() {
             {mode === "login" && (
               <button
                 type="button"
-                disabled={resetLoading}
+                disabled={resetLoading || !email.trim()}
                 onClick={async () => {
                   if (!email.trim()) {
-                    setError(t('auth.error_enter_email_for_reset'));
+                    setSuccessMsg(t('auth.error_enter_email_for_reset'));
                     return;
                   }
                   setResetLoading(true);
                   setError(null);
+                  setSuccessMsg(null);
                   const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: window.location.origin + window.location.pathname + "?returnTo=/auth",
                   });
@@ -215,7 +216,7 @@ export default function Auth() {
                     setSuccessMsg(t('auth.reset_email_sent'));
                   }
                 }}
-                className="text-[#4ECDC4] text-xs font-medium pl-1 hover:underline mt-1 py-2 inline-block"
+                className="text-[#4ECDC4] text-xs font-medium pl-1 hover:underline mt-1 py-2 inline-block disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
               >
                 {resetLoading ? t('auth.sending_reset') : t('auth.forgot')}
               </button>
