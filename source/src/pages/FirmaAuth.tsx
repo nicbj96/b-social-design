@@ -159,63 +159,89 @@ export default function FirmaAuth() {
   };
 
   return (
-    <div
-      className="relative min-h-svh flex flex-col"
-      style={{
-        background: "#060a0f",
-      }}
-    >
-      {/* Subtle teal gradient glow at top */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(ellipse at center top, rgba(78,205,196,0.06) 0%, transparent 60%)",
-          pointerEvents: "none",
-        }}
-      />
-      {/* Back button */}
-      <div className="pt-12 px-5">
-        <button
-          onClick={() => setLocation("/feed")}
-          className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/15 transition-colors"
-        >
-          <ArrowLeft size={18} className="text-white" />
-        </button>
-      </div>
+    <div className="relative min-h-svh flex flex-col" style={{ background: "#060a0f" }}>
 
-      <div className="flex-1 flex flex-col px-6 pb-16 pt-6 max-w-2xl mx-auto w-full">
-        {/* Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center mb-4">
-            <Building2 size={28} className="text-[#4ECDC4]" />
+      {/* ── Cinematic header ── */}
+      <div
+        className="relative w-full min-h-[40vh] bg-cover bg-center flex flex-col"
+        style={{ backgroundImage: "url('/aurora.jpg')" }}
+      >
+        {/* Gradient overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(6,10,15,0.3) 0%, rgba(6,10,15,0.85) 100%)",
+          }}
+        />
+
+        {/* Back button — overlaid top-left */}
+        <div className="relative z-10 pt-12 px-5">
+          <button
+            onClick={() => setLocation("/feed")}
+            className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/15 transition-colors backdrop-blur-sm"
+          >
+            <ArrowLeft size={18} className="text-white" />
+          </button>
+        </div>
+
+        {/* Header copy */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-end pb-10 px-6 text-center">
+          {/* Eyebrow */}
+          <div className="eyebrow mb-4">
+            <div className="eyebrow-line" />
+            B-Social Firma
+            <div className="eyebrow-line" />
           </div>
-          <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
-          <h1 className="text-white text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.5px" }}>{t('firma.become_firma')}</h1>
-          <p className="text-white/50 text-sm mt-1 text-center">
+
+          {/* Main heading */}
+          <h1
+            className="text-white text-4xl leading-tight mb-3"
+            style={{
+              fontFamily: "'Instrument Serif', Georgia, serif",
+              fontWeight: 400,
+              letterSpacing: "-0.5px",
+            }}
+          >
+            Bliv en del af{" "}
+            <em className="not-italic text-[#4ECDC4]">B-Social</em>
+          </h1>
+
+          <p className="text-white/55 text-sm max-w-sm">
             {t('firma.start_free')}
           </p>
-          <div className="flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+
+          <div className="flex items-center gap-1.5 mt-4 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
             <Gift size={12} className="text-emerald-400" />
             <span className="text-emerald-400 text-xs font-bold">{t('firma.all_plans_free_badge')}</span>
           </div>
         </div>
+      </div>
 
-        {!isLoggedIn && (
-          <div className="p-4 rounded-2xl bg-yellow-500/15 border border-yellow-500/25 text-yellow-300 text-sm text-center mb-6">
-            {t('auth.must_be_logged_in')}{" "}
-            <span
-              className="underline cursor-pointer font-semibold"
-              onClick={() => setLocation("/auth")}
-            >
-              {t('auth.login_here')}
-            </span>
-          </div>
-        )}
+      {/* ── Form area ── */}
+      <div className="flex-1 flex flex-col items-center px-5 pb-16 pt-8">
+        <div
+          className="w-full max-w-2xl rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+          }}
+        >
+          {/* Not-logged-in warning */}
+          {!isLoggedIn && (
+            <div className="p-4 rounded-2xl bg-yellow-500/15 border border-yellow-500/25 text-yellow-300 text-sm text-center">
+              {t('auth.must_be_logged_in')}{" "}
+              <span
+                className="underline cursor-pointer font-semibold"
+                onClick={() => setLocation("/auth")}
+              >
+                {t('auth.login_here')}
+              </span>
+            </div>
+          )}
 
-        {isLoggedIn && (
-          <>
-            {/* Form */}
+          {isLoggedIn && (
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
                 <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm text-center">
@@ -225,7 +251,9 @@ export default function FirmaAuth() {
 
               {/* Company info */}
               <div className="space-y-4">
-                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">{t('firma.company_info')}</h2>
+                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">
+                  {t('firma.company_info')}
+                </h2>
 
                 <div className="space-y-1">
                   <label className="text-white/60 text-xs font-medium pl-1">{t('firma.company_name')}</label>
@@ -277,9 +305,11 @@ export default function FirmaAuth() {
                 </div>
               </div>
 
-              {/* Plan selection — 3 new tiers */}
+              {/* Plan selection */}
               <div className="space-y-3">
-                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">{t('firma.choose_plan')}</h2>
+                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">
+                  {t('firma.choose_plan')}
+                </h2>
                 <p className="text-white/30 text-xs">{t('firma.all_plans_free')}</p>
                 <div className="grid grid-cols-1 gap-3">
                   {PLANS.map((plan) => {
@@ -345,25 +375,26 @@ export default function FirmaAuth() {
                 {loading ? t('firma.creating_company') : t('firma.create_account_free')}
               </button>
             </form>
-          </>
-        )}
+          )}
 
-        <p className="text-center text-white/30 text-xs mt-6 leading-relaxed">
-          {t('auth.terms')}{" "}
-          <span
-            className="text-white/50 underline cursor-pointer"
-            onClick={() => setLocation("/vilkaar")}
-          >
-            vilkår
-          </span>{" "}
-          og{" "}
-          <span
-            className="text-white/50 underline cursor-pointer"
-            onClick={() => setLocation("/privatlivspolitik")}
-          >
-            {t('auth.privacy')}
-          </span>
-        </p>
+          {/* Terms */}
+          <p className="text-center text-white/30 text-xs leading-relaxed">
+            {t('auth.terms')}{" "}
+            <span
+              className="text-white/50 underline cursor-pointer"
+              onClick={() => setLocation("/vilkaar")}
+            >
+              vilkår
+            </span>{" "}
+            og{" "}
+            <span
+              className="text-white/50 underline cursor-pointer"
+              onClick={() => setLocation("/privatlivspolitik")}
+            >
+              {t('auth.privacy')}
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   );

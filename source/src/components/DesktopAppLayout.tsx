@@ -60,7 +60,18 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
         }`}
         style={isActive ? { background: "rgba(78,205,196,0.08)", border: "1px solid rgba(78,205,196,0.1)" } : undefined}
       >
-        <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center`} style={isActive ? { opacity: 1 } : { opacity: 0.7 }}>
+        <div
+          className="relative w-8 h-8 rounded-lg flex items-center justify-center"
+          style={
+            isActive
+              ? {
+                  opacity: 1,
+                  boxShadow: "0 0 20px rgba(78,205,196,0.3)",
+                  background: "rgba(78,205,196,0.12)",
+                }
+              : { opacity: 0.7 }
+          }
+        >
           <Icon size={18} />
           {opts?.badge && opts.badge > 0 ? (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
@@ -76,28 +87,126 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
   return (
     <div className="dsk-app dark">
       {/* Desktop sidebar */}
-      <aside className="dsk-sidebar">
-        {/* Logo — premium serif */}
-        <Link href="/feed" className="block px-5 py-6 mb-1 cursor-pointer border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg text-[#060a0f]" style={{ background: "linear-gradient(135deg, #4ECDC4, #93c5fd)" , boxShadow: "0 2px 12px rgba(78,205,196,0.2)" }}>
-              B
+      <aside
+        className="dsk-sidebar"
+        style={{
+          background: "linear-gradient(180deg, #060a0f 0%, #060a0f 100%)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Subtle teal ambient glow at top of sidebar */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "220px",
+            background: "radial-gradient(ellipse 120% 30% at 50% 0%, rgba(78,205,196,0.04) 0%, transparent 60%)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+
+        {/* Logo area — premium version */}
+        <Link
+          href="/feed"
+          className="block px-5 py-6 mb-1 cursor-pointer border-b border-white/[0.06]"
+          style={{ position: "relative", zIndex: 1 }}
+        >
+          {/* Subtle radial glow behind logo */}
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "160px",
+              height: "80px",
+              background: "radial-gradient(ellipse at center, rgba(78,205,196,0.07) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }}
+          />
+          <div className="flex items-center gap-3" style={{ position: "relative" }}>
+            {/* Teal circle/dot glow logo mark */}
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              {/* Outer glow ring */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: "-4px",
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(78,205,196,0.18) 0%, transparent 70%)",
+                  pointerEvents: "none",
+                }}
+              />
+              {/* The dot itself */}
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle at 38% 38%, #7ef4ed 0%, #4ECDC4 55%, #2aa39c 100%)",
+                  boxShadow: "0 0 18px rgba(78,205,196,0.45), 0 0 6px rgba(78,205,196,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "'Instrument Serif', Georgia, serif",
+                    fontSize: "17px",
+                    color: "#060a0f",
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    letterSpacing: "-0.5px",
+                  }}
+                >
+                  B
+                </span>
+              </div>
             </div>
             <div>
-              <span className="font-serif text-xl tracking-tight" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>B-Social</span>
-              <span className="block text-[10px] uppercase tracking-[2px] text-[#4ECDC4]/60 font-semibold mt-0.5">Norden</span>
+              <span
+                style={{
+                  fontFamily: "'Instrument Serif', Georgia, serif",
+                  fontSize: "22px",
+                  color: "#f0fffe",
+                  letterSpacing: "-0.3px",
+                  lineHeight: 1.1,
+                  display: "block",
+                }}
+              >
+                B-Social
+              </span>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "#4ECDC4",
+                  fontWeight: 600,
+                  marginTop: "3px",
+                  lineHeight: 1,
+                }}
+              >
+                Norden
+              </span>
             </div>
           </div>
         </Link>
 
         {/* Main navigation */}
-        <nav className="flex-1 px-3">
+        <nav className="flex-1 px-3" style={{ position: "relative", zIndex: 1 }}>
           {NAV_MAIN.map((item) => navLink(item.href, item.icon, t(item.key), item.key === "nav.beskeder" ? { badge: unreadMessages } : undefined))}
           {/* Invitér — right under Beskeder/Min Side */}
           {navLink("/inviter", UserPlus, "Invitér")}
 
           {/* Separator */}
-          <div className="h-px bg-white/10 my-3 mx-2" />
+          <div className="h-px bg-white/[0.06] my-3 mx-2" />
 
           {/* Notifikationer */}
           {navLink("/notifikationer", Bell, t("nav.notifications") || "Notifikationer", { badge: unreadCount })}
@@ -110,7 +219,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
         </nav>
 
         {/* Bottom section: Auth + Language + Version */}
-        <div className="px-3 space-y-2 pb-2">
+        <div className="px-3 space-y-2 pb-2" style={{ position: "relative", zIndex: 1 }}>
           {/* Login / Logout button */}
           {authLoading ? (
             <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/5 animate-pulse">
@@ -123,7 +232,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
           ) : loggedIn ? (
             <div className="space-y-1">
               {/* User info */}
-              <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/5">
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/[0.04]" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="w-8 h-8 rounded-full bg-[#4ECDC4]/20 flex items-center justify-center text-[#4ECDC4] text-xs font-bold">
                   {profile?.name?.charAt(0)?.toUpperCase() || "?"}
                 </div>
@@ -148,20 +257,34 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
               </div>
             </div>
           ) : (
-            <Link
-              href="/auth"
-              className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[#060a0f] text-sm font-semibold hover:opacity-90 transition-all"
-              style={{ background: "linear-gradient(135deg, #4ECDC4, #93c5fd)", boxShadow: "0 4px 20px rgba(78,205,196,0.2)" }}
+            /* Premium gradient-border login CTA */
+            <div
+              style={{
+                padding: "1px",
+                borderRadius: "13px",
+                background: "linear-gradient(135deg, rgba(78,205,196,0.5) 0%, rgba(147,197,253,0.3) 50%, rgba(78,205,196,0.15) 100%)",
+                boxShadow: "0 4px 24px rgba(78,205,196,0.12)",
+              }}
             >
-              <LogIn size={16} />
-              Log ind / Opret konto
-            </Link>
+              <Link
+                href="/auth"
+                className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold transition-all"
+                style={{
+                  background: "linear-gradient(135deg, rgba(78,205,196,0.12) 0%, rgba(147,197,253,0.06) 100%)",
+                  color: "#4ECDC4",
+                  borderRadius: "12px",
+                }}
+              >
+                <LogIn size={16} />
+                Log ind / Opret konto
+              </Link>
+            </div>
           )}
 
           {/* Language switcher */}
           <LanguageSwitcher variant="toggle" />
         </div>
-        <div className="px-4 pb-3 text-white/15 text-xs">
+        <div className="px-4 pb-3 text-white/15 text-xs" style={{ position: "relative", zIndex: 1 }}>
           v1.0 beta
         </div>
       </aside>
@@ -171,7 +294,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
         {children}
       </main>
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav — unchanged */}
       <div className="dsk-bottom-nav glass-nav">
         <div className="flex items-center justify-around h-20">
           {NAV_MAIN.map((item) => {
