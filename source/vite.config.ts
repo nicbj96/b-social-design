@@ -17,7 +17,6 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
-      input: path.resolve(import.meta.dirname, "app.html"),
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react/jsx-runtime'],

@@ -40,6 +40,7 @@ const Henvisning = lazy(() => import("@/pages/Henvisning"));
 const InviterVenner = lazy(() => import("@/pages/InviterVenner"));
 const Notifikationer = lazy(() => import("@/pages/Notifikationer"));
 const WhitelabelLanding = lazy(() => import("@/pages/WhitelabelLanding"));
+const Landing = lazy(() => import("@/pages/Landing"));
 // Firma pages
 const FirmaAuth = lazy(() => import("@/pages/FirmaAuth"));
 const FirmaDashboard = lazy(() => import("@/pages/FirmaDashboard"));
@@ -54,7 +55,6 @@ function MainRouter() {
     <DesktopAppLayout>
       <Suspense fallback={<PageLoader />}>
         <Switch>
-          <Route path="/" component={Feed} />
           <Route path="/test" component={Feed} />
           <Route path="/feed" component={Feed} />
           <Route path="/udforsk" component={Udforsk} />
@@ -104,6 +104,8 @@ function RootRouter() {
   const isPrivatlivspolitik = location === "/privatlivspolitik";
   const isVilkaar = location === "/vilkaar";
   const isWhitelabel = location === "/whitelabel";
+  const isHome = location === "/";
+  if (isHome) return <Suspense fallback={<PageLoader />}><Landing /></Suspense>;
   if (isWhitelabel) return <Suspense fallback={<PageLoader />}><WhitelabelLanding /></Suspense>;
   if (isPrivatlivspolitik) return <Suspense fallback={<PageLoader />}><Privatlivspolitik /></Suspense>;
   if (isVilkaar) return <Suspense fallback={<PageLoader />}><Vilkaar /></Suspense>;
