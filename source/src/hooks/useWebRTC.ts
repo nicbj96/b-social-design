@@ -18,6 +18,7 @@ export interface UseWebRTCReturn {
   remoteStream: MediaStream | null;
   isMuted: boolean;
   isVideoOff: boolean;
+  isIncomingVideo: boolean;
   callDuration: number;
   startCall: (withVideo: boolean) => Promise<void>;
   acceptCall: () => Promise<void>;
@@ -47,8 +48,10 @@ export function useWebRTC(
   const remoteOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
   const remoteIdRef = useRef<string | null>(null);
   const withVideoRef = useRef(false);
+  const [isIncomingVideo, setIsIncomingVideo] = useState(false);
   const iceCandidateBuffer = useRef<RTCIceCandidateInit[]>([]);
   const remoteDescriptionSet = useRef(false);
+  const remoteStreamRef = useRef<MediaStream>(new MediaStream());
 
   // Clean up media tracks
   const stopMediaTracks = (stream: MediaStream | null) => {
@@ -139,11 +142,11 @@ export function useWebRTC(
     };
 
     pc.ontrack = (event) => {
-      console.log('[WebRTC] ontrack event received');
-      const [stream] = event.streams;
-      if (stream) {
-        setRemoteStream(stream);
-      }
+      console.log('[WebRTC] ontrack received:', event.track.kind, 'track id:', event.track.id);
+      // Always add the track to our own MediaStream to avoid browser stream reference issues
+      remoteStreamRef.current.addTrack(event.track);
+      // Force React to pick up the updated stream by creating a new reference
+      setRemoteStream(new MediaStream(remoteStreamRef.current.getTracks()));
     };
 
     pc.oniceconnectionstatechange = () => {
@@ -220,6 +223,11 @@ export function useWebRTC(
     }
 
     try {
+      // IMPORTANT: Set remote description FIRST so transceivers are created from the offer
+      await peerConnection.current.setRemoteDescription(remoteOfferRef.current);
+      remoteDescriptionSet.current = true;
+      await flushIceCandidateBuffer();
+
       // Get user media
       const mediaConstraints = {
         audio: true,
@@ -228,15 +236,10 @@ export function useWebRTC(
       const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
       setLocalStream(stream);
 
-      // Add local tracks to peer connection
+      // Add local tracks to peer connection (reuses transceivers from the offer)
       stream.getTracks().forEach(track => {
         peerConnection.current!.addTrack(track, stream);
       });
-
-      // Set remote description and flush buffered ICE candidates
-      await peerConnection.current.setRemoteDescription(remoteOfferRef.current);
-      remoteDescriptionSet.current = true;
-      await flushIceCandidateBuffer();
 
       // Create and send answer
       const answer = await peerConnection.current.createAnswer();
@@ -276,6 +279,8 @@ export function useWebRTC(
     remoteIdRef.current = null;
     iceCandidateBuffer.current = [];
     remoteDescriptionSet.current = false;
+    remoteStreamRef.current = new MediaStream();
+    setIsIncomingVideo(false);
   };
 
   // Toggle mute
@@ -318,6 +323,7 @@ export function useWebRTC(
           console.log('[WebRTC] Received offer');
           remoteOfferRef.current = payload.sdp || null;
           withVideoRef.current = payload.withVideo || false;
+          setIsIncomingVideo(payload.withVideo || false);
 
           // Create peer connection on receiving offer
           if (!peerConnection.current) {
@@ -382,6 +388,7 @@ export function useWebRTC(
     remoteStream,
     isMuted,
     isVideoOff,
+    isIncomingVideo,
     callDuration,
     startCall,
     acceptCall,

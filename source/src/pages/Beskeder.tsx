@@ -150,6 +150,13 @@ export default function Beskeder() {
   const [isVideoCall, setIsVideoCall] = useState(false);
   const webrtc = useWebRTC(activeConvoId, myId);
 
+  // Sync isVideoCall when receiving an incoming video call
+  useEffect(() => {
+    if (webrtc.callState === 'ringing' && webrtc.isIncomingVideo) {
+      setIsVideoCall(true);
+    }
+  }, [webrtc.callState, webrtc.isIncomingVideo]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
