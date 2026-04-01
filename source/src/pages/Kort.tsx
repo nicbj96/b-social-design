@@ -461,6 +461,23 @@ function MapRecenter({ center, zoom }: { center: [number, number]; zoom: number 
   return null;
 }
 
+/** Fix Leaflet tile rendering — invalidateSize on mount + resize */
+function MapResizeFix() {
+  const map = useMap();
+  useEffect(() => {
+    // Immediate + delayed invalidateSize to handle async layout
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 100);
+    const t2 = setTimeout(() => map.invalidateSize(), 500);
+    // ResizeObserver for sidebar/layout changes
+    const container = map.getContainer();
+    const ro = new ResizeObserver(() => { map.invalidateSize(); });
+    ro.observe(container);
+    return () => { clearTimeout(t1); clearTimeout(t2); ro.disconnect(); };
+  }, [map]);
+  return null;
+}
+
 const GEOAPIFY_KEY = "c6ed42e8addb457ebf24265a045b892b";
 
 /* ── Inline nearby hotels for pin detail ── */
@@ -963,6 +980,7 @@ export default function Kort() {
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
         />
+        <MapResizeFix />
 
         {/* Map event listener for viewport-based loading */}
         <MapEventListener onBoundsChange={handleMapBoundsChange} />

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { Search, MapPin, ChevronRight, X, Users, Heart, TrendingUp, Star, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Event } from "@/lib/data";
@@ -311,7 +311,6 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
 export default function Udforsk() {
   const { t } = useTranslation();
   const { selectedTags } = useTags();
-  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -580,8 +579,7 @@ export default function Udforsk() {
           </section>
 
           {/* ══ Kategori-chips — kompakte, scrollbare ══ */}
-          {!activeCategory && (
-            <section className="px-5">
+          <section className="px-5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm">🗂️</span>
                 <h2 className="text-white font-semibold text-sm">{t('udforsk.categories')}</h2>
@@ -590,27 +588,31 @@ export default function Udforsk() {
                 {ALL_CATEGORIES.map((cat) => (
                   <button
                     key={cat.key}
-                    onClick={() => setLocation(`/kategori/${cat.key}`)}
-                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl glass-card hover:bg-white/10 transition-all text-left min-h-[44px]"
+                    onClick={() => pickTag(cat.key)}
+                    className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all text-left min-h-[44px] ${
+                      activeCategory === cat.key
+                        ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/20"
+                        : "glass-card hover:bg-white/10"
+                    }`}
                     data-testid={`cat-chip-${cat.key}`}
                   >
                     <span className="text-base">{cat.emoji}</span>
-                    <span className="text-white/80 text-xs font-medium">{cat.label}</span>
+                    <span className={`text-xs font-medium ${activeCategory === cat.key ? "text-[#0a0f1a]" : "text-white/80"}`}>{cat.label}</span>
                   </button>
                 ))}
-                <button
-                  onClick={() => setLocation('/kort')}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#003580] hover:bg-[#00264D] transition-all text-left min-h-[44px] border border-[#003580]"
-                >
-                  <span className="text-base">🏨</span>
-                  <span className="text-white text-xs font-medium">Hoteller & overnatning</span>
-                </button>
+                <Link href="/kort">
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#003580] hover:bg-[#00264D] transition-all text-left min-h-[44px] border border-[#003580]"
+                  >
+                    <span className="text-base">🏨</span>
+                    <span className="text-white text-xs font-medium">Hoteller & overnatning</span>
+                  </button>
+                </Link>
               </div>
             </section>
-          )}
 
           {/* ═══ STEDER FRA DATABASEN ═══ */}
-          {!activeCategory && <SupabasePlacesSection activeCountry={activeCountry} />}
+          <SupabasePlacesSection activeCountry={activeCountry} />
 
           {/* ── Trending nær dig ── */}
           <section className="px-5">
