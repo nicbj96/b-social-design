@@ -2,7 +2,7 @@
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://rbengtfrthqdfbcdcugp.supabase.co";
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const OTM_API_KEY = Deno.env.get("OPENTRIPMAP_API_KEY");
+const OTM_API_KEY = Deno.env.get("OPENTRIPMAP_API_KEY") || "5ae2e3f221c38a28845f05b6";
 const OTM_BASE = "https://api.opentripmap.org/0.1/en/places";
 
 // ---------------------------------------------------------------------------
@@ -254,14 +254,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  if (!OTM_API_KEY) {
-    console.error("Missing OPENTRIPMAP_API_KEY environment variable");
-    return new Response(JSON.stringify({ error: "Server configuration error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
     });
   }
 
