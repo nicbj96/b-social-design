@@ -6,6 +6,8 @@ import { fetchNews, formatNewsTime, type NewsItem } from "@/lib/newsEngine";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { logger } from "@/lib/logger";
+import { useWebRTC } from "@/hooks/useWebRTC";
+import CallModal from "@/components/CallModal";
 
 /* ── Types ── */
 
@@ -40,6 +42,14 @@ interface ConversationDisplay {
   unread: boolean;
 }
 
+interface MessageReaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+}
+
 /* ── Helpers ── */
 
 function formatTime(iso: string): string {
@@ -65,6 +75,28 @@ function defaultAvatar(name: string | null): string {
   const initial = (name ?? "?")[0]?.toUpperCase() ?? "?";
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initial)}&background=4ECDC4&color=0a0f1a&size=80&bold=true`;
 }
+
+const EMOJI_CATEGORIES = {
+  SMILEYS: ["😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "😉", "😊", "😇", "🥰", "😍", "🤩", "😘", "😗", "😚", "😙", "🥲", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🫡", "🤐", "🤨", "😐", "😑", "😶", "🫥", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢", "🤮", "🥴", "😵", "🤯", "🤠", "🥳", "🥸", "😎", "🤓", "🧐", "😕", "🫤", "😟", "🙁", "😮", "😯", "😲", "😳", "🥺", "🥹", "😦", "😧", "😨", "😰", "😥", "😢", "😭", "😱", "😖", "😣", "😞", "😓", "😩", "😫", "🥱", "😤", "😡", "😠", "🤬", "😈", "👿", "💀", "☠️", "💩", "🤡", "👹", "👺", "👻", "👽", "👾", "🤖"],
+  HANDS: ["👋", "🤚", "🖐️", "✋", "🖖", "🫱", "🫲", "🫳", "🫴", "👌", "🤌", "🤏", "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉", "👆", "🖕", "👇", "☝️", "🫵", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "🫶", "👐", "🤲", "🤝", "🙏", "✍️", "💅", "🤳", "💪"],
+  HEARTS: ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", "💖", "💘", "💝"],
+  NATURE: ["🌸", "🌺", "🌻", "🌹", "🌷", "🌼", "💐", "🍀", "🌿", "🌱", "🌳", "🌲", "🍃", "🍂", "🍁", "🌾", "🌵", "🎋", "🎍", "🍄", "🐚", "🌊", "💧", "🔥", "⭐", "🌟", "✨", "⚡", "☀️", "🌙", "🌈", "☁️", "🌤️", "🌥️", "🌦️", "❄️", "💨", "🌀"],
+  FOOD: ["🍕", "🍔", "🍟", "🌭", "🍿", "🧀", "🥚", "🍳", "🥞", "🧇", "🥓", "🍗", "🍖", "🥩", "🌮", "🌯", "🫔", "🥙", "🧆", "🥗", "🥘", "🫕", "🍝", "🍜", "🍛", "🍣", "🍱", "🥟", "🍤", "🍙", "🍚", "🍘", "🍥", "🥮", "🍡", "🧁", "🍰", "🎂", "🍮", "🍭", "🍬", "🍫", "🍩", "🍪", "🍯", "🍺", "🍻", "🥂", "🍷", "🍸", "🍹", "🧃", "☕", "🍵", "🧋"],
+  ACTIVITIES: ["⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🏓", "🏸", "🥅", "⛳", "🏹", "🎣", "🥊", "🥋", "🎿", "⛷️", "🏂", "🏋️", "🎮", "🎯", "🎲", "🧩", "🎭", "🎨", "🎬", "🎤", "🎧", "🎼", "🎵", "🎶", "🎹", "🥁", "🎷", "🎺", "🎸", "🪕"],
+  OBJECTS: ["💡", "🔦", "📱", "💻", "⌨️", "🖥️", "🖨️", "📷", "📹", "🎥", "📞", "📺", "📻", "⏰", "⌚", "💰", "💳", "💎", "🔑", "🗝️", "🔒", "🔓", "📦", "📫", "📬", "✉️", "📝", "📄", "📋", "📌", "📎", "🔗", "✂️", "🗑️", "🧲", "🔧", "🔨", "⚙️", "🧰"],
+  FLAGS: ["🇩🇰", "🇩🇪", "🇬🇧", "🇺🇸", "🇫🇷", "🇪🇸", "🇮🇹", "🇳🇴", "🇸🇪", "🇫🇮", "🇳🇱", "🇧🇪", "🇦🇹", "🇨🇭", "🇵🇹", "🇧🇷", "🇯🇵", "🇰🇷", "🇨🇳", "🇮🇳", "🇦🇺", "🏳️‍🌈"],
+};
+
+const CATEGORY_ICONS: Record<string, string> = {
+  SMILEYS: "😀",
+  HANDS: "👋",
+  HEARTS: "❤️",
+  NATURE: "🌸",
+  FOOD: "🍕",
+  ACTIVITIES: "🎮",
+  OBJECTS: "💡",
+  FLAGS: "🇩🇰",
+};
 
 /* ── Component ── */
 
@@ -97,26 +129,259 @@ export default function Beskeder() {
   const [allNews, setAllNews] = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
 
-  // Toast for "coming soon" messages
+  // Toast for notifications
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
 
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedEmojiCategory, setSelectedEmojiCategory] = useState<keyof typeof EMOJI_CATEGORIES>("SMILEYS");
+  const [reactionPickerMsgId, setReactionPickerMsgId] = useState<string | null>(null);
+  const [reactions, setReactions] = useState<Record<string, MessageReaction[]>>({});
+
+  // File attachments
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Chat menu
+  const [showChatMenu, setShowChatMenu] = useState(false);
+
+  // WebRTC calls
+  const [isVideoCall, setIsVideoCall] = useState(false);
+  const webrtc = useWebRTC(activeConvoId ?? "", myId ?? "");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const reactionPickerRef = useRef<HTMLDivElement>(null);
+  const chatMenuRef = useRef<HTMLDivElement>(null);
 
   const activeConvo = conversations.find(c => c.id === activeConvoId) ?? null;
 
-  const commonEmojis = ["😀", "😂", "🥰", "😍", "❤️", "👍", "👋", "🎉", "🔥", "✨", "😎", "🤔", "😅", "🙏", "💪", "😢", "😡", "🥳", "💯", "👀", "🤝", "☀️", "🌙", "🎶"];
-
   /* ── Toast helper ── */
-  const showComingSoonToast = (msg: string) => {
+  const showToastMsg = (msg: string) => {
     setToastMsg(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   };
+
+  /* ── File attachment handler ── */
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !activeConvoId || !myId) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      showToastMsg("Filen er for stor (maks 10MB)");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const filePath = `${activeConvoId}/${Date.now()}_${file.name}`;
+      const { data, error: uploadError } = await supabase.storage
+        .from("chat-attachments")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage
+        .from("chat-attachments")
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicData.publicUrl;
+      const fileMessage = `[file:${file.name}:${file.type}:${publicUrl}]`;
+
+      // Send message with file reference
+      const tempId = crypto.randomUUID();
+      const optimistic: MessageRow = {
+        id: tempId,
+        conversation_id: activeConvoId,
+        sender_id: myId,
+        content: fileMessage,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, optimistic]);
+
+      const { error: msgError } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: activeConvoId,
+          sender_id: myId,
+          content: fileMessage,
+        });
+
+      if (msgError) {
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        throw msgError;
+      }
+
+      // Insert attachment record
+      await supabase.from("message_attachments").insert({
+        message_id: tempId,
+        file_name: file.name,
+        file_type: file.type,
+        file_url: publicUrl,
+        file_size: file.size,
+      });
+
+      // Update conversation list
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === activeConvoId
+            ? { ...c, lastMessage: `📎 ${file.name}`, lastMessageTime: new Date().toISOString() }
+            : c
+        )
+      );
+
+      showToastMsg("Fil vedhæftet");
+    } catch (err) {
+      console.error("File upload error:", err);
+      showToastMsg("Fejl ved upload af fil");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  /* ── Emoji reaction handlers ── */
+  const loadReactions = useCallback(async (msgIds: string[]) => {
+    if (msgIds.length === 0) return;
+    try {
+      const { data, error } = await supabase
+        .from("message_reactions")
+        .select("*")
+        .in("message_id", msgIds);
+
+      if (!error && data) {
+        const grouped: Record<string, MessageReaction[]> = {};
+        data.forEach(r => {
+          if (!grouped[r.message_id]) grouped[r.message_id] = [];
+          grouped[r.message_id].push(r);
+        });
+        setReactions(grouped);
+      }
+    } catch (err) {
+      console.error("Load reactions error:", err);
+    }
+  }, []);
+
+  const addReaction = async (messageId: string, emoji: string) => {
+    if (!myId) return;
+    try {
+      const { error } = await supabase.from("message_reactions").insert({
+        message_id: messageId,
+        user_id: myId,
+        emoji,
+      });
+
+      if (!error) {
+        setReactions(prev => ({
+          ...prev,
+          [messageId]: [
+            ...(prev[messageId] ?? []),
+            {
+              id: crypto.randomUUID(),
+              message_id: messageId,
+              user_id: myId,
+              emoji,
+              created_at: new Date().toISOString(),
+            },
+          ],
+        }));
+        setReactionPickerMsgId(null);
+      }
+    } catch (err) {
+      console.error("Add reaction error:", err);
+    }
+  };
+
+  const removeReaction = async (messageId: string, emoji: string) => {
+    if (!myId) return;
+    try {
+      const { error } = await supabase
+        .from("message_reactions")
+        .delete()
+        .eq("message_id", messageId)
+        .eq("emoji", emoji)
+        .eq("user_id", myId);
+
+      if (!error) {
+        setReactions(prev => ({
+          ...prev,
+          [messageId]: (prev[messageId] ?? []).filter(r => !(r.emoji === emoji && r.user_id === myId)),
+        }));
+      }
+    } catch (err) {
+      console.error("Remove reaction error:", err);
+    }
+  };
+
+  /* ── File message rendering helper ── */
+  const renderFileAttachment = (content: string) => {
+    const fileMatch = content.match(/^\[file:(.+?):(.+?):(.+?)\]$/);
+    if (!fileMatch) return null;
+
+    const [, fileName, fileType, fileUrl] = fileMatch;
+
+    if (fileType.startsWith("image/")) {
+      return (
+        <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
+          <img
+            src={fileUrl}
+            alt={fileName}
+            className="max-w-xs rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+            loading="lazy"
+          />
+        </a>
+      );
+    }
+
+    if (fileType === "application/pdf") {
+      return (
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg hover:bg-white/15 transition-colors"
+        >
+          <span className="text-xl">📄</span>
+          <span className="text-sm font-medium truncate max-w-xs">{fileName}</span>
+        </a>
+      );
+    }
+
+    return (
+      <a
+        href={fileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 text-blue-400 hover:underline text-sm"
+      >
+        📎 {fileName}
+      </a>
+    );
+  };
+
+  /* ── Close menus on outside click ── */
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(e.target as Node) &&
+        (e.target as HTMLElement)?.closest("button") !== inputRef.current?.parentElement?.querySelector("[aria-label='emoji']")
+      ) {
+        setShowEmojiPicker(false);
+      }
+      if (reactionPickerRef.current && !reactionPickerRef.current.contains(e.target as Node)) {
+        setReactionPickerMsgId(null);
+      }
+      if (chatMenuRef.current && !chatMenuRef.current.contains(e.target as Node)) {
+        setShowChatMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
 
   /* ── Emoji picker handler ── */
   const handleEmojiClick = (emoji: string) => {
@@ -129,7 +394,6 @@ export default function Beskeder() {
     if (!myId) { setConvoLoading(false); return; }
 
     try {
-      // Get conversation IDs the user participates in
       const { data: parts, error: partsErr } = await supabase
         .from("conversation_participants")
         .select("conversation_id")
@@ -142,12 +406,9 @@ export default function Beskeder() {
       }
 
       const convoIds = parts.map(p => p.conversation_id);
-
-      // For each conversation, get the other participant's profile + last message
       const convos: ConversationDisplay[] = [];
 
       for (const cid of convoIds) {
-        // Other participant
         const { data: otherParts } = await supabase
           .from("conversation_participants")
           .select("user_id")
@@ -166,7 +427,6 @@ export default function Beskeder() {
           if (prof) otherUser = prof;
         }
 
-        // Last message
         const { data: lastMsgs } = await supabase
           .from("messages")
           .select("content, created_at")
@@ -175,17 +435,21 @@ export default function Beskeder() {
           .limit(1);
 
         const lastMsg = lastMsgs?.[0];
+        let displayMsg = lastMsg?.content ?? t('beskeder.no_messages_yet');
+        if (displayMsg.match(/^\[file:.+?:.+?:.+?\]$/)) {
+          const match = displayMsg.match(/^\[file:(.+?):/);
+          displayMsg = `📎 ${match?.[1] ?? "Fil"}`;
+        }
 
         convos.push({
           id: cid,
           otherUser,
-          lastMessage: lastMsg?.content ?? t('beskeder.no_messages_yet'),
+          lastMessage: displayMsg,
           lastMessageTime: lastMsg?.created_at ?? new Date().toISOString(),
           unread: false,
         });
       }
 
-      // Sort by last message time (newest first)
       convos.sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime());
       setConversations(convos);
     } catch (err) {
@@ -206,9 +470,10 @@ export default function Beskeder() {
 
     if (!error && data) {
       setMessages(data);
+      await loadReactions(data.map(m => m.id));
     }
     setMsgsLoading(false);
-  }, []);
+  }, [loadReactions]);
 
   /* ── Initial load ── */
   useEffect(() => {
@@ -224,6 +489,7 @@ export default function Beskeder() {
       loadMessages(activeConvoId);
     } else {
       setMessages([]);
+      setReactions({});
     }
   }, [activeConvoId, loadMessages]);
 
@@ -244,9 +510,7 @@ export default function Beskeder() {
         (payload: any) => {
           const newMsg = payload.new as MessageRow;
           setMessages(prev => {
-            // Skip if already have this exact message
             if (prev.some(m => m.id === newMsg.id)) return prev;
-            // Replace optimistic message (same sender + content within 10s) with real one
             const optimisticIdx = prev.findIndex(m =>
               m.sender_id === newMsg.sender_id &&
               m.content === newMsg.content &&
@@ -259,7 +523,6 @@ export default function Beskeder() {
             }
             return [...prev, newMsg];
           });
-          // Update last message in conversation list
           setConversations(prev =>
             prev.map(c =>
               c.id === activeConvoId
@@ -276,6 +539,51 @@ export default function Beskeder() {
     };
   }, [activeConvoId]);
 
+  /* ── Realtime subscription for reactions ── */
+  useEffect(() => {
+    if (!activeConvoId) return;
+
+    const channel = supabase
+      .channel(`reactions:${activeConvoId}`)
+      .on(
+        "postgres_changes" as any,
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "message_reactions",
+          filter: `message_id=in.(${messages.map(m => `"${m.id}"`).join(",")})`,
+        },
+        (payload: any) => {
+          const newReaction = payload.new as MessageReaction;
+          setReactions(prev => ({
+            ...prev,
+            [newReaction.message_id]: [...(prev[newReaction.message_id] ?? []), newReaction],
+          }));
+        }
+      )
+      .on(
+        "postgres_changes" as any,
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "message_reactions",
+          filter: `message_id=in.(${messages.map(m => `"${m.id}"`).join(",")})`,
+        },
+        (payload: any) => {
+          const deletedReaction = payload.old as MessageReaction;
+          setReactions(prev => ({
+            ...prev,
+            [deletedReaction.message_id]: (prev[deletedReaction.message_id] ?? []).filter(r => r.id !== deletedReaction.id),
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeConvoId, messages]);
+
   /* ── Scroll to bottom on new messages ── */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -289,7 +597,6 @@ export default function Beskeder() {
     setMessageText("");
     setSending(true);
 
-    // Optimistic insert
     const tempId = crypto.randomUUID();
     const optimistic: MessageRow = {
       id: tempId,
@@ -310,10 +617,8 @@ export default function Beskeder() {
 
     if (error) {
       console.error("Send message error:", error);
-      // Remove optimistic message on failure
       setMessages(prev => prev.filter(m => m.id !== tempId));
     } else {
-      // Update conversation list last message
       setConversations(prev =>
         prev.map(c =>
           c.id === activeConvoId
@@ -367,7 +672,6 @@ export default function Beskeder() {
     setConvoError(null);
 
     try {
-      // Check if conversation already exists
       logger.log("[Beskeder] Checking existing conversations...");
       const { data: myConvos, error: fetchErr } = await supabase
         .from("conversation_participants")
@@ -394,7 +698,6 @@ export default function Beskeder() {
         }
       }
 
-      // Create new conversation
       logger.log("[Beskeder] Creating new conversation...");
       const { data: newConvo, error: convoErr } = await supabase
         .from("conversations")
@@ -409,7 +712,6 @@ export default function Beskeder() {
         return;
       }
 
-      // Add both participants
       const { error: insertErr } = await supabase.from("conversation_participants").insert([
         { conversation_id: newConvo.id, user_id: myId },
         { conversation_id: newConvo.id, user_id: otherUserId },
@@ -431,6 +733,33 @@ export default function Beskeder() {
       setConvoError("Fejl: " + (err?.message || String(err)));
     } finally {
       setStartingConvo(null);
+    }
+  };
+
+  /* ── Delete conversation (soft delete) ── */
+  const handleDeleteConversation = () => {
+    if (!activeConvoId) return;
+    setConversations(prev => prev.filter(c => c.id !== activeConvoId));
+    setActiveConvoId(null);
+    setShowChatMenu(false);
+    showToastMsg("Samtale slettet");
+  };
+
+  /* ── Block user ── */
+  const handleBlockUser = async () => {
+    if (!activeConvo || !myId) return;
+    try {
+      await supabase.from("blocked_users").insert({
+        user_id: myId,
+        blocked_user_id: activeConvo.otherUser.user_id,
+      });
+      setConversations(prev => prev.filter(c => c.id !== activeConvoId));
+      setActiveConvoId(null);
+      setShowChatMenu(false);
+      showToastMsg("Bruger blokeret");
+    } catch (err) {
+      console.error("Block user error:", err);
+      showToastMsg("Fejl ved blokering");
     }
   };
 
@@ -579,25 +908,57 @@ export default function Beskeder() {
                   </h3>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 relative">
                 <button
-                  onClick={() => showComingSoonToast("Opkald kommer snart")}
+                  onClick={() => { setIsVideoCall(false); webrtc.startCall(false); }}
                   className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                  title="Starte opkald"
                 >
                   <Phone size={16} />
                 </button>
                 <button
-                  onClick={() => showComingSoonToast("Videoopkald kommer snart")}
+                  onClick={() => { setIsVideoCall(true); webrtc.startCall(true); }}
                   className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                  title="Starte videoopkald"
                 >
                   <Video size={16} />
                 </button>
-                <button
-                  onClick={() => showComingSoonToast("Flere muligheder kommer snart")}
-                  className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-                >
-                  <MoreVertical size={16} />
-                </button>
+                <div className="relative" ref={chatMenuRef}>
+                  <button
+                    onClick={() => setShowChatMenu(!showChatMenu)}
+                    className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  {showChatMenu && (
+                    <div className="absolute right-0 top-full mt-1 bg-[#0d1225] border border-white/10 rounded-xl shadow-lg z-50 overflow-hidden">
+                      <button
+                        onClick={handleDeleteConversation}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors"
+                      >
+                        Slet samtale
+                      </button>
+                      <button
+                        onClick={handleBlockUser}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors border-t border-white/10"
+                      >
+                        Bloker bruger
+                      </button>
+                      <button
+                        onClick={() => { showToastMsg("Rapport sendt"); setShowChatMenu(false); }}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors border-t border-white/10"
+                      >
+                        Rapportér
+                      </button>
+                      <button
+                        onClick={() => { showToastMsg("Notifikationer slået fra"); setShowChatMenu(false); }}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors border-t border-white/10"
+                      >
+                        Slå notifikationer fra
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -614,18 +975,89 @@ export default function Beskeder() {
               ) : (
                 messages.map(msg => {
                   const isMe = msg.sender_id === myId;
+                  const isFileMessage = msg.content.match(/^\[file:.+?:.+?:.+?\]$/);
+                  const msgReactions = reactions[msg.id] ?? [];
+                  const reactionGroups = msgReactions.reduce((acc, r) => {
+                    const group = acc.find(g => g.emoji === r.emoji);
+                    if (group) {
+                      group.reactions.push(r);
+                    } else {
+                      acc.push({ emoji: r.emoji, reactions: [r] });
+                    }
+                    return acc;
+                  }, [] as Array<{ emoji: string; reactions: MessageReaction[] }>);
+
                   return (
-                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
-                        isMe ? "bg-[#4ECDC4] text-[#0a0f1a]" : "bg-white/8 text-white/90"
-                      }`}>
-                        <p className="mb-1">{msg.content}</p>
-                        <div className={`flex items-center justify-end gap-1 text-[11px] ${
-                          isMe ? "text-[#0a0f1a]/50" : "text-white/30"
+                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} group relative`}>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
+                          isMe ? "bg-[#4ECDC4] text-[#0a0f1a]" : "bg-white/8 text-white/90"
                         }`}>
-                          {formatMessageTime(msg.created_at)}
-                          {isMe && <CheckCheck size={10} />}
+                          {isFileMessage ? (
+                            <div>{renderFileAttachment(msg.content)}</div>
+                          ) : (
+                            <p className="mb-1">{msg.content}</p>
+                          )}
+                          <div className={`flex items-center justify-end gap-1 text-[11px] ${
+                            isMe ? "text-[#0a0f1a]/50" : "text-white/30"
+                          }`}>
+                            {formatMessageTime(msg.created_at)}
+                            {isMe && <CheckCheck size={10} />}
+                          </div>
                         </div>
+
+                        {/* Reactions display */}
+                        {reactionGroups.length > 0 && (
+                          <div className="flex gap-1 flex-wrap justify-end px-2">
+                            {reactionGroups.map(group => {
+                              const userReacted = group.reactions.some(r => r.user_id === myId);
+                              return (
+                                <button
+                                  key={group.emoji}
+                                  onClick={() => {
+                                    if (userReacted) {
+                                      removeReaction(msg.id, group.emoji);
+                                    } else {
+                                      addReaction(msg.id, group.emoji);
+                                    }
+                                  }}
+                                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs ${
+                                    userReacted
+                                      ? "bg-[#4ECDC4]/30 text-[#4ECDC4]"
+                                      : "bg-white/5 hover:bg-white/10"
+                                  } transition-colors`}
+                                >
+                                  <span>{group.emoji}</span>
+                                  <span className="text-[10px]">{group.reactions.length}</span>
+                                </button>
+                              );
+                            })}
+                            {reactionPickerMsgId === msg.id && (
+                              <div ref={reactionPickerRef} className="flex gap-1 bg-white/5 rounded-full p-1">
+                                {["❤️", "😂", "👍", "😮", "😢", "🔥"].map(emoji => (
+                                  <button
+                                    key={emoji}
+                                    onClick={() => addReaction(msg.id, emoji)}
+                                    className="p-1 hover:bg-white/10 rounded-full transition-colors text-lg"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Reaction picker button (on hover) */}
+                        {reactionPickerMsgId !== msg.id && (
+                          <button
+                            onClick={() => setReactionPickerMsgId(msg.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 text-xs text-white/40 hover:text-white/60"
+                            title="Tilføj reaction"
+                          >
+                            +
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -637,16 +1069,36 @@ export default function Beskeder() {
             {/* Message input */}
             <div className="p-4 border-t border-white/10 flex-shrink-0 relative">
               {showEmojiPicker && (
-                <div className="absolute bottom-20 left-4 bg-[#0d1225] border border-white/10 rounded-2xl p-3 grid grid-cols-6 gap-2 w-fit shadow-lg z-40">
-                  {commonEmojis.map((emoji, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleEmojiClick(emoji)}
-                      className="text-xl hover:bg-white/10 rounded-lg p-1.5 transition-colors text-center"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                <div ref={emojiPickerRef} className="absolute bottom-20 left-4 right-4 bg-[#0d1225] border border-white/10 rounded-2xl shadow-lg z-40 max-h-80 flex flex-col">
+                  {/* Category tabs */}
+                  <div className="flex gap-1 p-2 border-b border-white/10 overflow-x-auto flex-shrink-0">
+                    {Object.keys(EMOJI_CATEGORIES).map(category => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedEmojiCategory(category as keyof typeof EMOJI_CATEGORIES)}
+                        className={`text-xl p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                          selectedEmojiCategory === category
+                            ? "bg-[#4ECDC4]/30 text-[#4ECDC4]"
+                            : "hover:bg-white/5"
+                        }`}
+                        title={category}
+                      >
+                        {CATEGORY_ICONS[category]}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Emoji grid */}
+                  <div className="overflow-y-auto p-2 grid grid-cols-6 gap-1">
+                    {EMOJI_CATEGORIES[selectedEmojiCategory].map((emoji, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleEmojiClick(emoji)}
+                        className="text-xl hover:bg-white/10 rounded-lg p-1.5 transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
               <form
@@ -655,11 +1107,13 @@ export default function Beskeder() {
               >
                 <button
                   type="button"
-                  onClick={() => showComingSoonToast("Vedhæft fil kommer snart")}
-                  className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors disabled:opacity-50"
                 >
-                  <Paperclip size={16} />
+                  {uploading ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}
                 </button>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf,video/mp4,audio/*" onChange={handleFileUpload} />
                 <input
                   ref={inputRef}
                   type="text"
@@ -672,6 +1126,7 @@ export default function Beskeder() {
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors"
+                  aria-label="emoji"
                 >
                   <Smile size={16} />
                 </button>
@@ -703,6 +1158,22 @@ export default function Beskeder() {
             </div>
           </div>
         )}
+
+        {/* WebRTC Call Modal */}
+        <CallModal
+          callState={webrtc.callState}
+          localStream={webrtc.localStream}
+          remoteStream={webrtc.remoteStream}
+          isMuted={webrtc.isMuted}
+          isVideoOff={webrtc.isVideoOff}
+          callDuration={webrtc.callDuration}
+          isVideo={isVideoCall}
+          otherUserName={activeConvo?.otherUser.display_name ?? "Ukendt"}
+          onAccept={webrtc.acceptCall}
+          onEnd={webrtc.endCall}
+          onToggleMute={webrtc.toggleMute}
+          onToggleVideo={webrtc.toggleVideo}
+        />
       </div>
 
       {/* ── Right Column - News Sidebar ── */}
@@ -845,4 +1316,4 @@ export default function Beskeder() {
       `}</style>
     </div>
   );
-  }
+}
