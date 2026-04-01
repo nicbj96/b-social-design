@@ -12,7 +12,7 @@ import { useTags } from "@/context/TagContext";
 import { searchTags, getParentCategories, TAG_TREE } from "@/lib/tagTree";
 import { OPLEVELSER_NAER_DIG } from "@/data/feedData";
 import type { SocialActivity } from "@/data/feedData";
-import { ALL_PINS } from "@/pages/Kort";
+import { ALL_PINS } from "@/data/kortPins";
 import { ALL_CATEGORIES } from "@/data/categories";
 import type { Category } from "@/data/categories";
 
