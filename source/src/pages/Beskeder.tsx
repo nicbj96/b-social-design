@@ -28,9 +28,8 @@ interface MessageRow {
 }
 
 interface ProfileRow {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
+  user_id: string;
+  display_name: string | null;
 }
 
 interface ConversationDisplay {
@@ -98,10 +97,32 @@ export default function Beskeder() {
   const [allNews, setAllNews] = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
 
+  // Toast for "coming soon" messages
+  const [showToast, setShowToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
+
+  // Emoji picker
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const activeConvo = conversations.find(c => c.id === activeConvoId) ?? null;
+
+  const commonEmojis = ["😀", "😂", "🥰", "😍", "❤️", "👍", "👋", "🎉", "🔥", "✨", "😎", "🤔", "😅", "🙏", "💪", "😢", "😡", "🥳", "💯", "👀", "🤝", "☀️", "🌙", "🎶"];
+
+  /* ── Toast helper ── */
+  const showComingSoonToast = (msg: string) => {
+    setToastMsg(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
+  /* ── Emoji picker handler ── */
+  const handleEmojiClick = (emoji: string) => {
+    setMessageText(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
 
   /* ── Fetch conversations ── */
   const loadConversations = useCallback(async () => {
@@ -134,13 +155,13 @@ export default function Beskeder() {
           .neq("user_id", myId);
 
         const otherUserId = otherParts?.[0]?.user_id;
-        let otherUser: ProfileRow = { id: otherUserId ?? "", name: t('beskeder.unknown'), avatar_url: null };
+        let otherUser: ProfileRow = { user_id: otherUserId ?? "", display_name: t('beskeder.unknown') };
 
         if (otherUserId) {
           const { data: prof } = await supabase
-            .from("profiles")
-            .select("id, name, avatar_url")
-            .eq("id", otherUserId)
+            .from("user_profiles")
+            .select("user_id, display_name")
+            .eq("user_id", otherUserId)
             .single();
           if (prof) otherUser = prof;
         }
@@ -316,10 +337,10 @@ export default function Beskeder() {
     const timer = setTimeout(async () => {
       setSearchingUsers(true);
       const { data, error } = await supabase
-        .from("profiles")
-        .select("id, name, avatar_url")
-        .ilike("name", `%${userSearch.trim()}%`)
-        .neq("id", myId ?? "")
+        .from("user_profiles")
+        .select("user_id, display_name")
+        .ilike("display_name", `%${userSearch.trim()}%`)
+        .neq("user_id", myId ?? "")
         .limit(10);
 
       if (!error && data) {
@@ -416,7 +437,7 @@ export default function Beskeder() {
   /* ── Filter conversations by search ── */
   const filteredConvos = searchQuery.trim()
     ? conversations.filter(c =>
-        (c.otherUser.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.otherUser.display_name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : conversations;
@@ -506,8 +527,8 @@ export default function Beskeder() {
               >
                 <div className="relative flex-shrink-0">
                   <img
-                    src={convo.otherUser.avatar_url || defaultAvatar(convo.otherUser.name)}
-                    alt={convo.otherUser.name ?? ""}
+                    src={defaultAvatar(convo.otherUser.display_name)}
+                    alt={convo.otherUser.display_name ?? ""}
                     className="w-11 h-11 rounded-xl object-cover"
                     loading="lazy"
                   />
@@ -515,7 +536,7 @@ export default function Beskeder() {
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="font-bold text-sm truncate text-white/70">
-                      {convo.otherUser.name ?? t('beskeder.unknown_user')}
+                      {convo.otherUser.display_name ?? t('beskeder.unknown_user')}
                     </span>
                     <span className="text-xs text-white/30 ml-2">
                       {formatTime(convo.lastMessageTime)}
@@ -530,9 +551,16 @@ export default function Beskeder() {
       </div>
 
       {/* ── Chat area (center panel) ── */}
-      <div className={`flex-1 flex flex-col min-w-0 ${!activeConvoId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 relative ${!activeConvoId ? 'hidden md:flex' : 'flex'}`}>
         {activeConvo ? (
           <>
+            {/* Toast notification */}
+            {showToast && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-[#4ECDC4] text-[#0a0f1a] px-4 py-2.5 rounded-xl text-sm font-medium shadow-lg animate-fade-in-out">
+                {toastMsg}
+              </div>
+            )}
+
             {/* Chat header */}
             <div className="h-16 border-b border-white/10 px-4 md:px-6 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
@@ -540,25 +568,36 @@ export default function Beskeder() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
                 <img
-                  src={activeConvo.otherUser.avatar_url || defaultAvatar(activeConvo.otherUser.name)}
-                  alt={activeConvo.otherUser.name ?? ""}
+                  src={defaultAvatar(activeConvo.otherUser.display_name)}
+                  alt={activeConvo.otherUser.display_name ?? ""}
                   className="w-9 h-9 rounded-xl object-cover"
                   loading="lazy"
                 />
                 <div>
-                  <h3 className="font-bold text-sm leading-none mb-1">
-                    {activeConvo.otherUser.name ?? t('beskeder.unknown_user')}
+                  <h3 className="font-bold text-sm leading-none">
+                    {activeConvo.otherUser.display_name ?? t('beskeder.unknown_user')}
                   </h3>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-[#4ECDC4] rounded-full" />
-                    <span className="text-xs text-white/40">{t('beskeder.online')}</span>
-                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <button className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"><Phone size={16} /></button>
-                <button className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"><Video size={16} /></button>
-                <button className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"><MoreVertical size={16} /></button>
+                <button
+                  onClick={() => showComingSoonToast("Opkald kommer snart")}
+                  className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <Phone size={16} />
+                </button>
+                <button
+                  onClick={() => showComingSoonToast("Videoopkald kommer snart")}
+                  className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <Video size={16} />
+                </button>
+                <button
+                  onClick={() => showComingSoonToast("Flere muligheder kommer snart")}
+                  className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <MoreVertical size={16} />
+                </button>
               </div>
             </div>
 
@@ -596,12 +635,31 @@ export default function Beskeder() {
             </div>
 
             {/* Message input */}
-            <div className="p-4 border-t border-white/10 flex-shrink-0">
+            <div className="p-4 border-t border-white/10 flex-shrink-0 relative">
+              {showEmojiPicker && (
+                <div className="absolute bottom-20 left-4 bg-[#0d1225] border border-white/10 rounded-2xl p-3 grid grid-cols-6 gap-2 w-fit shadow-lg z-40">
+                  {commonEmojis.map((emoji, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleEmojiClick(emoji)}
+                      className="text-xl hover:bg-white/10 rounded-lg p-1.5 transition-colors text-center"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
               <form
                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                 className="bg-white/5 border border-white/10 rounded-2xl px-3 py-2 flex items-center gap-2"
               >
-                <button type="button" className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors"><Paperclip size={16} /></button>
+                <button
+                  type="button"
+                  onClick={() => showComingSoonToast("Vedhæft fil kommer snart")}
+                  className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors"
+                >
+                  <Paperclip size={16} />
+                </button>
                 <input
                   ref={inputRef}
                   type="text"
@@ -610,7 +668,13 @@ export default function Beskeder() {
                   onChange={(e) => setMessageText(e.target.value)}
                   className="flex-1 bg-transparent border-none focus:outline-none text-sm text-white/90 placeholder:text-white/30"
                 />
-                <button type="button" className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors"><Smile size={16} /></button>
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors"
+                >
+                  <Smile size={16} />
+                </button>
                 <button
                   type="submit"
                   disabled={!messageText.trim() || sending}
@@ -734,23 +798,23 @@ export default function Beskeder() {
                 ) : (
                   userResults.map(u => (
                     <button
-                      key={u.id}
-                      onClick={() => startConversation(u.id)}
-                      disabled={startingConvo === u.id}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left ${startingConvo === u.id ? "opacity-50 cursor-wait" : ""}`}
+                      key={u.user_id}
+                      onClick={() => startConversation(u.user_id)}
+                      disabled={startingConvo === u.user_id}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left ${startingConvo === u.user_id ? "opacity-50 cursor-wait" : ""}`}
                     >
-                      {startingConvo === u.id ? (
+                      {startingConvo === u.user_id ? (
                         <Loader2 size={20} className="w-10 h-10 animate-spin text-[#4ECDC4]" />
                       ) : (
                         <img
-                          src={u.avatar_url || defaultAvatar(u.name)}
-                          alt={u.name ?? ""}
+                          src={defaultAvatar(u.display_name)}
+                          alt={u.display_name ?? ""}
                           className="w-10 h-10 rounded-xl object-cover"
                           loading="lazy"
                         />
                       )}
                       <span className="text-white/80 text-sm font-medium">
-                        {startingConvo === u.id ? "Opretter samtale..." : (u.name ?? t('beskeder.unknown'))}
+                        {startingConvo === u.user_id ? "Opretter samtale..." : (u.display_name ?? t('beskeder.unknown'))}
                       </span>
                     </button>
                   ))
@@ -771,6 +835,13 @@ export default function Beskeder() {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        @keyframes fade-in-out {
+          0%, 100% { opacity: 0; }
+          10%, 90% { opacity: 1; }
+        }
+        .animate-fade-in-out {
+          animation: fade-in-out 2s ease-in-out forwards;
+        }
       `}</style>
     </div>
   );
