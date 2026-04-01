@@ -419,7 +419,7 @@ footer{background:#060a0f;border-top:1px solid rgba(255,255,255,0.06);padding:52
 (function(){
   var h = window.location.hash;
   if (h && h.startsWith('#/')) {
-    window.location.replace('/app.html' + h);
+    window.location.replace(h.substring(1));
   }
 })();
 
