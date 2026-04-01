@@ -5,6 +5,220 @@ import { Target, Users, Search, ChevronRight, Check, X, Sparkles, MapPin, Info, 
 import { TAG_TREE } from "@/lib/tagTree";
 import { estimateFirmaReach } from "@/lib/tagEngine";
 import { supabase } from "@/lib/supabase";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
+
+/* ── scoped CSS ── */
+const firmaTargetingCSS = `${pageBase("ft")}
+
+/* ── Layout ── */
+.ft-page { padding: 48px 0; max-width: 1200px; margin: 0 auto; }
+.ft-header { margin-bottom: 40px; }
+
+.ft-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+@media (min-width: 1024px) {
+  .ft-grid { grid-template-columns: 2fr 1fr; }
+}
+
+/* ── Loading ── */
+.ft-loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 80px 0; gap: 10px;
+}
+.ft-spinner {
+  animation: ft-spin 1s linear infinite;
+  color: var(--teal);
+}
+@keyframes ft-spin { to { transform: rotate(360deg); } }
+
+/* ── Search input ── */
+.ft-search-wrap { position: relative; margin-bottom: 8px; }
+.ft-search-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--pg-white-muted); pointer-events: none;
+}
+.ft-search { padding-left: 44px !important; }
+
+/* ── Presets row ── */
+.ft-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.ft-preset-btn {
+  padding: 7px 14px; border-radius: 10px; font-size: 12px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--pg-white-dim); cursor: pointer; transition: all 0.25s;
+  font-family: var(--sans); display: inline-flex; align-items: center; gap: 5px;
+}
+.ft-preset-btn:hover {
+  background: rgba(78,205,196,0.1); color: var(--teal);
+  border-color: rgba(78,205,196,0.3);
+}
+
+/* ── Category accordion (glass tree nav) ── */
+.ft-cat {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; overflow: hidden;
+  margin-bottom: 12px; transition: border-color 0.3s;
+}
+.ft-cat:hover { border-color: var(--glass-border-hover); }
+.ft-cat-header {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; background: transparent; border: none;
+  color: var(--pg-white); cursor: pointer; transition: background 0.2s;
+  font-family: var(--sans);
+}
+.ft-cat-header:hover { background: rgba(255,255,255,0.03); }
+.ft-cat-name { font-size: 14px; font-weight: 500; }
+.ft-cat-meta { display: flex; align-items: center; gap: 10px; }
+.ft-cat-count { font-size: 12px; color: var(--pg-white-muted); }
+.ft-cat-chevron {
+  transition: transform 0.25s; color: var(--pg-white-muted);
+}
+.ft-cat-chevron.open { transform: rotate(90deg); }
+
+/* ── Tag chips inside category ── */
+.ft-tags { padding: 0 20px 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+.ft-tag {
+  padding: 7px 16px; border-radius: 100px; font-size: 12px;
+  border: 1px solid var(--glass-border); background: rgba(255,255,255,0.04);
+  color: var(--pg-white-dim); cursor: pointer; transition: all 0.25s;
+  font-family: var(--sans); display: inline-flex; align-items: center; gap: 5px;
+}
+.ft-tag:hover {
+  border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.07);
+}
+.ft-tag.selected {
+  background: rgba(78,205,196,0.15); border-color: var(--teal);
+  color: var(--teal); font-weight: 500;
+}
+.ft-tag-reach { color: var(--pg-white-muted); margin-left: 2px; }
+
+/* ── Sidebar panels (glass) ── */
+.ft-sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+.ft-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 24px;
+  transition: border-color 0.3s;
+}
+.ft-panel:hover { border-color: var(--glass-border-hover); }
+.ft-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.ft-panel-title {
+  font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px;
+  color: var(--pg-white);
+}
+.ft-panel-title svg { color: var(--teal); }
+
+/* ── Selected tags display ── */
+.ft-selected-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ft-sel-tag {
+  padding: 5px 12px; border-radius: 100px; font-size: 11px;
+  background: rgba(78,205,196,0.15); border: 1px solid rgba(78,205,196,0.25);
+  color: var(--teal); display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--sans);
+}
+.ft-sel-remove {
+  background: none; border: none; color: var(--teal); cursor: pointer;
+  padding: 0; display: inline-flex; opacity: 0.6; transition: opacity 0.2s;
+}
+.ft-sel-remove:hover { opacity: 1; }
+
+.ft-clear-btn {
+  font-size: 12px; color: var(--pg-white-muted); background: none;
+  border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;
+  transition: color 0.2s; font-family: var(--sans);
+}
+.ft-clear-btn:hover { color: #f87171; }
+
+.ft-empty { font-size: 13px; color: var(--pg-white-muted); }
+
+/* ── Reach meter ── */
+.ft-reach { padding-top: 18px; margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.06); }
+.ft-reach-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ft-reach-label { font-size: 12px; color: var(--pg-white-muted); text-transform: uppercase; letter-spacing: 1px; }
+.ft-reach-val {
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+  color: var(--teal); line-height: 1;
+}
+.ft-reach-track {
+  width: 100%; height: 6px; background: rgba(255,255,255,0.08);
+  border-radius: 100px; overflow: hidden; position: relative;
+}
+.ft-reach-bar {
+  height: 100%; border-radius: 100px;
+  background: linear-gradient(90deg, var(--teal), #34d399);
+  transition: width 0.6s cubic-bezier(0.23,1,0.32,1);
+  box-shadow: 0 0 12px var(--teal-glow);
+}
+.ft-reach-sub { font-size: 11px; color: var(--pg-white-muted); margin-top: 8px; }
+
+/* ── Save preset row ── */
+.ft-save-row {
+  padding-top: 18px; margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; gap: 8px;
+}
+.ft-save-input { flex: 1; font-size: 12px; }
+.ft-save-btn {
+  padding: 10px 16px; background: var(--teal); color: var(--bg);
+  border: none; border-radius: 12px; cursor: pointer;
+  transition: all 0.25s; display: flex; align-items: center;
+}
+.ft-save-btn:hover { box-shadow: 0 4px 16px var(--teal-glow); }
+.ft-save-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* ── Persona cards (glass) ── */
+.ft-persona {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; border-radius: 14px;
+  transition: background 0.2s; cursor: default;
+}
+.ft-persona:hover { background: rgba(255,255,255,0.04); }
+.ft-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(78,205,196,0.15); border: 1px solid rgba(78,205,196,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: var(--teal); flex-shrink: 0;
+}
+.ft-persona-info { flex: 1; min-width: 0; }
+.ft-persona-name { font-size: 14px; font-weight: 500; color: var(--pg-white); }
+.ft-persona-detail {
+  font-size: 12px; color: var(--pg-white-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 4px;
+}
+.ft-match { font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.ft-match-high { color: #34d399; }
+.ft-match-mid { color: #fbbf24; }
+.ft-match-low { color: var(--pg-white-muted); }
+
+/* ── Info panel ── */
+.ft-info {
+  background: rgba(78,205,196,0.06);
+  border: 1px solid rgba(78,205,196,0.15);
+  border-radius: 16px; padding: 20px;
+  display: flex; gap: 12px;
+}
+.ft-info-icon { flex-shrink: 0; color: var(--teal); margin-top: 2px; }
+.ft-info-text { font-size: 13px; color: rgba(78,205,196,0.7); line-height: 1.55; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .ft-page { padding: 24px 16px; }
+  .ft-panel { padding: 18px; }
+}
+`;
 
 interface TagWithReach {
   name: string;
@@ -31,6 +245,7 @@ interface MatchingPersona {
 
 export default function FirmaTargeting() {
   const { t } = useTranslation();
+  const containerRef = useFadeUp("ft");
   const [categories, setCategories] = useState<TagCategory[]>([]);
   const [search, setSearch] = useState("");
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
@@ -181,197 +396,228 @@ export default function FirmaTargeting() {
     );
   };
 
+  const reachPct = totalUsers > 0 ? Math.min((totalReach / totalUsers) * 100, 100) : 0;
+
   return (
     <FirmaLayout>
-      <div className="space-y-6">
-        <div>
-          <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
-          <h1 className="text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }}>{t('firma.targeting_title')}</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t('firma.targeting_subtitle')}
-            {totalUsers > 0 && <span className="ml-1">({totalUsers.toLocaleString()} {t('firma.targeting_users_in_database')})</span>}
-          </p>
-        </div>
+      <style>{firmaTargetingCSS}</style>
+      <div className="ft-root" ref={containerRef}>
+        <div className="ft-page">
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 size={24} className="animate-spin text-primary mr-2" />
-            <span className="text-muted-foreground text-sm">{t('firma.targeting_loading')}</span>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Tag selector */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-2.5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder={t('firma.targeting_search_tags')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="premium-input pl-9"
-                />
-              </div>
-
-              {/* Presets */}
-              {presets.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {presets.map((p) => (
-                    <button key={p.name} onClick={() => loadPreset(p)} className="px-3 py-1.5 rounded-lg text-xs bg-white/5 border border-white/10 hover:bg-primary/10 hover:text-primary transition-colors">
-                      <Download size={10} className="inline mr-1" />{p.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Categories from TAG_TREE */}
-              {categories
-                .filter(cat => !search || cat.tags.some(item => item.name.toLowerCase().includes(search.toLowerCase())))
-                .map((cat) => (
-                  <div key={cat.tag} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
-                    <button
-                      onClick={() => setExpandedCat(expandedCat === cat.name ? null : cat.name)}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
-                    >
-                      <span className="font-medium text-sm">
-                        {cat.emoji} {cat.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          {cat.tags.filter(item => item.selected).length} {t('firma.targeting_selected')}
-                        </span>
-                        <ChevronRight size={14} className={`transition-transform ${expandedCat === cat.name ? "rotate-90" : ""}`} />
-                      </div>
-                    </button>
-                    {expandedCat === cat.name && (
-                      <div className="px-4 pb-4 flex flex-wrap gap-2">
-                        {cat.tags
-                          .filter(item => !search || item.name.toLowerCase().includes(search.toLowerCase()))
-                          .map((tag) => (
-                            <button
-                              key={tag.tag}
-                              onClick={() => toggleTag(cat.name, tag.tag)}
-                              className={`px-3 py-1.5 rounded-full text-xs border transition-all ${
-                                tag.selected
-                                  ? "bg-primary/20 border-primary text-primary"
-                                  : "bg-white/5 border-white/10 hover:border-white/20"
-                              }`}
-                            >
-                              {tag.selected && <Check size={10} className="inline mr-1" />}
-                              {tag.emoji} {tag.name}
-                              <span className="ml-1 text-muted-foreground">
-                                ({tag.reach.toLocaleString()})
-                              </span>
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+          {/* ── Header ── */}
+          <div className="ft-header ft-fade-up">
+            <div className="ft-eyebrow">
+              <span className="ft-eyebrow-line" />
+              B-Social Firma
             </div>
+            <h1 className="ft-h2" style={{ marginTop: 12 }}>
+              {t('firma.targeting_title')}
+            </h1>
+            <p className="ft-text" style={{ marginTop: 8 }}>
+              {t('firma.targeting_subtitle')}
+              {totalUsers > 0 && (
+                <span style={{ marginLeft: 6, color: 'var(--teal)' }}>
+                  ({totalUsers.toLocaleString()} {t('firma.targeting_users_in_database')})
+                </span>
+              )}
+            </p>
+          </div>
 
-            {/* Sidebar */}
-            <div className="space-y-4">
-              {/* Selected tags & reach */}
-              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-sm flex items-center gap-2"><Target size={14} /> {t('firma.targeting_selected_tags')}</h3>
-                  {selectedTags.length > 0 && (
-                    <button onClick={clearAll} className="text-xs text-muted-foreground hover:text-red-400">
-                      <X size={12} className="inline" /> {t('firma.targeting_clear')}
-                    </button>
-                  )}
+          {loading ? (
+            <div className="ft-loading ft-fade-up">
+              <Loader2 size={22} className="ft-spinner" />
+              <span className="ft-text-sm">{t('firma.targeting_loading')}</span>
+            </div>
+          ) : (
+            <div className="ft-grid">
+
+              {/* ══════ Left column: tag tree navigator ══════ */}
+              <div className="ft-fade-up ft-d1">
+
+                {/* Search */}
+                <div className="ft-search-wrap">
+                  <Search size={16} className="ft-search-icon" />
+                  <input
+                    type="text"
+                    placeholder={t('firma.targeting_search_tags')}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="ft-input ft-search"
+                  />
                 </div>
-                {selectedTags.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">{t('firma.targeting_no_tags_selected')}</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedTags.map((item) => (
-                      <span key={item.tag} className="px-2 py-1 rounded-full text-xs bg-primary/20 text-primary border border-primary/30 flex items-center gap-1">
-                        {item.emoji} {item.name}
-                        <button onClick={() => {
-                          const cat = categories.find(c => c.tags.some(tag => tag.tag === item.tag));
-                          if (cat) toggleTag(cat.name, item.tag);
-                        }}><X size={10} /></button>
-                      </span>
+
+                {/* Presets */}
+                {presets.length > 0 && (
+                  <div className="ft-presets">
+                    {presets.map((p) => (
+                      <button key={p.name} onClick={() => loadPreset(p)} className="ft-preset-btn">
+                        <Download size={11} />
+                        {p.name}
+                      </button>
                     ))}
                   </div>
                 )}
 
-                {/* Reach meter — real data */}
-                <div className="pt-3 border-t border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">{t('firma.targeting_estimated_reach')}</span>
-                    <span className="text-sm font-bold text-primary">{totalReach.toLocaleString()}</span>
-                  </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-green-400 rounded-full transition-all"
-                      style={{ width: `${totalUsers > 0 ? Math.min((totalReach / totalUsers) * 100, 100) : 0}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t('firma.targeting_of_users_in_database', { count: totalUsers.toLocaleString() })}
-                  </p>
-                </div>
+                {/* Category accordion */}
+                {categories
+                  .filter(cat => !search || cat.tags.some(item => item.name.toLowerCase().includes(search.toLowerCase())))
+                  .map((cat, idx) => (
+                    <div key={cat.tag} className={`ft-cat ft-fade-up ft-d${Math.min(idx % 4 + 1, 4)}`}>
+                      <button
+                        onClick={() => setExpandedCat(expandedCat === cat.name ? null : cat.name)}
+                        className="ft-cat-header"
+                      >
+                        <span className="ft-cat-name">
+                          {cat.emoji} {cat.name}
+                        </span>
+                        <span className="ft-cat-meta">
+                          <span className="ft-cat-count">
+                            {cat.tags.filter(item => item.selected).length} {t('firma.targeting_selected')}
+                          </span>
+                          <ChevronRight
+                            size={14}
+                            className={`ft-cat-chevron${expandedCat === cat.name ? " open" : ""}`}
+                          />
+                        </span>
+                      </button>
 
-                {/* Save preset */}
-                <div className="pt-3 border-t border-white/10">
-                  <div className="flex gap-2">
+                      {expandedCat === cat.name && (
+                        <div className="ft-tags">
+                          {cat.tags
+                            .filter(item => !search || item.name.toLowerCase().includes(search.toLowerCase()))
+                            .map((tag) => (
+                              <button
+                                key={tag.tag}
+                                onClick={() => toggleTag(cat.name, tag.tag)}
+                                className={`ft-tag${tag.selected ? " selected" : ""}`}
+                              >
+                                {tag.selected && <Check size={10} />}
+                                {tag.emoji} {tag.name}
+                                <span className="ft-tag-reach">
+                                  ({tag.reach.toLocaleString()})
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+
+              {/* ══════ Right column: sidebar ══════ */}
+              <div className="ft-sidebar">
+
+                {/* ── Selected tags + reach meter panel ── */}
+                <div className="ft-panel ft-fade-up ft-d2">
+                  <div className="ft-panel-head">
+                    <span className="ft-panel-title">
+                      <Target size={15} />
+                      {t('firma.targeting_selected_tags')}
+                    </span>
+                    {selectedTags.length > 0 && (
+                      <button onClick={clearAll} className="ft-clear-btn">
+                        <X size={12} />
+                        {t('firma.targeting_clear')}
+                      </button>
+                    )}
+                  </div>
+
+                  {selectedTags.length === 0 ? (
+                    <p className="ft-empty">{t('firma.targeting_no_tags_selected')}</p>
+                  ) : (
+                    <div className="ft-selected-tags">
+                      {selectedTags.map((item) => (
+                        <span key={item.tag} className="ft-sel-tag">
+                          {item.emoji} {item.name}
+                          <button
+                            className="ft-sel-remove"
+                            onClick={() => {
+                              const cat = categories.find(c => c.tags.some(tag => tag.tag === item.tag));
+                              if (cat) toggleTag(cat.name, item.tag);
+                            }}
+                          >
+                            <X size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reach meter */}
+                  <div className="ft-reach">
+                    <div className="ft-reach-row">
+                      <span className="ft-reach-label">{t('firma.targeting_estimated_reach')}</span>
+                      <span className="ft-reach-val">{totalReach.toLocaleString()}</span>
+                    </div>
+                    <div className="ft-reach-track">
+                      <div className="ft-reach-bar" style={{ width: `${reachPct}%` }} />
+                    </div>
+                    <p className="ft-reach-sub">
+                      {t('firma.targeting_of_users_in_database', { count: totalUsers.toLocaleString() })}
+                    </p>
+                  </div>
+
+                  {/* Save preset */}
+                  <div className="ft-save-row">
                     <input
                       type="text"
                       placeholder={t('firma.targeting_save_as_preset')}
                       value={presetName}
                       onChange={(e) => setPresetName(e.target.value)}
-                      className="premium-input flex-1 text-xs"
+                      className="ft-input ft-save-input"
                     />
                     <button
                       onClick={savePreset}
                       disabled={!presetName || selectedTags.length === 0}
-                      className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs disabled:opacity-30"
+                      className="ft-save-btn"
                     >
-                      <Save size={12} />
+                      <Save size={14} />
                     </button>
                   </div>
                 </div>
-              </div>
 
-              {/* Personas — real profiles */}
-              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
-                <h3 className="font-medium text-sm flex items-center gap-2"><Sparkles size={14} /> {t('firma.targeting_matching_personas')}</h3>
-                {personas.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">{t('firma.targeting_no_user_data')}</p>
-                ) : (
-                  personas.map((p) => (
-                    <div key={p.navn} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">
-                        {p.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{p.navn}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {p.interesser.join(", ")} – <MapPin size={10} className="inline" /> {p.lokation}
-                        </p>
-                      </div>
-                      <span className={`text-xs font-medium ${p.match > 50 ? "text-green-400" : p.match > 0 ? "text-yellow-400" : "text-muted-foreground"}`}>
-                        {p.match}%
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
+                {/* ── Matching personas panel ── */}
+                <div className="ft-panel ft-fade-up ft-d3">
+                  <div className="ft-panel-head">
+                    <span className="ft-panel-title">
+                      <Sparkles size={15} />
+                      {t('firma.targeting_matching_personas')}
+                    </span>
+                  </div>
 
-              {/* Info */}
-              <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
-                <p className="text-xs text-blue-400 flex items-start gap-2">
-                  <Info size={14} className="mt-0.5 shrink-0" />
-                  {t('firma.targeting_info_text')}
-                </p>
+                  {personas.length === 0 ? (
+                    <p className="ft-empty">{t('firma.targeting_no_user_data')}</p>
+                  ) : (
+                    personas.map((p) => (
+                      <div key={p.navn} className="ft-persona">
+                        <div className="ft-avatar">{p.avatar}</div>
+                        <div className="ft-persona-info">
+                          <div className="ft-persona-name">{p.navn}</div>
+                          <div className="ft-persona-detail">
+                            {p.interesser.join(", ")} &ndash; <MapPin size={10} /> {p.lokation}
+                          </div>
+                        </div>
+                        <span className={`ft-match ${p.match > 50 ? "ft-match-high" : p.match > 0 ? "ft-match-mid" : "ft-match-low"}`}>
+                          {p.match}%
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* ── Info panel ── */}
+                <div className="ft-info ft-fade-up ft-d4">
+                  <Info size={16} className="ft-info-icon" />
+                  <p className="ft-info-text">
+                    {t('firma.targeting_info_text')}
+                  </p>
+                </div>
+
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </FirmaLayout>
   );
-              }
+}

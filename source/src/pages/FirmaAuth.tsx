@@ -4,7 +4,276 @@ import { useLocation } from "wouter";
 import { ArrowLeft, Loader2, Building2, Check, Heart, Zap, Crown, Sparkles, Gift } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
 
+/* ── Scoped CSS ── */
+const firmaAuthCSS = `${pageBase("fa")}
+
+/* ── Hero section ── */
+.fa-hero {
+  position: relative;
+  width: 100%;
+  min-height: 44vh;
+  background: url('/firma-hero.png') center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+}
+.fa-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6,10,15,0.25) 0%,
+    rgba(6,10,15,0.6) 50%,
+    rgba(6,10,15,1) 100%
+  );
+}
+
+/* ── Back button ── */
+.fa-back {
+  position: relative; z-index: 2;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: background 0.25s;
+  margin: 48px 0 0 20px;
+}
+.fa-back:hover { background: rgba(255,255,255,0.14); }
+
+/* ── Hero content ── */
+.fa-hero-content {
+  position: relative; z-index: 2;
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding: 0 24px 40px; text-align: center;
+}
+.fa-title {
+  font-family: var(--serif);
+  font-size: clamp(34px, 5vw, 52px);
+  font-weight: 400; line-height: 1.08;
+  letter-spacing: -0.5px;
+  color: var(--pg-white); margin: 16px 0 12px;
+}
+.fa-title em { font-style: italic; color: var(--teal); }
+.fa-subtitle {
+  font-size: 14px; color: var(--pg-white-dim);
+  max-width: 400px; line-height: 1.55;
+}
+.fa-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 16px; padding: 6px 14px;
+  border-radius: 100px;
+  background: rgba(78,205,196,0.1);
+  border: 1px solid rgba(78,205,196,0.2);
+  font-size: 11px; font-weight: 700;
+  color: var(--teal); text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Form area ── */
+.fa-form-area {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 64px;
+}
+
+/* ── Form card (premium glass) ── */
+.fa-form-card {
+  width: 100%; max-width: 680px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 28px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+@media (min-width: 640px) {
+  .fa-form-card { padding: 36px; }
+}
+
+/* ── Warning / error banners ── */
+.fa-warning {
+  padding: 14px 18px; border-radius: 14px;
+  background: rgba(234,179,8,0.12);
+  border: 1px solid rgba(234,179,8,0.22);
+  color: #fcd34d; font-size: 13px; text-align: center;
+  line-height: 1.5;
+}
+.fa-warning-link {
+  text-decoration: underline; cursor: pointer;
+  font-weight: 600; color: #fcd34d;
+  background: none; border: none; font-size: inherit;
+  font-family: inherit;
+}
+.fa-error {
+  padding: 12px 16px; border-radius: 14px;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #fca5a5; font-size: 13px; text-align: center;
+}
+
+/* ── Section heading inside form ── */
+.fa-section-title {
+  font-size: 11px; font-weight: 600;
+  color: var(--pg-white-dim);
+  text-transform: uppercase; letter-spacing: 1.8px;
+}
+
+/* ── Label ── */
+.fa-field-label {
+  font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  padding-left: 4px; margin-bottom: 4px;
+}
+
+/* ── Field group ── */
+.fa-fields { display: flex; flex-direction: column; gap: 16px; }
+.fa-field { display: flex; flex-direction: column; gap: 4px; }
+.fa-field-row {
+  display: grid; grid-template-columns: 1fr; gap: 16px;
+}
+@media (min-width: 640px) {
+  .fa-field-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Plan selection ── */
+.fa-plans-header { display: flex; flex-direction: column; gap: 4px; }
+.fa-plans-sub { font-size: 12px; color: var(--pg-white-muted); }
+.fa-plans-grid { display: flex; flex-direction: column; gap: 12px; }
+
+.fa-plan-card {
+  position: relative; padding: 18px;
+  border-radius: 16px; text-align: left;
+  cursor: pointer; border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s; outline: none;
+  font-family: var(--sans);
+}
+.fa-plan-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.15);
+}
+.fa-plan-card.fa-plan-selected {
+  background: rgba(78,205,196,0.1);
+  border-color: rgba(78,205,196,0.45);
+  box-shadow: 0 0 0 1px rgba(78,205,196,0.2),
+              0 8px 32px rgba(78,205,196,0.08);
+}
+
+/* Check circle on selected plan */
+.fa-plan-check {
+  position: absolute; top: 14px; right: 14px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--teal);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Popular badge */
+.fa-plan-popular {
+  position: absolute; top: 14px; right: 44px;
+  padding: 3px 10px; border-radius: 100px;
+  background: rgba(78,205,196,0.15);
+  color: var(--teal); font-size: 10px;
+  font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Plan header row */
+.fa-plan-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 4px; flex-wrap: wrap;
+}
+.fa-plan-name {
+  font-size: 14px; font-weight: 600;
+  color: var(--pg-white);
+}
+.fa-plan-free-chip {
+  padding: 2px 10px; border-radius: 100px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(78,205,196,0.12);
+  color: var(--teal);
+  border: 1px solid rgba(78,205,196,0.18);
+}
+
+/* Revenue share row */
+.fa-plan-revenue {
+  display: flex; align-items: center; gap: 6px;
+  margin: 4px 0 10px;
+}
+.fa-plan-revenue-text {
+  font-size: 12px; color: rgba(255,255,255,0.6);
+  font-weight: 500;
+}
+
+/* Feature list */
+.fa-plan-features {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.fa-plan-feature {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: rgba(255,255,255,0.4);
+}
+.fa-plan-feature svg { flex-shrink: 0; }
+
+/* Ideal-for text */
+.fa-plan-ideal {
+  font-size: 11px; color: rgba(255,255,255,0.2);
+  margin-top: 8px;
+}
+
+/* Plan icon colors */
+.fa-icon-emerald { color: #34d399; }
+.fa-icon-teal { color: var(--teal); }
+.fa-icon-purple { color: #c084fc; }
+
+/* ── Submit button ── */
+.fa-submit {
+  width: 100%; padding: 16px 28px;
+  border-radius: 16px;
+  background: var(--teal); color: var(--bg);
+  border: none; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all 0.3s;
+  font-family: var(--sans);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 8px 32px rgba(78,205,196,0.2);
+  margin-top: 8px;
+}
+.fa-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(78,205,196,0.3);
+}
+.fa-submit:active { transform: scale(0.98); }
+.fa-submit:disabled {
+  opacity: 0.55; cursor: not-allowed;
+  transform: none; box-shadow: none;
+}
+
+/* ── Spinner ── */
+@keyframes fa-spin { to { transform: rotate(360deg); } }
+.fa-spinner { animation: fa-spin 0.8s linear infinite; }
+
+/* ── Terms ── */
+.fa-terms {
+  text-align: center; font-size: 12px;
+  color: var(--pg-white-muted); line-height: 1.6;
+}
+.fa-terms-link {
+  color: rgba(255,255,255,0.45);
+  text-decoration: underline; cursor: pointer;
+  background: none; border: none;
+  font-size: inherit; font-family: inherit;
+}
+`;
+
+/* ── Plan definitions ── */
 type Plan = "starter" | "vaekst" | "partner";
 
 const PLANS: {
@@ -15,7 +284,7 @@ const PLANS: {
   features: string[];
   idealForKey: string;
   icon: typeof Heart;
-  color: string;
+  iconClass: string;
   highlight?: boolean;
 }[] = [
   {
@@ -24,7 +293,7 @@ const PLANS: {
     revenueShare: "0%",
     revenueSharePct: 0,
     icon: Heart,
-    color: "text-emerald-400",
+    iconClass: "fa-icon-emerald",
     features: ["pricing.feature_starter_1", "pricing.feature_starter_2", "pricing.feature_starter_3", "pricing.feature_starter_4"],
     idealForKey: "pricing.ideal_for_starter",
   },
@@ -35,7 +304,7 @@ const PLANS: {
     revenueSharePct: 5,
     highlight: true,
     icon: Zap,
-    color: "text-[#4ECDC4]",
+    iconClass: "fa-icon-teal",
     features: ["pricing.feature_vaekst_1", "pricing.feature_vaekst_2", "pricing.feature_vaekst_3", "pricing.feature_vaekst_4", "pricing.feature_vaekst_5"],
     idealForKey: "pricing.ideal_for_vaekst",
   },
@@ -45,7 +314,7 @@ const PLANS: {
     revenueShare: "3%",
     revenueSharePct: 3,
     icon: Crown,
-    color: "text-purple-400",
+    iconClass: "fa-icon-purple",
     features: ["pricing.feature_partner_1", "pricing.feature_partner_2", "pricing.feature_partner_3", "pricing.feature_partner_4", "pricing.feature_partner_5"],
     idealForKey: "pricing.ideal_for_partner",
   },
@@ -55,6 +324,7 @@ export default function FirmaAuth() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { user, isLoggedIn, refreshProfile } = useAuth();
+  const containerRef = useFadeUp("fa");
 
   // Restore form data from sessionStorage (in case user was redirected to auth)
   const savedForm = typeof window !== 'undefined' ? sessionStorage.getItem('firma_form_data') : null;
@@ -159,243 +429,213 @@ export default function FirmaAuth() {
   };
 
   return (
-    <div className="relative min-h-svh flex flex-col" style={{ background: "#060a0f" }}>
+    <>
+      <style>{firmaAuthCSS}</style>
+      <div className="fa-root" ref={containerRef}>
 
-      {/* ── Cinematic header ── */}
-      <div
-        className="relative w-full min-h-[40vh] bg-cover bg-center flex flex-col"
-        style={{ backgroundImage: "url('/aurora.jpg')" }}
-      >
-        {/* Gradient overlay */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(6,10,15,0.3) 0%, rgba(6,10,15,0.85) 100%)",
-          }}
-        />
+        {/* ── Cinematic hero ── */}
+        <div className="fa-hero">
+          <div className="fa-hero-overlay" />
 
-        {/* Back button — overlaid top-left */}
-        <div className="relative z-10 pt-12 px-5">
-          <button
-            onClick={() => setLocation("/feed")}
-            className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/15 transition-colors backdrop-blur-sm"
-          >
-            <ArrowLeft size={18} className="text-white" />
+          {/* Back button */}
+          <button className="fa-back" onClick={() => setLocation("/feed")}>
+            <ArrowLeft size={18} />
           </button>
-        </div>
 
-        {/* Header copy */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-end pb-10 px-6 text-center">
-          {/* Eyebrow */}
-          <div className="eyebrow mb-4">
-            <div className="eyebrow-line" />
-            B-Social Firma
-            <div className="eyebrow-line" />
-          </div>
-
-          {/* Main heading */}
-          <h1
-            className="text-white text-4xl leading-tight mb-3"
-            style={{
-              fontFamily: "'Instrument Serif', Georgia, serif",
-              fontWeight: 400,
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Bliv en del af{" "}
-            <em className="not-italic text-[#4ECDC4]">B-Social</em>
-          </h1>
-
-          <p className="text-white/55 text-sm max-w-sm">
-            {t('firma.start_free')}
-          </p>
-
-          <div className="flex items-center gap-1.5 mt-4 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <Gift size={12} className="text-emerald-400" />
-            <span className="text-emerald-400 text-xs font-bold">{t('firma.all_plans_free_badge')}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Form area ── */}
-      <div className="flex-1 flex flex-col items-center px-5 pb-16 pt-8">
-        <div
-          className="w-full max-w-2xl rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6"
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-          }}
-        >
-          {/* Not-logged-in warning */}
-          {!isLoggedIn && (
-            <div className="p-4 rounded-2xl bg-yellow-500/15 border border-yellow-500/25 text-yellow-300 text-sm text-center">
-              {t('auth.must_be_logged_in')}{" "}
-              <span
-                className="underline cursor-pointer font-semibold"
-                onClick={() => setLocation("/auth")}
-              >
-                {t('auth.login_here')}
-              </span>
+          {/* Hero content */}
+          <div className="fa-hero-content fa-fade-up">
+            <div className="fa-eyebrow">
+              <span className="fa-eyebrow-line" />
+              B-Social Firma
+              <span className="fa-eyebrow-line" />
             </div>
-          )}
 
-          {isLoggedIn && (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {error && (
-                <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm text-center">
-                  {error}
-                </div>
-              )}
+            <h1 className="fa-title">
+              Bliv en del af <em>B-Social</em>
+            </h1>
 
-              {/* Company info */}
-              <div className="space-y-4">
-                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">
-                  {t('firma.company_info')}
-                </h2>
+            <p className="fa-subtitle">
+              {t('firma.start_free')}
+            </p>
 
-                <div className="space-y-1">
-                  <label className="text-white/60 text-xs font-medium pl-1">{t('firma.company_name')}</label>
-                  <input
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="F.eks. Aalborg Fitness"
-                    required
-                    className="premium-input"
-                  />
-                </div>
+            <div className="fa-badge">
+              <Gift size={12} />
+              <span>{t('firma.all_plans_free_badge')}</span>
+            </div>
+          </div>
+        </div>
 
-                <div className="space-y-1">
-                  <label className="text-white/60 text-xs font-medium pl-1">{t('firma.cvr')}</label>
-                  <input
-                    type="text"
-                    value={cvr}
-                    onChange={(e) => setCvr(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                    placeholder="12345678"
-                    required
-                    maxLength={8}
-                    className="premium-input"
-                  />
-                </div>
+        {/* ── Form area ── */}
+        <div className="fa-form-area">
+          <div className="fa-form-card fa-fade-up fa-d1">
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-white/60 text-xs font-medium pl-1">{t('firma.company_email')}</label>
+            {/* Not-logged-in warning */}
+            {!isLoggedIn && (
+              <div className="fa-warning">
+                {t('auth.must_be_logged_in')}{" "}
+                <button
+                  className="fa-warning-link"
+                  onClick={() => setLocation("/auth")}
+                >
+                  {t('auth.login_here')}
+                </button>
+              </div>
+            )}
+
+            {isLoggedIn && (
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+                {error && (
+                  <div className="fa-error">{error}</div>
+                )}
+
+                {/* Company info */}
+                <div className="fa-fields fa-fade-up fa-d2">
+                  <h2 className="fa-section-title">{t('firma.company_info')}</h2>
+
+                  <div className="fa-field">
+                    <label className="fa-field-label">{t('firma.company_name')}</label>
                     <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="kontakt@firma.dk"
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="F.eks. Aalborg Fitness"
                       required
-                      className="premium-input"
+                      className="fa-input"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-white/60 text-xs font-medium pl-1">{t('firma.phone_optional')}</label>
+
+                  <div className="fa-field">
+                    <label className="fa-field-label">{t('firma.cvr')}</label>
                     <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+45 12 34 56 78"
-                      className="premium-input"
+                      type="text"
+                      value={cvr}
+                      onChange={(e) => setCvr(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                      placeholder="12345678"
+                      required
+                      maxLength={8}
+                      className="fa-input"
                     />
                   </div>
-                </div>
-              </div>
 
-              {/* Plan selection */}
-              <div className="space-y-3">
-                <h2 className="text-white/80 text-sm font-semibold uppercase tracking-wider">
-                  {t('firma.choose_plan')}
-                </h2>
-                <p className="text-white/30 text-xs">{t('firma.all_plans_free')}</p>
-                <div className="grid grid-cols-1 gap-3">
-                  {PLANS.map((plan) => {
-                    const Icon = plan.icon;
-                    return (
-                      <button
-                        key={plan.id}
-                        type="button"
-                        onClick={() => setSelectedPlan(plan.id)}
-                        className={`relative p-4 rounded-2xl border text-left transition-all ${
-                          selectedPlan === plan.id
-                            ? "bg-[#4ECDC4]/15 border-[#4ECDC4]/50 ring-1 ring-[#4ECDC4]/30"
-                            : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
-                        }`}
-                      >
-                        {selectedPlan === plan.id && (
-                          <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#4ECDC4] flex items-center justify-center">
-                            <Check size={12} className="text-white" />
-                          </div>
-                        )}
-                        {plan.highlight && (
-                          <div className="absolute top-3 right-10 px-2 py-0.5 rounded-full bg-[#4ECDC4]/20 text-[#4ECDC4] text-[11px] font-bold uppercase">
-                            {t('pricing.popular')}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icon size={16} className={plan.color} />
-                          <span className="text-white font-semibold text-sm">{t(plan.nameKey)}</span>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-                            {t('pricing.free_badge')}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1 mb-2">
-                          <Sparkles size={12} className={plan.color} />
-                          <span className="text-white/70 text-xs font-medium">
-                            {plan.revenueSharePct === 0
-                              ? t('pricing.no_revenue_share')
-                              : t('pricing.revenue_share_of', { pct: plan.revenueShare })}
-                          </span>
-                        </div>
-                        <ul className="space-y-1">
-                          {plan.features.map((f) => (
-                            <li key={f} className="text-white/40 text-xs flex items-center gap-1.5">
-                              <Check size={10} className="text-[#4ECDC4] shrink-0" />
-                              {t(f)}
-                            </li>
-                          ))}
-                        </ul>
-                        <p className="text-white/25 text-xs mt-2">{t('pricing.ideal_for', { audience: t(plan.idealForKey) })}</p>
-                      </button>
-                    );
-                  })}
+                  <div className="fa-field-row">
+                    <div className="fa-field">
+                      <label className="fa-field-label">{t('firma.company_email')}</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="kontakt@firma.dk"
+                        required
+                        className="fa-input"
+                      />
+                    </div>
+                    <div className="fa-field">
+                      <label className="fa-field-label">{t('firma.phone_optional')}</label>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+45 12 34 56 78"
+                        className="fa-input"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Submit */}
+                {/* Plan selection */}
+                <div className="fa-fade-up fa-d3" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div className="fa-plans-header">
+                    <h2 className="fa-section-title">{t('firma.choose_plan')}</h2>
+                    <p className="fa-plans-sub">{t('firma.all_plans_free')}</p>
+                  </div>
+
+                  <div className="fa-plans-grid">
+                    {PLANS.map((plan) => {
+                      const Icon = plan.icon;
+                      const isSelected = selectedPlan === plan.id;
+                      return (
+                        <button
+                          key={plan.id}
+                          type="button"
+                          onClick={() => setSelectedPlan(plan.id)}
+                          className={`fa-plan-card${isSelected ? " fa-plan-selected" : ""}`}
+                        >
+                          {isSelected && (
+                            <span className="fa-plan-check">
+                              <Check size={12} color="#fff" />
+                            </span>
+                          )}
+                          {plan.highlight && (
+                            <span className="fa-plan-popular">
+                              {t('pricing.popular')}
+                            </span>
+                          )}
+
+                          <div className="fa-plan-header">
+                            <Icon size={16} className={plan.iconClass} />
+                            <span className="fa-plan-name">{t(plan.nameKey)}</span>
+                            <span className="fa-plan-free-chip">{t('pricing.free_badge')}</span>
+                          </div>
+
+                          <div className="fa-plan-revenue">
+                            <Sparkles size={12} className={plan.iconClass} />
+                            <span className="fa-plan-revenue-text">
+                              {plan.revenueSharePct === 0
+                                ? t('pricing.no_revenue_share')
+                                : t('pricing.revenue_share_of', { pct: plan.revenueShare })}
+                            </span>
+                          </div>
+
+                          <ul className="fa-plan-features">
+                            {plan.features.map((f) => (
+                              <li key={f} className="fa-plan-feature">
+                                <Check size={10} style={{ color: "var(--teal)" }} />
+                                {t(f)}
+                              </li>
+                            ))}
+                          </ul>
+
+                          <p className="fa-plan-ideal">
+                            {t('pricing.ideal_for', { audience: t(plan.idealForKey) })}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading || !isLoggedIn}
+                  className="fa-submit fa-fade-up fa-d4"
+                >
+                  {loading && <Loader2 size={18} className="fa-spinner" />}
+                  {loading ? t('firma.creating_company') : t('firma.create_account_free')}
+                </button>
+              </form>
+            )}
+
+            {/* Terms */}
+            <p className="fa-terms">
+              {t('auth.terms')}{" "}
               <button
-                type="submit"
-                disabled={loading || !isLoggedIn}
-                className="w-full py-4 rounded-2xl bg-[#4ECDC4] text-[#0a0f1a] font-semibold text-base hover:bg-[#3dbdb5] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-[#4ECDC4]/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2"
+                className="fa-terms-link"
+                onClick={() => setLocation("/vilkaar")}
               >
-                {loading && <Loader2 size={18} className="animate-spin" />}
-                {loading ? t('firma.creating_company') : t('firma.create_account_free')}
+                vilkår
+              </button>{" "}
+              og{" "}
+              <button
+                className="fa-terms-link"
+                onClick={() => setLocation("/privatlivspolitik")}
+              >
+                {t('auth.privacy')}
               </button>
-            </form>
-          )}
-
-          {/* Terms */}
-          <p className="text-center text-white/30 text-xs leading-relaxed">
-            {t('auth.terms')}{" "}
-            <span
-              className="text-white/50 underline cursor-pointer"
-              onClick={() => setLocation("/vilkaar")}
-            >
-              vilkår
-            </span>{" "}
-            og{" "}
-            <span
-              className="text-white/50 underline cursor-pointer"
-              onClick={() => setLocation("/privatlivspolitik")}
-            >
-              {t('auth.privacy')}
-            </span>
-          </p>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

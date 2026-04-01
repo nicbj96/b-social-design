@@ -1,4 +1,11 @@
 import { useLocation } from "wouter";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
+
+/* ─────────────────────────────────────────────
+   B-Social Whitelabel Landing
+   Premium dark theme · scoped wl- prefix
+   ───────────────────────────────────────────── */
 
 const STATS = [
   { value: "95.000+", label: "Steder i databasen" },
@@ -40,187 +47,408 @@ const FEATURES = [
   },
 ];
 
+const INCLUDES = [
+  "Dit eget domæne og visuel identitet (logo, farver, fonts)",
+  "Komplet platform med alle B-Social features fra dag 1",
+  "Adgang til hele den eksisterende database — eller afgrænset til dit marked",
+  "Dedikeret opsætning, onboarding og teknisk support",
+  "Løbende hosting, vedligeholdelse og nye features automatisk",
+  "Firma-modul med selvbetjening, analytics og fakturering",
+  "Multi-sprog support og klar til internationale markeder",
+];
+
+/* ── Scoped CSS ── */
+const whitelabelCSS = `
+${pageBase("wl")}
+
+/* ── Nav ── */
+.wl-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(6,10,15,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.wl-nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 18px; letter-spacing: -0.3px;
+  color: var(--pg-white); font-family: var(--sans);
+}
+.wl-nav-brand span { color: var(--teal); }
+
+/* ── Hero ── */
+.wl-hero {
+  position: relative; padding: 160px 24px 100px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; overflow: hidden;
+}
+.wl-hero-bg {
+  position: absolute; inset: 0;
+  background: url('/whitelabel-hero.png') center/cover no-repeat;
+}
+.wl-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6,10,15,0.4) 0%,
+    rgba(6,10,15,0.65) 40%,
+    rgba(6,10,15,0.92) 100%
+  );
+}
+.wl-hero-glow {
+  position: absolute; top: -10%; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 500px;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(78,205,196,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.wl-hero-inner {
+  position: relative; z-index: 2; max-width: 760px;
+}
+.wl-hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 20px; border-radius: 100px;
+  border: 1px solid rgba(78,205,196,0.3);
+  background: rgba(78,205,196,0.08);
+  color: var(--teal); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 2.5px;
+  margin-bottom: 28px;
+}
+.wl-hero-h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 400; line-height: 1.05;
+  letter-spacing: -1.5px;
+  margin-bottom: 24px;
+}
+.wl-hero-h1 em { font-style: italic; color: var(--teal); }
+.wl-hero-sub {
+  font-size: clamp(15px, 1.6vw, 19px);
+  color: var(--pg-white-dim); line-height: 1.7;
+  max-width: 620px; margin: 0 auto 40px;
+}
+.wl-hero-btns {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+
+/* ── Sections shared ── */
+.wl-section {
+  padding: 0 24px; max-width: 1040px; margin: 0 auto;
+}
+.wl-section-center { text-align: center; margin-bottom: 48px; }
+.wl-section-center .wl-text { max-width: 640px; margin: 12px auto 0; }
+
+/* ── Stats row ── */
+.wl-stats {
+  padding: 0 24px 80px; max-width: 960px; margin: 0 auto;
+}
+.wl-stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+}
+.wl-stat-card {
+  padding: 28px 20px; border-radius: 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  text-align: center;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.wl-stat-card:hover {
+  border-color: rgba(78,205,196,0.3);
+  transform: translateY(-2px);
+}
+.wl-stat-value {
+  font-family: var(--serif); font-size: 32px; font-weight: 400;
+  color: var(--teal); line-height: 1; margin-bottom: 8px;
+}
+.wl-stat-desc {
+  font-size: 12px; color: var(--pg-white-muted);
+  text-transform: uppercase; letter-spacing: 1.2px;
+}
+
+/* ── Feature grid ── */
+.wl-features { padding-bottom: 100px; }
+.wl-feat-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+}
+.wl-feat-card {
+  padding: 32px; border-radius: 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  transition: border-color 0.3s, background 0.3s, transform 0.3s;
+}
+.wl-feat-card:hover {
+  border-color: rgba(78,205,196,0.35);
+  background: rgba(255,255,255,0.07);
+  transform: translateY(-2px);
+}
+.wl-feat-icon { font-size: 32px; margin-bottom: 14px; }
+.wl-feat-title {
+  font-family: var(--sans); font-size: 16px; font-weight: 600;
+  color: var(--pg-white); margin-bottom: 8px;
+}
+.wl-feat-desc {
+  font-size: 14px; color: var(--pg-white-dim); line-height: 1.65;
+}
+
+/* ── Includes section ── */
+.wl-includes { padding-bottom: 100px; }
+.wl-includes-box {
+  max-width: 760px; margin: 0 auto; padding: 48px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(78,205,196,0.08) 0%, rgba(78,205,196,0.02) 100%);
+  border: 1px solid rgba(78,205,196,0.18);
+}
+.wl-includes-list { list-style: none; padding: 0; margin: 0; }
+.wl-includes-list li {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 10px 0; font-size: 15px; color: var(--pg-white-dim);
+  line-height: 1.5;
+}
+.wl-check {
+  color: var(--teal); font-size: 16px; flex-shrink: 0; margin-top: 2px;
+}
+
+/* ── Pricing ── */
+.wl-pricing { padding-bottom: 100px; }
+.wl-price-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+  max-width: 760px; margin: 0 auto;
+}
+.wl-price-card {
+  padding: 40px 32px; border-radius: 24px; text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.3s;
+}
+.wl-price-card:hover { transform: translateY(-3px); }
+.wl-price-card--default {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.wl-price-card--accent {
+  background: rgba(78,205,196,0.08);
+  border: 1px solid rgba(78,205,196,0.25);
+}
+.wl-price-tag {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 16px;
+}
+.wl-price-tag--muted { color: var(--pg-white-muted); }
+.wl-price-tag--teal  { color: var(--teal); opacity: 0.7; }
+.wl-price-amount {
+  font-family: var(--serif); font-size: clamp(42px, 5vw, 56px);
+  font-weight: 400; line-height: 1; margin-bottom: 6px;
+}
+.wl-price-amount--white { color: var(--pg-white); }
+.wl-price-amount--teal  { color: var(--teal); }
+.wl-price-note {
+  font-size: 13px; margin-bottom: 24px;
+}
+.wl-price-note--muted { color: var(--pg-white-muted); }
+.wl-price-note--teal  { color: rgba(78,205,196,0.5); }
+.wl-price-desc {
+  font-size: 14px; color: var(--pg-white-dim); line-height: 1.65;
+}
+
+/* ── CTA ── */
+.wl-cta { padding-bottom: 140px; }
+.wl-cta-inner {
+  max-width: 640px; margin: 0 auto; text-align: center;
+}
+.wl-cta-inner .wl-text { margin-bottom: 32px; }
+
+/* ── Footer ── */
+.wl-footer {
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 28px 24px; text-align: center;
+  font-size: 12px; color: var(--pg-white-muted);
+}
+.wl-footer button {
+  background: none; border: none; color: var(--pg-white-muted);
+  font-size: 12px; cursor: pointer; font-family: var(--sans);
+  transition: color 0.25s;
+}
+.wl-footer button:hover { color: var(--pg-white-dim); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .wl-nav { padding: 12px 20px; }
+  .wl-hero { padding: 140px 20px 72px; }
+  .wl-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .wl-feat-grid { grid-template-columns: 1fr; }
+  .wl-price-grid { grid-template-columns: 1fr; }
+  .wl-includes-box { padding: 32px 24px; }
+  .wl-hero-btns { flex-direction: column; align-items: center; }
+}
+`;
+
 export default function WhitelabelLanding() {
   const [, setLocation] = useLocation();
+  const containerRef = useFadeUp("wl");
 
   return (
-    <div className="min-h-screen bg-[#080c1a] text-white overflow-x-hidden">
+    <>
+      <style>{whitelabelCSS}</style>
+      <div ref={containerRef} className="wl-root">
 
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#080c1a]/90 backdrop-blur border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <svg viewBox="0 0 40 40" fill="none" className="w-8 h-8">
-            <circle cx="20" cy="20" r="17" stroke="#4ECDC4" strokeWidth="1.5" opacity="0.6" />
-            <path d="M20 8 L22.5 18 L20 16 L17.5 18 Z" fill="#4ECDC4" />
-            <path d="M20 32 L17.5 22 L20 24 L22.5 22 Z" fill="rgba(255,255,255,0.4)" />
-            <circle cx="20" cy="20" r="2" fill="#4ECDC4" />
-          </svg>
-          <span className="font-bold text-lg tracking-tight">B-Social <span className="text-[#4ECDC4]">Whitelabel</span></span>
-        </div>
-        <a
-          href="mailto:kontakt@b-social.net"
-          className="px-5 py-2 rounded-xl bg-[#4ECDC4] text-[#080c1a] font-semibold text-sm hover:bg-[#3dbdb5] transition-colors"
-        >
-          Book demo
-        </a>
-      </nav>
+        {/* ── NAV ── */}
+        <nav className="wl-nav">
+          <div className="wl-nav-brand">
+            <svg viewBox="0 0 40 40" fill="none" width="32" height="32">
+              <circle cx="20" cy="20" r="17" stroke="#4ECDC4" strokeWidth="1.5" opacity="0.6" />
+              <path d="M20 8 L22.5 18 L20 16 L17.5 18 Z" fill="#4ECDC4" />
+              <path d="M20 32 L17.5 22 L20 24 L22.5 22 Z" fill="rgba(255,255,255,0.4)" />
+              <circle cx="20" cy="20" r="2" fill="#4ECDC4" />
+            </svg>
+            B-Social <span>Whitelabel</span>
+          </div>
+          <a href="mailto:kontakt@b-social.net" className="wl-btn-sm">Book demo</a>
+        </nav>
 
-      {/* HERO */}
-      <section className="relative pt-32 pb-24 px-6 flex flex-col items-center text-center overflow-hidden">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(78,205,196,0.12) 0%, transparent 70%)",
-          }}
-        />
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#4ECDC4]/30 bg-[#4ECDC4]/10 text-[#4ECDC4] text-xs font-semibold uppercase tracking-widest mb-6">
-          Whitelabel Platform
-        </div>
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight max-w-3xl mb-6">
-          Din platform.
-          <br />
-          <span className="text-[#4ECDC4]">Dit brand.</span>
-          <br />
-          Vores motor.
-        </h1>
-        <p className="text-white/60 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
-          Få en komplet social oplevelses-platform i dit eget navn — bygget på B-Socials
-          kraftfulde infrastruktur med 95.000+ steder og 6.400+ events på tværs af 100+ lande.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <a
-            href="mailto:kontakt@b-social.net"
-            className="px-8 py-4 rounded-2xl bg-[#4ECDC4] text-[#080c1a] font-bold text-base hover:bg-[#3dbdb5] transition-colors shadow-lg shadow-[#4ECDC4]/20"
-          >
-            Kontakt os for en demo
-          </a>
-          <button
-            onClick={() => setLocation("/")}
-            className="px-8 py-4 rounded-2xl border border-white/20 text-white/70 font-medium text-base hover:bg-white/5 hover:text-white transition-colors"
-          >
-            Se platformen live
-          </button>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section className="px-6 pb-20">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center text-center"
-            >
-              <span className="text-3xl font-extrabold text-[#4ECDC4] mb-1">{s.value}</span>
-              <span className="text-white/50 text-sm">{s.label}</span>
+        {/* ── HERO ── */}
+        <section className="wl-hero">
+          <div className="wl-hero-bg" />
+          <div className="wl-hero-overlay" />
+          <div className="wl-hero-glow" />
+          <div className="wl-hero-inner">
+            <div className="wl-hero-badge wl-fade-up">Whitelabel Platform</div>
+            <h1 className="wl-hero-h1 wl-fade-up wl-d1">
+              Din platform.<br />
+              <em>Dit brand.</em><br />
+              Vores motor.
+            </h1>
+            <p className="wl-hero-sub wl-fade-up wl-d2">
+              Få en komplet social oplevelses-platform i dit eget navn — bygget på B-Socials
+              kraftfulde infrastruktur med 95.000+ steder og 6.400+ events på tværs af 100+ lande.
+            </p>
+            <div className="wl-hero-btns wl-fade-up wl-d3">
+              <a href="mailto:kontakt@b-social.net" className="wl-btn">
+                Kontakt os for en demo
+              </a>
+              <button onClick={() => setLocation("/")} className="wl-btn-ghost">
+                Se platformen live
+              </button>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* DATABASE / MOTOR SEKTION */}
-      <section className="px-6 pb-24">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Hjernen bag platformen
-            </h2>
-            <p className="text-white/50 text-lg max-w-2xl mx-auto">
+        {/* ── STATS ── */}
+        <div className="wl-stats">
+          <div className="wl-stats-grid">
+            {STATS.map((s, i) => (
+              <div key={s.label} className={`wl-stat-card wl-fade-up wl-d${i % 4 + 1}`}>
+                <div className="wl-stat-value">{s.value}</div>
+                <div className="wl-stat-desc">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── DATABASE / MOTOR SEKTION ── */}
+        <section className="wl-section wl-features">
+          <div className="wl-section-center wl-fade-up">
+            <div className="wl-eyebrow">
+              <div className="wl-eyebrow-line" />
+              Infrastruktur
+            </div>
+            <h2 className="wl-h2">Hjernen bag <em>platformen</em></h2>
+            <p className="wl-text">
               Bag hver skærm ligger en kompleks relationsdatabase der i realtid håndterer
               tusindvis af datapunkter — fra personaliserede feeds til live kortvisning
               med 95.000+ steder over hele verden.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-[#4ECDC4]/40 hover:bg-white/8 transition-all"
-              >
-                <div className="text-3xl mb-3">{f.icon}</div>
-                <h3 className="font-semibold text-white mb-2">{f.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{f.desc}</p>
+          <div className="wl-feat-grid">
+            {FEATURES.map((f, i) => (
+              <div key={f.title} className={`wl-feat-card wl-fade-up wl-d${(i % 4) + 1}`}>
+                <div className="wl-feat-icon">{f.icon}</div>
+                <div className="wl-feat-title">{f.title}</div>
+                <div className="wl-feat-desc">{f.desc}</div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* HVAD DU FÅR */}
-      <section className="px-6 pb-24">
-        <div className="max-w-3xl mx-auto rounded-3xl border border-[#4ECDC4]/20 bg-gradient-to-br from-[#4ECDC4]/10 to-transparent p-10">
-          <h2 className="text-3xl font-bold mb-6 text-center">Alt inkluderet — under dit brand</h2>
-          <ul className="space-y-3 text-white/70 text-sm mb-8">
-            {[
-              "Dit eget domæne og visuel identitet (logo, farver, fonts)",
-              "Komplet platform med alle B-Social features fra dag 1",
-              "Adgang til hele den eksisterende database — eller afgrænset til dit marked",
-              "Dedikeret opsætning, onboarding og teknisk support",
-              "Løbende hosting, vedligeholdelse og nye features automatisk",
-              "Firma-modul med selvbetjening, analytics og fakturering",
-              "Multi-sprog support og klar til internationale markeder",
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-3">
-                <span className="text-[#4ECDC4] mt-0.5 shrink-0">✓</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* PRIS */}
-      <section className="px-6 pb-24">
-        <div className="max-w-3xl mx-auto text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Enkel, transparent prismodel</h2>
-          <p className="text-white/50">Du betaler kun i takt med at din platform vokser.</p>
-        </div>
-        <div className="max-w-3xl mx-auto grid md:grid-cols-2 gap-6">
-          {/* Setup */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 flex flex-col items-center text-center">
-            <span className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3">Engangsbetaling</span>
-            <span className="text-5xl font-extrabold text-white mb-1">€80.000</span>
-            <span className="text-white/40 text-sm mb-6">Setup-fee</span>
-            <p className="text-white/60 text-sm leading-relaxed">
-              Komplet whitelabel-opsætning inkl. branding, domæne, konfiguration, datamigration og onboarding.
-            </p>
+        {/* ── HVAD DU FÅR ── */}
+        <section className="wl-section wl-includes">
+          <div className="wl-section-center wl-fade-up">
+            <div className="wl-eyebrow">
+              <div className="wl-eyebrow-line" />
+              Alt inkluderet
+            </div>
+            <h2 className="wl-h2">Under <em>dit brand</em></h2>
           </div>
-          {/* Revenue share */}
-          <div className="rounded-3xl border border-[#4ECDC4]/30 bg-[#4ECDC4]/10 p-8 flex flex-col items-center text-center">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#4ECDC4]/70 mb-3">Løbende</span>
-            <span className="text-5xl font-extrabold text-[#4ECDC4] mb-1">5%</span>
-            <span className="text-[#4ECDC4]/60 text-sm mb-6">af omsætningen</span>
-            <p className="text-white/60 text-sm leading-relaxed">
-              Ingen månedlige faste omkostninger. Du betaler en andel af det din platform genererer.
-            </p>
+          <div className="wl-includes-box wl-fade-up wl-d1">
+            <ul className="wl-includes-list">
+              {INCLUDES.map((item) => (
+                <li key={item}>
+                  <span className="wl-check">&#10003;</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA */}
-      <section className="px-6 pb-32">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Klar til at bygge din platform?</h2>
-          <p className="text-white/50 mb-8">
-            Kontakt os for en uforpligtende demo og se hvad B-Social-motoren kan gøre for dit brand.
-          </p>
-          <a
-            href="mailto:kontakt@b-social.net"
-            className="inline-block px-10 py-4 rounded-2xl bg-[#4ECDC4] text-[#080c1a] font-bold text-base hover:bg-[#3dbdb5] transition-colors shadow-lg shadow-[#4ECDC4]/20"
-          >
-            Kontakt os
-          </a>
-        </div>
-      </section>
+        {/* ── PRIS ── */}
+        <section className="wl-section wl-pricing">
+          <div className="wl-section-center wl-fade-up">
+            <div className="wl-eyebrow">
+              <div className="wl-eyebrow-line" />
+              Pris
+            </div>
+            <h2 className="wl-h2">Enkel, <em>transparent</em> prismodel</h2>
+            <p className="wl-text">Du betaler kun i takt med at din platform vokser.</p>
+          </div>
+          <div className="wl-price-grid">
+            {/* Setup */}
+            <div className="wl-price-card wl-price-card--default wl-fade-up wl-d1">
+              <div className="wl-price-tag wl-price-tag--muted">Engangsbetaling</div>
+              <div className="wl-price-amount wl-price-amount--white">&euro;80.000</div>
+              <div className="wl-price-note wl-price-note--muted">Setup-fee</div>
+              <p className="wl-price-desc">
+                Komplet whitelabel-opsætning inkl. branding, domæne, konfiguration, datamigration og onboarding.
+              </p>
+            </div>
+            {/* Revenue share */}
+            <div className="wl-price-card wl-price-card--accent wl-fade-up wl-d2">
+              <div className="wl-price-tag wl-price-tag--teal">Løbende</div>
+              <div className="wl-price-amount wl-price-amount--teal">5%</div>
+              <div className="wl-price-note wl-price-note--teal">af omsætningen</div>
+              <p className="wl-price-desc">
+                Ingen månedlige faste omkostninger. Du betaler en andel af det din platform genererer.
+              </p>
+            </div>
+          </div>
+        </section>
 
-      {/* FOOTER */}
-      <footer className="border-t border-white/5 px-6 py-8 text-center text-white/30 text-xs">
-        © 2026 B-Social · Alle rettigheder forbeholdes ·{" "}
-        <button onClick={() => setLocation("/privatlivspolitik")} className="hover:text-white/60 transition-colors">
-          Privatlivspolitik
-        </button>
-      </footer>
-    </div>
+        {/* ── CTA ── */}
+        <section className="wl-section wl-cta wl-fade-up">
+          <div className="wl-cta-inner">
+            <div className="wl-eyebrow" style={{ justifyContent: "center", marginBottom: 20 }}>
+              <div className="wl-eyebrow-line" />
+              Kom i gang
+            </div>
+            <h2 className="wl-h2">Klar til at bygge <em>din</em> platform?</h2>
+            <p className="wl-text" style={{ marginTop: 16, marginBottom: 32 }}>
+              Kontakt os for en uforpligtende demo og se hvad B-Social-motoren kan gøre for dit brand.
+            </p>
+            <a href="mailto:kontakt@b-social.net" className="wl-btn">
+              Kontakt os
+            </a>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="wl-footer">
+          &copy; 2026 B-Social &middot; Alle rettigheder forbeholdes &middot;{" "}
+          <button onClick={() => setLocation("/privatlivspolitik")}>
+            Privatlivspolitik
+          </button>
+        </footer>
+      </div>
+    </>
   );
 }

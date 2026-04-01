@@ -8,15 +8,20 @@ import { getEvents } from "@/lib/data";
 import { fetchPlacesWithLimit, type Place } from "@/lib/supabase";
 import { getCategoryEmoji, getEventImage, formatDanishDate } from "@/lib/eventHelpers";
 import { useTags } from "@/context/TagContext";
-
 import { searchTags, getParentCategories, TAG_TREE } from "@/lib/tagTree";
 import { OPLEVELSER_NAER_DIG } from "@/data/feedData";
 import type { SocialActivity } from "@/data/feedData";
 import { ALL_PINS } from "@/data/kortPins";
 import { ALL_CATEGORIES } from "@/data/categories";
 import type { Category } from "@/data/categories";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
 
-/* ── Country/Region filter config ── */
+/* ─────────────────────────────────────────────
+   B-Social Udforsk — Premium Redesign
+   Scoped CSS prefix: ud-
+   ───────────────────────────────────────────── */
+
 const REGIONS: Record<string, { flag: string; label: string }> = {
   'DK': { flag: '🇩🇰', label: 'Danmark' },
   'SE': { flag: '🇸🇪', label: 'Sverige' },
@@ -37,7 +42,6 @@ const EUROPE_CODES = [
   'LU','MT','CY','LI','IS','AL','MK','BA','ME','MD','AM','GE','AZ',
 ];
 
-// Only show chips for countries that have events (plus EUROPE and ALL as always-visible)
 const COUNTRY_CHIP_ORDER = ['DK', 'SE', 'NO', 'DE', 'NL', 'GB', 'FR', 'ES', 'IT', 'EUROPE', 'ALL'] as const;
 
 const BRUGERE = [
@@ -50,88 +54,6 @@ const BRUGERE = [
   { name: "Peter", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&crop=face" },
 ];
 
-/* Category tiles removed — replaced with compact chips */
-
-/* ── Horizontal scroll event card ── */
-function PopularCard({ event }: { event: Event }) {
-  const { t } = useTranslation();
-  const isGratis = !event.price || event.price === 0;
-  return (
-    <Link href={`/event/${event.id}`} className="block flex-shrink-0">
-      <div className="min-w-[170px] max-w-[170px] rounded-2xl overflow-hidden glass-card premium-event-card cursor-pointer active:scale-[0.98] transition-transform">
-        <div className="relative h-28 overflow-hidden">
-          <img src={getEventImage(event)} alt={event.title} className="w-full h-full object-cover premium-event-img" loading="lazy" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <span className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold ${isGratis ? "bg-[#4ECDC4]/80 text-white" : "bg-amber-500/80 text-white"}`}>
-            {isGratis ? t('events.free') : `${event.price} kr`}
-          </span>
-        </div>
-        <div className="p-2.5">
-          <h3 className="text-white text-xs font-semibold line-clamp-2 leading-tight">{event.title}</h3>
-          <p className="text-white/40 text-xs mt-0.5 flex items-center gap-1">
-            {getCategoryEmoji(event.category || "")} {event.category}
-          </p>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-/* ── Wide card for "Sker snart" calendar list ── */
-function CalendarListCard({ event }: { event: Event }) {
-  const { t } = useTranslation();
-  const isGratis = !event.price || event.price === 0;
-  return (
-    <Link href={`/event/${event.id}`} className="block">
-      <div className="glass-card premium-event-card rounded-2xl overflow-hidden cursor-pointer active:opacity-80 transition-all flex gap-3 pr-3">
-        <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden">
-          <img src={getEventImage(event)} alt={event.title} className="w-full h-full object-cover premium-event-img" loading="lazy" />
-        </div>
-        <div className="flex flex-col justify-center py-2 min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-xs text-white/50">{getCategoryEmoji(event.category || "")} {event.category}</span>
-            <span className={`px-1.5 py-0 rounded-full text-xs font-semibold ${isGratis ? "bg-[#4ECDC4]/20 text-[#4ECDC4]" : "bg-amber-500/20 text-amber-400"}`}>
-              {isGratis ? t('events.free') : `${event.price} kr`}
-            </span>
-          </div>
-          <h3 className="text-white text-sm font-semibold line-clamp-1">{event.title}</h3>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-white/40 text-[11px]">{formatDanishDate(event.date)}</span>
-            {event.location && (
-              <span className="flex items-center gap-0.5 text-white/30 text-[11px]">
-                <MapPin size={9} />{event.location.split(",")[0]}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-/* ── Trending social item ── */
-function TrendingCard({ activity }: { activity: SocialActivity }) {
-  const { t } = useTranslation();
-  return (
-    <Link href={`/social/${activity.id}`} className="block">
-      <div className="glass-card premium-event-card rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:opacity-80 transition-all">
-        <div className="w-10 h-10 rounded-xl bg-[#4ECDC4]/15 flex items-center justify-center flex-shrink-0 text-xl">
-          {activity.emoji}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-white text-sm font-semibold">{activity.title}</h3>
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-0.5 text-white/40 text-xs"><MapPin size={8} />{activity.location}</span>
-            <span className="flex items-center gap-0.5 text-white/40 text-xs"><Users size={8} />{activity.spots.current}/{activity.spots.total}</span>
-          </div>
-        </div>
-        <span className="px-2 py-0.5 rounded-full bg-[#4ECDC4] text-[#0a0f1a] text-[11px] font-bold flex-shrink-0">{t('events.free')}</span>
-      </div>
-    </Link>
-  );
-}
-
-/* ── Supabase places card ── */
 const PLACE_CATEGORY_IMAGES: Record<string, string> = {
   natur: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400",
   aktiv_sport: "https://images.unsplash.com/photo-1461896836934-bd45ba3ff2b3?w=400",
@@ -140,44 +62,6 @@ const PLACE_CATEGORY_IMAGES: Record<string, string> = {
   kultur: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400",
   musik: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400",
 };
-
-function PlaceCard({ place }: { place: Place }) {
-  const catImg = PLACE_CATEGORY_IMAGES[place.main_categories?.[0] || "natur"] || PLACE_CATEGORY_IMAGES.natur;
-  const catEmoji: Record<string, string> = { natur: "🌿", aktiv_sport: "🏃", mad_hangout: "🍽️", sport: "⚽", kultur: "🎭", musik: "🎵" };
-  const emoji = catEmoji[place.main_categories?.[0] || "natur"] || "📍";
-  return (
-    <Link href={`/sted/${place.id}`}>
-      <div className="min-w-[200px] max-w-[200px] rounded-2xl overflow-hidden glass-card premium-event-card cursor-pointer transition-transform flex-shrink-0" data-testid={`place-card-${place.id}`}>
-        <div className="relative h-28 overflow-hidden">
-          <img src={catImg} alt={place.name} className="w-full h-full object-cover premium-event-img" loading="lazy" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-[#4ECDC4]/80 text-white text-xs font-semibold">
-            {emoji} {place.main_categories?.[0] || "Sted"}
-          </span>
-        </div>
-        <div className="p-2.5">
-          <h3 className="text-white text-xs font-semibold line-clamp-1 leading-tight">{place.name}</h3>
-          <div className="flex items-center gap-1.5 mt-1">
-            <div className="flex items-center gap-0.5">
-              <Star size={10} className="text-amber-400 fill-amber-400" />
-              <span className="text-white/60 text-xs">{place.rating_avg?.toFixed(1) || "–"}</span>
-              <span className="text-white/30 text-[11px]">({place.rating_count || 0})</span>
-            </div>
-            <span className="text-white/30">·</span>
-            <span className="text-white/40 text-xs">{place.city}</span>
-          </div>
-          {place.tags && place.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {place.tags.slice(0, 3).map(tag => (
-                <span key={tag} className="px-1.5 py-0.5 rounded-full bg-white/8 text-white/40 text-[8px]">{tag}</span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 const DB_FILTERS: { key: string | null; label: string; emoji: string }[] = [
   { key: null, label: "Alle", emoji: "✨" },
@@ -195,19 +79,83 @@ const PLACE_CAT_EMOJI: Record<string, string> = {
   loeb: "🏃", mtb: "🚵", vandring: "🥾", mad: "🍽️", fitness: "💪", outdoor: "🌲",
 };
 
+/* ── Sub-components ── */
+
+function PopularCard({ event }: { event: Event }) {
+  const { t } = useTranslation();
+  const isGratis = !event.price || event.price === 0;
+  return (
+    <Link href={`/event/${event.id}`} className="ud-pop-card">
+      <div className="ud-pop-card-img-wrap">
+        <img src={getEventImage(event)} alt={event.title} className="ud-pop-card-img" loading="lazy" />
+        <div className="ud-pop-card-gradient" />
+        <span className={`ud-pop-card-price ${isGratis ? "free" : ""}`}>
+          {isGratis ? t('events.free') : `${event.price} kr`}
+        </span>
+      </div>
+      <div className="ud-pop-card-body">
+        <h3 className="ud-pop-card-name">{event.title}</h3>
+        <p className="ud-pop-card-cat">{getCategoryEmoji(event.category || "")} {event.category}</p>
+      </div>
+    </Link>
+  );
+}
+
+function CalendarListCard({ event }: { event: Event }) {
+  const { t } = useTranslation();
+  const isGratis = !event.price || event.price === 0;
+  return (
+    <Link href={`/event/${event.id}`} className="ud-cal-card">
+      <div className="ud-cal-card-img-wrap">
+        <img src={getEventImage(event)} alt={event.title} className="ud-cal-card-img" loading="lazy" />
+      </div>
+      <div className="ud-cal-card-body">
+        <div className="ud-cal-card-meta">
+          <span className="ud-cal-card-cat">{getCategoryEmoji(event.category || "")} {event.category}</span>
+          <span className={`ud-cal-card-price ${isGratis ? "free" : ""}`}>
+            {isGratis ? t('events.free') : `${event.price} kr`}
+          </span>
+        </div>
+        <h3 className="ud-cal-card-name">{event.title}</h3>
+        <div className="ud-cal-card-info">
+          <span>{formatDanishDate(event.date)}</span>
+          {event.location && (
+            <span className="ud-cal-card-loc"><MapPin size={9} />{event.location.split(",")[0]}</span>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function TrendingCard({ activity }: { activity: SocialActivity }) {
+  const { t } = useTranslation();
+  return (
+    <Link href={`/social/${activity.id}`} className="ud-trend-card">
+      <div className="ud-trend-card-icon">{activity.emoji}</div>
+      <div className="ud-trend-card-body">
+        <h3 className="ud-trend-card-name">{activity.title}</h3>
+        <div className="ud-trend-card-meta">
+          <span><MapPin size={8} />{activity.location}</span>
+          <span><Users size={8} />{activity.spots.current}/{activity.spots.total}</span>
+        </div>
+      </div>
+      <span className="ud-trend-card-badge">{t('events.free')}</span>
+    </Link>
+  );
+}
+
 function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   const { t } = useTranslation();
   const [dbFilter, setDbFilter] = useState<string | null>(null);
   const { data: places, isLoading } = useQuery<Place[]>({
     queryKey: ["supabase-places-50"],
     queryFn: () => fetchPlacesWithLimit(50),
-    staleTime: 30 * 60 * 1000, // 30 min — places don't change often
+    staleTime: 30 * 60 * 1000,
   });
 
   const filteredPlaces = useMemo(() => {
     if (!places) return [];
-
-    // Filter by country first
     let countryFiltered = places;
     if (activeCountry === 'ALL') {
       countryFiltered = places;
@@ -216,8 +164,6 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
     } else {
       countryFiltered = places.filter(p => !p.country || p.country === activeCountry);
     }
-
-    // Then filter by category if dbFilter is set
     if (!dbFilter) return countryFiltered;
     return countryFiltered.filter(p => {
       const cats = (p.main_categories || []).map(c => c.toLowerCase());
@@ -228,12 +174,12 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   }, [places, dbFilter, activeCountry]);
 
   if (isLoading) return (
-    <section className="px-5">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm">📍</span>
-        <h2 className="text-white font-semibold text-sm">{t('udforsk.places_in_area')}</h2>
+    <section className="ud-places-section">
+      <div className="ud-section-head">
+        <span>📍</span>
+        <h2>{t('udforsk.places_in_area')}</h2>
       </div>
-      <div className="flex items-center gap-2 text-white/40 text-xs">
+      <div className="ud-places-loading">
         <Loader2 size={14} className="animate-spin" /> {t('udforsk.fetching_places')}
       </div>
     </section>
@@ -242,72 +188,59 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   if (!places || places.length === 0) return null;
 
   return (
-    <section>
-      <div className="flex items-center justify-between px-5 mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm">📍</span>
-          <h2 className="text-white font-semibold text-sm">{t('udforsk.places_in_area')}</h2>
-          <span className="px-1.5 py-0.5 rounded-full bg-[#4ECDC4]/20 text-[#4ECDC4] text-[11px] font-bold">{places.length}</span>
+    <section className="ud-places-section">
+      <div className="ud-section-head">
+        <div className="ud-section-head-left">
+          <span>📍</span>
+          <h2>{t('udforsk.places_in_area')}</h2>
+          <span className="ud-section-count">{places.length}</span>
         </div>
-        <Link href="/kort">
-          <span className="text-white/30 text-xs flex items-center gap-0.5 hover:text-white/60 transition-colors cursor-pointer">
-            {t('nav.kort')} <ChevronRight size={12} />
-          </span>
+        <Link href="/kort" className="ud-section-link">
+          {t('nav.kort')} <ChevronRight size={12} />
         </Link>
       </div>
-      {/* v25 Category filter chips */}
-      <div className="flex gap-1.5 overflow-x-auto px-5 pb-2" style={{ scrollbarWidth: "none" }}>
+      <div className="ud-filter-row">
         {DB_FILTERS.map((f) => (
           <button
             key={f.key || "alle"}
             onClick={() => setDbFilter(f.key)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-              dbFilter === f.key
-                ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/20"
-                : "glass-card text-white/60 hover:text-white"
-            }`}
+            className={`ud-chip ${dbFilter === f.key ? "active" : ""}`}
             data-testid={`db-filter-${f.key || "alle"}`}
           >
-            <span className="text-xs">{f.emoji}</span>
-            {f.label}
+            <span>{f.emoji}</span> {f.label}
           </button>
         ))}
       </div>
-      {/* Place cards grid */}
-      <div className="grid grid-cols-2 gap-2.5 px-5">
+      <div className="ud-places-grid">
         {filteredPlaces.slice(0, 20).map(p => {
           const mainCat = p.main_categories?.[0] || "natur";
           const emoji = PLACE_CAT_EMOJI[mainCat] || "📍";
           return (
-            <Link key={p.id} href={`/sted/${p.id}`}>
-              <div className="glass-card rounded-2xl p-3 cursor-pointer hover:bg-white/10 transition-all" data-testid={`db-place-${p.id}`}>
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-lg mb-2">
-                  {emoji}
+            <Link key={p.id} href={`/sted/${p.id}`} className="ud-place-card" data-testid={`db-place-${p.id}`}>
+              <div className="ud-place-card-icon">{emoji}</div>
+              <h3 className="ud-place-card-name">{p.name}</h3>
+              <div className="ud-place-card-meta">
+                <div className="ud-place-card-rating">
+                  <Star size={10} className="ud-star" />
+                  <span>{p.rating_avg?.toFixed(1) || "–"}</span>
                 </div>
-                <h3 className="text-white text-xs font-semibold line-clamp-1 leading-tight">{p.name}</h3>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <div className="flex items-center gap-0.5">
-                    <Star size={10} className="text-amber-400 fill-amber-400" />
-                    <span className="text-white/60 text-xs">{p.rating_avg?.toFixed(1) || "–"}</span>
-                  </div>
-                  <span className="text-white/30">·</span>
-                  <span className="text-white/40 text-xs truncate">{p.city}</span>
-                </div>
+                <span className="ud-place-card-sep">·</span>
+                <span className="ud-place-card-city">{p.city}</span>
               </div>
             </Link>
           );
         })}
       </div>
       {filteredPlaces.length === 0 && (
-        <div className="px-5 py-4 text-center">
-          <span className="text-white/40 text-xs">{t('udforsk.no_places_category')}</span>
+        <div className="ud-empty-places">
+          <span>{t('udforsk.no_places_category')}</span>
         </div>
       )}
     </section>
   );
 }
 
-/* ═══════════════════ UDFORSK ═══════════════════ */
+/* ═══════════════════ MAIN ═══════════════════ */
 export default function Udforsk() {
   const { t } = useTranslation();
   const { selectedTags } = useTags();
@@ -317,8 +250,8 @@ export default function Udforsk() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeCountry, setActiveCountry] = useState<string>('EUROPE');
   const searchRef = useRef<HTMLInputElement>(null);
+  const containerRef = useFadeUp("ud");
 
-  // Debounce search input — wait 250ms after user stops typing before filtering
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 250);
     return () => clearTimeout(timer);
@@ -327,14 +260,12 @@ export default function Udforsk() {
   const { data: events } = useQuery<Event[]>({
     queryKey: ["events"],
     queryFn: () => Promise.resolve(getEvents()),
-    staleTime: 2 * 60 * 1000, // 2 min — events change often
+    staleTime: 2 * 60 * 1000,
   });
 
   const allEvents = events || [];
 
-  /* ── Filter events by active category, country, or search (TAG-TREE AWARE) ── */
   const filtered = useMemo(() => {
-    // Expand search query through tag tree (uses debounced value for performance)
     const q = debouncedSearch.toLowerCase().trim();
     let expandedTerms: string[] = q ? [q] : [];
     if (q) {
@@ -354,10 +285,8 @@ export default function Udforsk() {
       const matchCat = !activeCategory ||
         (e.interest_tags || []).some(tag => tag.toLowerCase().includes(activeCategory)) ||
         (e.category || "").toLowerCase().includes(activeCategory);
-      // Also apply user's selected interest tags (from onboarding/profile)
       const matchUserTags = selectedTags.length === 0 || !activeCategory ||
         selectedTags.some(t => (e.interest_tags || []).some(tag => tag.toLowerCase().includes(t.toLowerCase())));
-      // Country filter
       let matchCountry = true;
       if (activeCountry === 'ALL') {
         matchCountry = true;
@@ -382,30 +311,25 @@ export default function Udforsk() {
   }
 
   return (
-    <div
-      className="relative min-h-svh pb-24"
-      style={{
-        background: "#060a0f",
-      }}
-      data-testid="udforsk-page"
-    >
-      {/* Accent glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] rounded-full pointer-events-none" style={{ background: "radial-gradient(ellipse at center, rgba(78,205,196,0.08) 0%, transparent 70%)" }} />
+    <div ref={containerRef} className="ud-root" data-testid="udforsk-page">
+      <style>{udforskCSS}</style>
 
-      {/* ── Header ── */}
-      <div className="sticky top-0 z-30 pt-12 pb-3 px-5" style={{ background: "linear-gradient(to bottom, #060a0f 85%, transparent)" }}>
-        <div className="mb-3 fade-up">
-          <div className="eyebrow mb-2">
-            <div className="eyebrow-line" />
+      {/* Accent glow */}
+      <div className="ud-glow" />
+
+      {/* ── Sticky header ── */}
+      <div className="ud-sticky-header">
+        <div className="ud-header ud-fade-up">
+          <div className="ud-eyebrow">
+            <div className="ud-eyebrow-line" />
             {t('nav.udforsk')}
           </div>
-          <h1 className="text-white" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "26px", letterSpacing: "-0.5px" }}>{t('udforsk.title')}</h1>
-          <p className="text-white/45 text-sm mt-0.5">{t('udforsk.subtitle')}</p>
+          <h1 className="ud-h1">{t('udforsk.title')}</h1>
+          <p className="ud-sub">{t('udforsk.subtitle')}</p>
         </div>
 
-        {/* Big search bar */}
-        <div className="relative fade-up delay-1">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" />
+        <div className="ud-search-bar ud-fade-up ud-d1">
+          <Search size={16} className="ud-search-icon" />
           <input
             ref={searchRef}
             type="search"
@@ -413,54 +337,48 @@ export default function Udforsk() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setSearchFocused(true)}
-            className="premium-input w-full pl-11 pr-10 text-white placeholder:text-white/35 text-sm focus:outline-none"
-            style={{ paddingLeft: "44px" }}
+            className="ud-search-input"
             data-testid="input-search"
           />
           {(search || searchFocused) && (
-            <button onClick={() => { setSearch(""); setSearchFocused(false); setActiveCategory(null); searchRef.current?.blur(); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+            <button onClick={() => { setSearch(""); setSearchFocused(false); setActiveCategory(null); searchRef.current?.blur(); }} className="ud-search-clear">
               <X size={16} />
             </button>
           )}
         </div>
       </div>
 
-      {/* ═══ SEARCH OVERLAY: tags when focused ═══ */}
+      {/* ═══ SEARCH OVERLAY ═══ */}
       {searchFocused && !search && (
-        <div className="px-5 pb-4">
-          <p className="text-white/50 text-[11px] uppercase tracking-wider font-semibold mb-2.5">{t('udforsk.what_catches_you')}</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="ud-search-overlay">
+          <p className="ud-label">{t('udforsk.what_catches_you')}</p>
+          <div className="ud-tag-suggestions">
             {getParentCategories().map((dt) => (
-              <button key={dt.tag} onClick={() => pickTag(dt.tag)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full glass-card text-white/70 text-xs font-medium hover:bg-white/10 hover:text-white transition-all">
-                <span>{dt.emoji}</span>
-                <span>{dt.label}</span>
+              <button key={dt.tag} onClick={() => pickTag(dt.tag)} className="ud-chip">
+                <span>{dt.emoji}</span> {dt.label}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* ═══ SEARCH ACTIVE: grouped results ═══ */}
+      {/* ═══ SEARCH RESULTS ═══ */}
       {search && (
-        <div className="px-5 pb-4 space-y-4">
+        <div className="ud-search-results">
           {/* Kategorier */}
           {(() => {
             const results = searchTags(search);
             if (results.length === 0) return null;
             return (
-              <div>
-                <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">{t('udforsk.categories')}</p>
-                <div className="flex flex-wrap gap-2">
+              <div className="ud-result-group">
+                <p className="ud-label">{t('udforsk.categories')}</p>
+                <div className="ud-tag-suggestions">
                   {results.slice(0, 6).map((tr) => {
                     const isParentCat = TAG_TREE.some(p => p.tag === tr.tag);
                     return (
                       <button key={tr.tag} onClick={() => pickTag(tr.tag)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-white/15 transition-all ${
-                          isParentCat ? "glass-card text-white/90 border-white/20" : "bg-white/5 text-white/70 hover:text-white"
-                        }`}>
-                        <span>{tr.emoji}</span>
-                        <span>{tr.label}</span>
+                        className={`ud-chip ${isParentCat ? "highlighted" : ""}`}>
+                        <span>{tr.emoji}</span> {tr.label}
                       </button>
                     );
                   })}
@@ -471,13 +389,13 @@ export default function Udforsk() {
 
           {/* Events */}
           {filtered.length > 0 && (
-            <div>
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">{t('udforsk.search_events')}</p>
-              <div className="space-y-2">
+            <div className="ud-result-group">
+              <p className="ud-label">{t('udforsk.search_events')}</p>
+              <div className="ud-result-list">
                 {filtered.slice(0, 3).map(e => <CalendarListCard key={e.id} event={e} />)}
               </div>
               {filtered.length > 3 && (
-                <button className="text-[#4ECDC4] text-xs font-medium mt-2">{t('events.see_all_events', {count: filtered.length})}</button>
+                <button className="ud-see-more">{t('events.see_all_events', {count: filtered.length})}</button>
               )}
             </div>
           )}
@@ -491,19 +409,17 @@ export default function Udforsk() {
             if (matchedPlaces.length === 0) return null;
             const catEmoji: Record<string, string> = { sport: "⚽", kultur: "🎭", natur: "🌿", musik: "🎵", mad: "🍽️", spil: "🎲", events: "🎉", mtb: "🚵", vandring: "🥾", loeb: "🏃", hund: "🐕", fiskeri: "🎣", badning: "🏊", shelter: "⛺", dyrespot: "🦌", kreativt: "🖌️", fitness: "💪", outdoor: "🌲", socialt: "❤️", karriere: "💼", tech: "💻", rejser: "🚆", logi: "🏕️", wellness: "🧘", communities: "👥", ture: "🥾", aktiv: "⚽" };
             return (
-              <div>
-                <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">{t('udforsk.search_places')}</p>
-                <div className="space-y-2">
+              <div className="ud-result-group">
+                <p className="ud-label">{t('udforsk.search_places')}</p>
+                <div className="ud-result-list">
                   {matchedPlaces.map(p => (
-                    <Link key={p.id} href="/kort">
-                      <div className="flex items-center gap-3 p-2.5 rounded-xl glass-card hover:bg-white/8 transition-colors cursor-pointer">
-                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm">{catEmoji[p.category] || "📍"}</div>
-                        <div>
-                          <span className="text-white text-xs font-medium block">{p.name}</span>
-                          <span className="text-white/40 text-xs">{p.category}</span>
-                        </div>
-                        <MapPin size={12} className="ml-auto text-white/30" />
+                    <Link key={p.id} href="/kort" className="ud-result-row">
+                      <div className="ud-result-row-icon">{catEmoji[p.category] || "📍"}</div>
+                      <div className="ud-result-row-text">
+                        <span className="ud-result-row-name">{p.name}</span>
+                        <span className="ud-result-row-cat">{p.category}</span>
                       </div>
+                      <MapPin size={12} className="ud-result-row-pin" />
                     </Link>
                   ))}
                 </div>
@@ -517,13 +433,13 @@ export default function Udforsk() {
             const matchedUsers = BRUGERE.filter(b => b.name.toLowerCase().includes(q)).slice(0, 3);
             if (matchedUsers.length === 0) return null;
             return (
-              <div>
-                <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">{t('udforsk.search_users')}</p>
-                <div className="space-y-2">
+              <div className="ud-result-group">
+                <p className="ud-label">{t('udforsk.search_users')}</p>
+                <div className="ud-result-list">
                   {matchedUsers.map(b => (
-                    <div key={b.name} className="flex items-center gap-3 p-2.5 rounded-xl glass-card hover:bg-white/8 transition-colors cursor-pointer">
-                      <img src={b.avatar} alt={b.name} className="w-8 h-8 rounded-full object-cover" loading="lazy" />
-                      <span className="text-white text-xs font-medium">{b.name}</span>
+                    <div key={b.name} className="ud-result-row">
+                      <img src={b.avatar} alt={b.name} className="ud-result-row-avatar" loading="lazy" />
+                      <span className="ud-result-row-name">{b.name}</span>
                     </div>
                   ))}
                 </div>
@@ -531,139 +447,419 @@ export default function Udforsk() {
             );
           })()}
 
-          {/* No results */}
           {filtered.length === 0 && searchTags(search).length === 0 && (
-            <div className="text-center py-8">
-              <span className="text-3xl">🔍</span>
-              <p className="text-white/50 text-sm mt-2">{t('udforsk.no_results', {query: search})}</p>
+            <div className="ud-no-results">
+              <span>🔍</span>
+              <p>{t('udforsk.no_results', {query: search})}</p>
             </div>
           )}
         </div>
       )}
 
-      {/* ═══ MAIN DISCOVERY CONTENT (no search) ═══ */}
+      {/* ═══ MAIN CONTENT ═══ */}
       {!search && !searchFocused && (
-        <div className="space-y-6 mt-1">
+        <div className="ud-content">
 
-          {/* Active category indicator */}
           {activeCategory && (
-            <div className="mx-5 flex items-center justify-between glass-card rounded-2xl px-4 py-2.5">
-              <span className="text-white text-sm font-medium">{getCategoryEmoji(activeCategory)} {t('events.showing', {category: activeCategory})}</span>
-              <button onClick={() => setActiveCategory(null)} className="text-[#4ECDC4] text-xs font-medium">{t('events.show_all')}</button>
+            <div className="ud-active-cat ud-fade-up">
+              <span>{getCategoryEmoji(activeCategory)} {t('events.showing', {category: activeCategory})}</span>
+              <button onClick={() => setActiveCategory(null)}>{t('events.show_all')}</button>
             </div>
           )}
 
-          {/* ══ Country / Region chips ══ */}
-          <section>
-            <div className="flex items-center gap-2 px-5 mb-2">
-              <span className="text-sm">🌎</span>
-              <h2 className="text-white font-semibold text-sm">{t('udforsk.country_filter_label')}</h2>
+          {/* Country chips */}
+          <section className="ud-fade-up">
+            <div className="ud-section-head">
+              <span>🌎</span>
+              <h2>{t('udforsk.country_filter_label')}</h2>
             </div>
-            <div className="flex gap-2 overflow-x-auto px-5 pb-1" style={{ scrollbarWidth: "none" }}>
+            <div className="ud-chip-scroll">
               {COUNTRY_CHIP_ORDER.map((code) => {
                 const region = REGIONS[code];
                 if (!region) return null;
-                const isActive = activeCountry === code;
                 return (
-                  <button
-                    key={code}
-                    onClick={() => setActiveCountry(code)}
-                    className={`flex items-center gap-1.5 px-3 py-2.5 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] ${
-                      isActive
-                        ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/20"
-                        : "glass-card text-white/60 hover:text-white hover:bg-white/10"
-                    }`}
-                    data-testid={`country-chip-${code}`}
-                  >
-                    <span className="text-sm">{region.flag}</span>
-                    {region.label}
+                  <button key={code} onClick={() => setActiveCountry(code)}
+                    className={`ud-chip ${activeCountry === code ? "active" : ""}`}
+                    data-testid={`country-chip-${code}`}>
+                    <span>{region.flag}</span> {region.label}
                   </button>
                 );
               })}
             </div>
           </section>
 
-          {/* ══ Kategori-chips — kompakte, scrollbare ══ */}
-          <section className="px-5">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm">🗂️</span>
-                <h2 className="text-white font-semibold text-sm">{t('udforsk.categories')}</h2>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {ALL_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.key}
-                    onClick={() => pickTag(cat.key)}
-                    className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all text-left min-h-[44px] ${
-                      activeCategory === cat.key
-                        ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/20"
-                        : "glass-card hover:bg-white/10"
-                    }`}
-                    data-testid={`cat-chip-${cat.key}`}
-                  >
-                    <span className="text-base">{cat.emoji}</span>
-                    <span className={`text-xs font-medium ${activeCategory === cat.key ? "text-[#0a0f1a]" : "text-white/80"}`}>{cat.label}</span>
-                  </button>
-                ))}
-                <Link href="/kort">
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#003580] hover:bg-[#00264D] transition-all text-left min-h-[44px] border border-[#003580]"
-                  >
-                    <span className="text-base">🏨</span>
-                    <span className="text-white text-xs font-medium">Hoteller & overnatning</span>
-                  </button>
-                </Link>
-              </div>
-            </section>
-
-          {/* ═══ STEDER FRA DATABASEN ═══ */}
-          <SupabasePlacesSection activeCountry={activeCountry} />
-
-          {/* ── Trending nær dig ── */}
-          <section className="px-5">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={14} className="text-[#4ECDC4]" />
-              <h2 className="text-white font-semibold text-sm">{t('udforsk.trending_nearby')}</h2>
+          {/* Categories */}
+          <section className="ud-fade-up ud-d1">
+            <div className="ud-section-head">
+              <span>🗂️</span>
+              <h2>{t('udforsk.categories')}</h2>
             </div>
-            <div className="space-y-2">
+            <div className="ud-cat-wrap">
+              {ALL_CATEGORIES.map((cat) => (
+                <button key={cat.key} onClick={() => pickTag(cat.key)}
+                  className={`ud-cat-chip ${activeCategory === cat.key ? "active" : ""}`}
+                  data-testid={`cat-chip-${cat.key}`}>
+                  <span className="ud-cat-chip-emoji">{cat.emoji}</span>
+                  <span className="ud-cat-chip-label">{cat.label}</span>
+                </button>
+              ))}
+              <Link href="/kort" className="ud-cat-chip hotel">
+                <span className="ud-cat-chip-emoji">🏨</span>
+                <span className="ud-cat-chip-label">Hoteller & overnatning</span>
+              </Link>
+            </div>
+          </section>
+
+          {/* Database places */}
+          <div className="ud-fade-up ud-d2">
+            <SupabasePlacesSection activeCountry={activeCountry} />
+          </div>
+
+          {/* Trending */}
+          <section className="ud-fade-up ud-d2">
+            <div className="ud-section-head">
+              <TrendingUp size={14} className="ud-teal-icon" />
+              <h2>{t('udforsk.trending_nearby')}</h2>
+            </div>
+            <div className="ud-trend-list">
               {trendingSocial.map((s) => <TrendingCard key={s.id} activity={s} />)}
             </div>
           </section>
 
-          {/* ── Populære oplevelser: horizontal scroll ── */}
+          {/* Popular */}
           {popular.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between px-5 mb-2.5">
-                <h2 className="text-white font-semibold text-sm">🔥 {t('events.popular_experiences')}</h2>
-                <span className="text-white/30 text-xs flex items-center gap-0.5">{t('events.see_all')} <ChevronRight size={12} /></span>
+            <section className="ud-fade-up ud-d3">
+              <div className="ud-section-head">
+                <div className="ud-section-head-left">
+                  <span>🔥</span>
+                  <h2>{t('events.popular_experiences')}</h2>
+                </div>
+                <span className="ud-section-link">{t('events.see_all')} <ChevronRight size={12} /></span>
               </div>
-              <div className="flex gap-3 overflow-x-auto px-5 pb-1" style={{ scrollbarWidth: "none" }}>
+              <div className="ud-pop-row">
                 {popular.map(e => <PopularCard key={e.id} event={e} />)}
               </div>
             </section>
           )}
 
-          {/* ── Sker snart: calendar-style list ── */}
+          {/* Coming soon */}
           {comingSoon.length > 0 && (
-            <section className="px-5">
-              <h2 className="text-white font-semibold text-sm mb-3">📅 {t('events.coming_soon')}</h2>
-              <div className="space-y-2">
+            <section className="ud-fade-up ud-d3">
+              <div className="ud-section-head">
+                <span>📅</span>
+                <h2>{t('events.coming_soon')}</h2>
+              </div>
+              <div className="ud-cal-list">
                 {comingSoon.map(e => <CalendarListCard key={e.id} event={e} />)}
               </div>
             </section>
           )}
 
-          {/* Empty state */}
           {activeCategory && filtered.length === 0 && (
-            <div className="flex flex-col items-center py-16 text-center px-5">
-              <span className="text-4xl mb-3">🔍</span>
-              <p className="text-white/60 text-sm">{t('events.no_experiences_found')}</p>
-              <button onClick={() => setActiveCategory(null)} className="mt-2 text-[#4ECDC4] text-sm font-medium">{t('events.show_all_categories')}</button>
+            <div className="ud-empty-state">
+              <span>🔍</span>
+              <p>{t('events.no_experiences_found')}</p>
+              <button onClick={() => setActiveCategory(null)} className="ud-btn-sm">{t('events.show_all_categories')}</button>
             </div>
           )}
         </div>
       )}
-
     </div>
   );
 }
+
+/* ──────────────────────────────────────────────
+   Scoped CSS — all classes prefixed with ud-
+   ────────────────────────────────────────────── */
+const udforskCSS = `
+${pageBase("ud")}
+
+.ud-root { position: relative; padding-bottom: 96px; }
+
+/* ── Glow ── */
+.ud-glow {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 400px; height: 300px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(78,205,196,0.07) 0%, transparent 70%);
+}
+
+/* ── Sticky header ── */
+.ud-sticky-header {
+  position: sticky; top: 0; z-index: 30;
+  padding: 48px 20px 14px;
+  background: linear-gradient(to bottom, #060a0f 80%, transparent);
+}
+.ud-header { margin-bottom: 14px; }
+.ud-h1 {
+  font-family: var(--serif); font-size: 28px; font-weight: 400;
+  letter-spacing: -0.5px; color: var(--pg-white);
+}
+.ud-sub { font-size: 13px; color: var(--pg-white-muted); margin-top: 4px; }
+
+/* ── Search ── */
+.ud-search-bar { position: relative; }
+.ud-search-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--pg-white-muted); pointer-events: none; z-index: 1;
+}
+.ud-search-input {
+  width: 100%; padding: 14px 44px 14px 44px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  border-radius: 14px; color: var(--pg-white); font-size: 14px;
+  font-family: var(--sans); outline: none; transition: all 0.25s;
+}
+.ud-search-input:focus { border-color: rgba(78,205,196,0.35); }
+.ud-search-input::placeholder { color: rgba(255,255,255,0.3); }
+.ud-search-clear {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--pg-white-muted); background: none; border: none;
+  cursor: pointer; transition: color 0.2s;
+}
+.ud-search-clear:hover { color: var(--pg-white); }
+
+/* ── Search overlay / results ── */
+.ud-search-overlay, .ud-search-results { padding: 0 20px 16px; }
+.ud-tag-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ud-result-group { margin-bottom: 20px; }
+.ud-result-list { display: flex; flex-direction: column; gap: 8px; }
+.ud-result-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 14px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  text-decoration: none; color: var(--pg-white); cursor: pointer;
+  transition: background 0.2s;
+}
+.ud-result-row:hover { background: var(--glass-bg-hover); }
+.ud-result-row-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: rgba(255,255,255,0.08); display: flex;
+  align-items: center; justify-content: center; font-size: 15px;
+}
+.ud-result-row-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.ud-result-row-text { display: flex; flex-direction: column; }
+.ud-result-row-name { font-size: 13px; font-weight: 500; }
+.ud-result-row-cat { font-size: 11px; color: var(--pg-white-muted); }
+.ud-result-row-pin { margin-left: auto; color: var(--pg-white-muted); }
+.ud-see-more {
+  font-size: 12px; color: var(--teal); font-weight: 500;
+  background: none; border: none; cursor: pointer; margin-top: 8px;
+  font-family: var(--sans);
+}
+.ud-no-results { text-align: center; padding: 40px 20px; }
+.ud-no-results span { font-size: 32px; display: block; margin-bottom: 10px; }
+.ud-no-results p { font-size: 14px; color: var(--pg-white-dim); }
+
+/* ── Content ── */
+.ud-content { display: flex; flex-direction: column; gap: 28px; padding: 0 20px; }
+
+/* ── Active category ── */
+.ud-active-cat {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; border-radius: 14px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+}
+.ud-active-cat span { font-size: 14px; font-weight: 500; }
+.ud-active-cat button {
+  font-size: 12px; color: var(--teal); font-weight: 500;
+  background: none; border: none; cursor: pointer; font-family: var(--sans);
+}
+
+/* ── Section heads ── */
+.ud-section-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.ud-section-head h2 { font-size: 14px; font-weight: 600; color: var(--pg-white); }
+.ud-section-head span { font-size: 14px; }
+.ud-section-head-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+.ud-section-count {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px;
+  background: var(--teal-dim); color: var(--teal);
+}
+.ud-section-link {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 12px; color: var(--pg-white-muted); text-decoration: none;
+  cursor: pointer; transition: color 0.2s;
+}
+.ud-section-link:hover { color: var(--pg-white-dim); }
+.ud-teal-icon { color: var(--teal); }
+
+/* ── Chips ── */
+.ud-chip-scroll {
+  display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.ud-chip-scroll::-webkit-scrollbar { display: none; }
+.ud-chip.highlighted {
+  background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);
+  color: var(--pg-white);
+}
+
+/* ── Category chips ── */
+.ud-cat-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.ud-cat-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border-radius: 14px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  cursor: pointer; transition: all 0.25s; text-decoration: none;
+  min-height: 44px; font-family: var(--sans);
+  color: var(--pg-white);
+}
+.ud-cat-chip:hover { background: var(--glass-bg-hover); }
+.ud-cat-chip.active {
+  background: var(--teal); border-color: var(--teal);
+  box-shadow: 0 4px 16px rgba(78,205,196,0.25);
+}
+.ud-cat-chip.active .ud-cat-chip-label { color: var(--bg); }
+.ud-cat-chip.hotel {
+  background: #003580; border-color: #003580;
+}
+.ud-cat-chip.hotel:hover { background: #00264D; }
+.ud-cat-chip.hotel .ud-cat-chip-label { color: white; }
+.ud-cat-chip-emoji { font-size: 16px; }
+.ud-cat-chip-label { font-size: 12px; font-weight: 500; color: var(--pg-white-dim); }
+
+/* ── Places section ── */
+.ud-places-section { }
+.ud-places-loading {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--pg-white-muted);
+}
+.ud-filter-row {
+  display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px;
+  scrollbar-width: none;
+}
+.ud-filter-row::-webkit-scrollbar { display: none; }
+.ud-places-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ud-place-card {
+  padding: 14px; border-radius: 16px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  cursor: pointer; transition: all 0.25s; text-decoration: none; color: var(--pg-white);
+}
+.ud-place-card:hover { background: var(--glass-bg-hover); transform: translateY(-2px); }
+.ud-place-card-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(255,255,255,0.06); display: flex;
+  align-items: center; justify-content: center; font-size: 18px;
+  margin-bottom: 10px;
+}
+.ud-place-card-name {
+  font-size: 12px; font-weight: 600; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ud-place-card-meta {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 6px; font-size: 12px;
+}
+.ud-place-card-rating { display: flex; align-items: center; gap: 3px; }
+.ud-star { color: #fbbf24; fill: #fbbf24; }
+.ud-place-card-rating span { color: var(--pg-white-dim); }
+.ud-place-card-sep { color: var(--pg-white-muted); }
+.ud-place-card-city { color: var(--pg-white-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ud-empty-places { padding: 16px 0; text-align: center; font-size: 12px; color: var(--pg-white-muted); }
+
+/* ── Trending cards ── */
+.ud-trend-list { display: flex; flex-direction: column; gap: 8px; }
+.ud-trend-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px; border-radius: 16px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  text-decoration: none; color: var(--pg-white); cursor: pointer;
+  transition: all 0.25s;
+}
+.ud-trend-card:hover { background: var(--glass-bg-hover); transform: translateY(-2px); }
+.ud-trend-card-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: var(--teal-dim); display: flex;
+  align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.ud-trend-card-body { flex: 1; min-width: 0; }
+.ud-trend-card-name { font-size: 14px; font-weight: 600; }
+.ud-trend-card-meta {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 3px; font-size: 12px; color: var(--pg-white-muted);
+}
+.ud-trend-card-meta span { display: flex; align-items: center; gap: 3px; }
+.ud-trend-card-badge {
+  padding: 4px 12px; border-radius: 100px;
+  background: var(--teal); color: var(--bg);
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+
+/* ── Popular row ── */
+.ud-pop-row {
+  display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none;
+}
+.ud-pop-row::-webkit-scrollbar { display: none; }
+.ud-pop-card {
+  flex: 0 0 175px; border-radius: 16px; overflow: hidden;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  text-decoration: none; color: var(--pg-white); cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
+}
+.ud-pop-card:hover { transform: translateY(-6px); border-color: rgba(78,205,196,0.2); }
+.ud-pop-card-img-wrap { position: relative; height: 112px; overflow: hidden; }
+.ud-pop-card-img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.ud-pop-card:hover .ud-pop-card-img { transform: scale(1.08); }
+.ud-pop-card-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(6,10,15,0.8) 0%, transparent 50%);
+}
+.ud-pop-card-price {
+  position: absolute; top: 8px; right: 8px;
+  padding: 3px 8px; border-radius: 100px;
+  font-size: 11px; font-weight: 600;
+  background: rgba(245,158,11,0.8); color: white;
+}
+.ud-pop-card-price.free { background: rgba(78,205,196,0.8); }
+.ud-pop-card-body { padding: 10px 12px 12px; }
+.ud-pop-card-name {
+  font-size: 12px; font-weight: 600; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ud-pop-card-cat { font-size: 11px; color: var(--pg-white-muted); margin-top: 4px; }
+
+/* ── Calendar list cards ── */
+.ud-cal-list { display: flex; flex-direction: column; gap: 8px; }
+.ud-cal-card {
+  display: flex; gap: 12px; padding-right: 14px;
+  border-radius: 16px; overflow: hidden;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  text-decoration: none; color: var(--pg-white); cursor: pointer;
+  transition: all 0.25s;
+}
+.ud-cal-card:hover { background: var(--glass-bg-hover); }
+.ud-cal-card-img-wrap { width: 80px; height: 80px; flex-shrink: 0; overflow: hidden; }
+.ud-cal-card-img { width: 100%; height: 100%; object-fit: cover; }
+.ud-cal-card-body { display: flex; flex-direction: column; justify-content: center; padding: 8px 0; min-width: 0; flex: 1; }
+.ud-cal-card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.ud-cal-card-cat { font-size: 11px; color: var(--pg-white-dim); }
+.ud-cal-card-price {
+  padding: 1px 8px; border-radius: 100px;
+  font-size: 11px; font-weight: 600;
+  background: rgba(245,158,11,0.15); color: #f59e0b;
+}
+.ud-cal-card-price.free { background: var(--teal-dim); color: var(--teal); }
+.ud-cal-card-name {
+  font-size: 13px; font-weight: 600; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ud-cal-card-info {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 3px; font-size: 11px; color: var(--pg-white-muted);
+}
+.ud-cal-card-loc { display: flex; align-items: center; gap: 3px; }
+
+/* ── Empty ── */
+.ud-empty-state {
+  text-align: center; padding: 60px 20px;
+}
+.ud-empty-state span { font-size: 40px; display: block; margin-bottom: 12px; }
+.ud-empty-state p { font-size: 14px; color: var(--pg-white-dim); margin-bottom: 16px; }
+
+@media (max-width: 768px) {
+  .ud-sticky-header { padding: 40px 16px 12px; }
+}
+`;

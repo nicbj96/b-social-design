@@ -9,6 +9,14 @@ import { getCategoryEmoji, getEventImage, formatDanishDate } from "@/lib/eventHe
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
+import { gradients } from "@/lib/designTokens";
+
+/* ─────────────────────────────────────────────
+   B-Social Event Detail — Premium Redesign
+   Scoped CSS prefix: ed-
+   ───────────────────────────────────────────── */
 
 const GEOAPIFY_KEY = "c6ed42e8addb457ebf24265a045b892b";
 
@@ -48,6 +56,243 @@ async function fetchNearbyHotels(lat: number, lon: number): Promise<NearbyHotel[
   }
 }
 
+const eventDetailCSS = `
+${pageBase("ed")}
+
+/* ── Hero ── */
+.ed-hero {
+  position: relative; height: 420px; overflow: hidden;
+}
+.ed-hero img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.ed-hero-gradient-bottom {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(6,10,15,1) 0%, rgba(6,10,15,0.6) 40%, transparent 70%);
+}
+.ed-hero-gradient-top {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(6,10,15,0.5) 0%, transparent 40%);
+}
+
+/* ── Top controls ── */
+.ed-top-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 48px 20px 16px;
+  z-index: 10;
+}
+.ed-icon-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.3s; color: rgba(255,255,255,0.9);
+}
+.ed-icon-btn:hover {
+  background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.2);
+}
+.ed-icon-btn svg { width: 18px; height: 18px; }
+.ed-icon-btn-row { display: flex; gap: 8px; }
+
+/* ── Hero badges ── */
+.ed-hero-badges {
+  position: absolute; bottom: 24px; left: 20px; right: 20px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  z-index: 10;
+}
+.ed-badge {
+  padding: 6px 14px; border-radius: 100px; font-size: 13px; font-weight: 500;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.ed-badge-cat {
+  background: rgba(6,10,15,0.6); color: rgba(255,255,255,0.9);
+}
+.ed-badge-free {
+  background: rgba(78,205,196,0.2); color: var(--teal);
+  border-color: rgba(78,205,196,0.3);
+}
+.ed-badge-paid {
+  background: rgba(255,152,0,0.2); color: #ffb74d;
+  border-color: rgba(255,152,0,0.3);
+}
+
+/* ── Content ── */
+.ed-content {
+  padding: 0 20px 160px; margin-top: -24px; position: relative; z-index: 5;
+}
+.ed-title {
+  font-family: var(--serif); font-size: clamp(26px, 5vw, 36px);
+  font-weight: 400; line-height: 1.1; letter-spacing: -0.5px;
+  color: var(--pg-white); margin-bottom: 20px;
+}
+
+/* ── Info row ── */
+.ed-info-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.ed-info-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: var(--pg-white-dim);
+}
+.ed-info-item svg { color: var(--teal); flex-shrink: 0; width: 16px; height: 16px; }
+
+/* ── Description card ── */
+.ed-desc-card {
+  background: var(--glass-bg); backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 16px;
+  padding: 20px; margin-bottom: 24px;
+}
+.ed-desc-title {
+  font-size: 12px; font-weight: 600; color: var(--teal);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;
+}
+.ed-desc-text {
+  font-size: 14px; color: var(--pg-white-dim); line-height: 1.7;
+}
+
+/* ── Tags ── */
+.ed-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.ed-tag {
+  padding: 6px 14px; border-radius: 100px;
+  background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.12);
+  font-size: 12px; color: var(--teal); font-weight: 500;
+  transition: all 0.25s;
+}
+.ed-tag:hover { background: rgba(78,205,196,0.15); }
+
+/* ── Affiliate buttons ── */
+.ed-affiliate-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px; border-radius: 14px;
+  font-size: 14px; font-weight: 600; transition: all 0.3s;
+  border: none; cursor: pointer; text-decoration: none;
+  min-height: 48px; color: white;
+}
+.ed-affiliate-btn svg { width: 16px; height: 16px; }
+.ed-affiliate-btn:hover { transform: translateY(-1px); }
+.ed-affiliate-tm {
+  background: linear-gradient(135deg, #026CDF 0%, #0256B3 100%);
+  box-shadow: 0 4px 20px rgba(2,108,223,0.3);
+}
+.ed-affiliate-tm:hover { box-shadow: 0 6px 28px rgba(2,108,223,0.4); }
+.ed-affiliate-sg {
+  background: linear-gradient(135deg, #4CAF50 0%, #43A047 100%);
+  box-shadow: 0 4px 20px rgba(76,175,80,0.3);
+}
+.ed-affiliate-sg:hover { box-shadow: 0 6px 28px rgba(76,175,80,0.4); }
+.ed-affiliate-booking {
+  background: linear-gradient(135deg, #003580 0%, #00264D 100%);
+  box-shadow: 0 4px 20px rgba(0,53,128,0.3);
+}
+.ed-affiliate-booking:hover { box-shadow: 0 6px 28px rgba(0,53,128,0.4); }
+
+/* ── Hotels section ── */
+.ed-hotels-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+}
+.ed-hotels-header svg { color: var(--teal); width: 18px; height: 18px; }
+.ed-hotels-header h3 {
+  font-family: var(--serif); font-size: 20px; font-weight: 400;
+  color: var(--pg-white);
+}
+.ed-hotel-card {
+  display: flex; align-items: flex-start; gap: 14px; padding: 14px;
+  border-radius: 14px; background: var(--glass-bg);
+  border: 1px solid var(--glass-border); cursor: pointer;
+  transition: all 0.3s; text-decoration: none; margin-bottom: 8px;
+}
+.ed-hotel-card:hover {
+  background: var(--glass-bg-hover); border-color: var(--glass-border-hover);
+  transform: translateY(-1px);
+}
+.ed-hotel-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(0,53,128,0.15); border: 1px solid rgba(0,53,128,0.2);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ed-hotel-icon svg { color: #5B9BD5; width: 18px; height: 18px; }
+.ed-hotel-info { flex: 1; min-width: 0; }
+.ed-hotel-name {
+  font-size: 14px; font-weight: 500; color: var(--pg-white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.25s;
+}
+.ed-hotel-card:hover .ed-hotel-name { color: var(--teal); }
+.ed-hotel-addr {
+  font-size: 12px; color: var(--pg-white-muted); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ed-hotel-meta {
+  display: flex; align-items: center; gap: 8px; margin-top: 4px;
+}
+.ed-hotel-meta span {
+  font-size: 10px; color: rgba(255,255,255,0.2);
+}
+.ed-hotel-arrow {
+  color: rgba(255,255,255,0.15); flex-shrink: 0; margin-top: 4px;
+  transition: color 0.25s;
+}
+.ed-hotel-card:hover .ed-hotel-arrow { color: rgba(255,255,255,0.4); }
+.ed-hotels-note {
+  font-size: 10px; color: rgba(255,255,255,0.12); text-align: center;
+  margin-top: 8px;
+}
+
+/* ── Fixed bottom CTA ── */
+.ed-bottom-cta {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px; padding: 16px 20px 32px;
+  background: rgba(6,10,15,0.85); backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  z-index: 50;
+}
+.ed-rsvp-count {
+  text-align: center; font-size: 13px; color: var(--pg-white-muted);
+  margin-bottom: 8px;
+}
+.ed-join-btn {
+  width: 100%; padding: 16px; border-radius: 14px;
+  font-size: 15px; font-weight: 600; border: none; cursor: pointer;
+  transition: all 0.3s; font-family: var(--sans);
+}
+.ed-join-btn-active {
+  background: var(--teal); color: var(--bg);
+  box-shadow: 0 8px 32px var(--teal-glow);
+}
+.ed-join-btn-active:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 40px var(--teal-glow);
+}
+.ed-join-btn-joined {
+  background: rgba(78,205,196,0.08); color: var(--teal);
+  border: 1px solid rgba(78,205,196,0.2);
+}
+
+/* ── Loading skeleton ── */
+.ed-skeleton {
+  min-height: 100vh; background: var(--bg);
+}
+
+/* ── Not found ── */
+.ed-not-found {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 24px;
+  background: var(--bg); color: var(--pg-white);
+  font-family: var(--sans);
+}
+.ed-not-found-emoji { font-size: 56px; margin-bottom: 16px; }
+.ed-not-found-text { font-size: 15px; color: var(--pg-white-dim); margin-bottom: 20px; }
+
+/* ── Responsive ── */
+@media (min-width: 600px) {
+  .ed-hero { height: 480px; }
+  .ed-content { max-width: 640px; margin-left: auto; margin-right: auto; }
+}
+`;
+
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -57,11 +302,12 @@ export default function EventDetail() {
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
   const [rsvpCount, setRsvpCount] = useState(0);
+  const containerRef = useFadeUp("ed");
 
   const { data: event, isLoading } = useQuery<Event | null>({
     queryKey: ["event", id],
     queryFn: () => Promise.resolve(id ? getEventById(id) : null),
-    staleTime: 5 * 60 * 1000, // 5 min — global default is reasonable for single event detail
+    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -97,32 +343,32 @@ export default function EventDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-svh" style={{ background: "#060a0f" }}>
-        <Skeleton className="w-full h-72 bg-white/5" />
-        <div className="px-5 pt-5 space-y-3">
-          <Skeleton className="h-8 w-3/4 bg-white/5" />
-          <Skeleton className="h-4 w-1/2 bg-white/5" />
-          <Skeleton className="h-24 bg-white/5" />
+      <>
+        <style>{eventDetailCSS}</style>
+        <div className="ed-skeleton">
+          <Skeleton className="w-full h-72 bg-white/5" />
+          <div style={{ padding: '20px' }}>
+            <Skeleton className="h-8 w-3/4 bg-white/5 mb-3" />
+            <Skeleton className="h-4 w-1/2 bg-white/5 mb-3" />
+            <Skeleton className="h-24 bg-white/5" />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!event) {
     return (
-      <div
-        className="min-h-svh flex flex-col items-center justify-center px-6"
-        style={{ background: "hsl(230,35%,8%)" }}
-      >
-        <span className="text-5xl mb-4">🔍</span>
-        <p className="text-white/60 text-base">{t('events.not_found')}</p>
-        <button
-          onClick={() => setLocation("/feed")}
-          className="mt-4 px-6 py-2.5 rounded-2xl bg-[#4ECDC4] text-[#0a0f1a] font-medium text-sm"
-        >
-          {t('events.back_to_feed')}
-        </button>
-      </div>
+      <>
+        <style>{eventDetailCSS}</style>
+        <div className="ed-not-found">
+          <span className="ed-not-found-emoji">🔍</span>
+          <p className="ed-not-found-text">{t('events.not_found')}</p>
+          <button className="ed-btn" onClick={() => setLocation("/feed")}>
+            {t('events.back_to_feed')}
+          </button>
+        </div>
+      </>
     );
   }
 
@@ -130,174 +376,140 @@ export default function EventDetail() {
   const isGratis = !event.price || event.price === 0;
 
   return (
-    <div
-      className="relative min-h-svh"
-      style={{ background: "hsl(230,35%,8%)" }}
-      data-testid="event-detail-page"
-    >
-      {/* Hero image */}
-      <div className="relative h-72">
-        <img
-          src={heroImage}
-          alt={event.title}
-          className="w-full h-full object-cover"
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#060a0f] via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
+    <>
+      <style>{eventDetailCSS}</style>
+      <div className="ed-root" ref={containerRef} data-testid="event-detail-page">
 
-        {/* Top controls */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 pt-12">
+        {/* ── Hero ── */}
+        <div className="ed-hero">
+          <img src={heroImage} alt={event.title} loading="eager" />
+          <div className="ed-hero-gradient-bottom" />
+          <div className="ed-hero-gradient-top" />
+
+          {/* Top controls */}
+          <div className="ed-top-bar">
+            <button className="ed-icon-btn" onClick={() => window.history.back()} data-testid="button-back">
+              <ArrowLeft />
+            </button>
+            <div className="ed-icon-btn-row">
+              <button
+                className="ed-icon-btn"
+                onClick={() => { if (navigator.share) navigator.share({ title: event.title, url: window.location.href }); }}
+                data-testid="button-share"
+              >
+                <Share2 />
+              </button>
+              <button
+                className="ed-icon-btn"
+                onClick={() => setFavorited(!favorited)}
+                data-testid="button-favorite"
+                style={favorited ? { background: 'rgba(239,68,68,0.15)', borderColor: 'rgba(239,68,68,0.3)' } : undefined}
+              >
+                <Heart style={favorited ? { color: '#f87171', fill: '#f87171' } : undefined} />
+              </button>
+            </div>
+          </div>
+
+          {/* Hero badges */}
+          <div className="ed-hero-badges">
+            <span className="ed-badge ed-badge-cat">
+              {getCategoryEmoji(event.category || "")} {event.category}
+            </span>
+            <span className={`ed-badge ${isGratis ? 'ed-badge-free' : 'ed-badge-paid'}`}>
+              {isGratis ? t('events.free') : `${event.price} ${t('events.currency')}`}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Content ── */}
+        <div className="ed-content">
+          <h1 className="ed-title ed-fade-up">{event.title}</h1>
+
+          {/* Info list */}
+          <div className="ed-info-list ed-fade-up ed-d1">
+            {event.date && (
+              <div className="ed-info-item">
+                <Calendar />
+                <span>{formatDanishDate(event.date)}</span>
+              </div>
+            )}
+            {event.location && (
+              <div className="ed-info-item">
+                <MapPin />
+                <span>{event.location}</span>
+              </div>
+            )}
+            {event.max_participants && (
+              <div className="ed-info-item">
+                <Users />
+                <span>{t('events.up_to_participants', { count: event.max_participants })}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          {event.description && (
+            <div className="ed-desc-card ed-fade-up ed-d2">
+              <div className="ed-desc-title">{t('events.about_experience')}</div>
+              <p className="ed-desc-text">{event.description}</p>
+            </div>
+          )}
+
+          {/* Tags */}
+          {event.interest_tags && event.interest_tags.length > 0 && (
+            <div className="ed-tags ed-fade-up ed-d2">
+              {event.interest_tags.map((tag) => (
+                <span key={tag} className="ed-tag">#{tag}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Affiliate ticket links */}
+          {event.source && ['ticketmaster', 'seatgeek'].includes(event.source) && (
+            <div className="ed-fade-up ed-d3" style={{ marginBottom: 24 }}>
+              {event.source === 'ticketmaster' && (
+                <a
+                  href={event.url || `https://www.ticketmaster.com/search?q=${encodeURIComponent(event.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ed-affiliate-btn ed-affiliate-tm"
+                >
+                  <Ticket /> Køb billetter på Ticketmaster <ExternalLink />
+                </a>
+              )}
+              {event.source === 'seatgeek' && (
+                <a
+                  href={event.url || `https://seatgeek.com/search?search=${encodeURIComponent(event.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ed-affiliate-btn ed-affiliate-sg"
+                >
+                  <Ticket /> Køb billetter på SeatGeek <ExternalLink />
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Nearby Hotels */}
+          <div className="ed-fade-up ed-d3">
+            <NearbyHotelsSection event={event} />
+          </div>
+        </div>
+
+        {/* ── Fixed bottom CTA ── */}
+        <div className="ed-bottom-cta">
+          <div className="ed-rsvp-count">{rsvpCount} {rsvpCount === 1 ? 'deltager' : 'deltagere'}</div>
           <button
-            onClick={() => window.history.back()}
-            className="w-9 h-9 rounded-full glass-card flex items-center justify-center"
-            data-testid="button-back"
+            onClick={handleJoin}
+            disabled={joined || joining}
+            className={`ed-join-btn ${joined ? 'ed-join-btn-joined' : 'ed-join-btn-active'}`}
+            data-testid="button-deltag"
           >
-            <ArrowLeft size={18} className="text-white" />
+            {joined ? t('events.joined') : joining ? t('events.joining') : t('events.join_experience')}
           </button>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: event.title, url: window.location.href });
-                }
-              }}
-              className="w-9 h-9 rounded-full glass-card flex items-center justify-center"
-              data-testid="button-share"
-            >
-              <Share2 size={16} className="text-white" />
-            </button>
-            <button
-              onClick={() => setFavorited(!favorited)}
-              className="w-9 h-9 rounded-full glass-card flex items-center justify-center"
-              data-testid="button-favorite"
-            >
-              <Heart
-                size={16}
-                className={favorited ? "text-red-400 fill-red-400" : "text-white"}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* Category badge */}
-        <div className="absolute bottom-4 left-4">
-          <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-medium">
-            {getCategoryEmoji(event.category || "")} {event.category}
-          </span>
-        </div>
-
-        {/* Price badge */}
-        <div className="absolute bottom-4 right-4">
-          <span
-            className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              isGratis ? "bg-[#4ECDC4]/90 text-white" : "bg-orange-500/90 text-white"
-            }`}
-          >
-            {isGratis ? t('events.free') : `${event.price} ${t('events.currency')}`}
-          </span>
         </div>
       </div>
-
-      {/* Content */}
-      <div className="px-5 pt-5 pb-32">
-        <h1 className="text-white text-2xl font-serif leading-tight mb-4" style={{ fontWeight: 400 }}>{event.title}</h1>
-
-        {/* Info pills */}
-        <div className="flex flex-col gap-2 mb-5">
-          {event.date && (
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              <Calendar size={15} className="text-[#4ECDC4] flex-shrink-0" />
-              <span>{formatDanishDate(event.date)}</span>
-            </div>
-          )}
-          {event.location && (
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              <MapPin size={15} className="text-[#4ECDC4] flex-shrink-0" />
-              <span>{event.location}</span>
-            </div>
-          )}
-          {event.max_participants && (
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              <Users size={15} className="text-[#4ECDC4] flex-shrink-0" />
-              <span>{t('events.up_to_participants', { count: event.max_participants })}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Description */}
-        {event.description && (
-          <div className="glass-card rounded-2xl p-4 mb-5">
-            <h3 className="text-white font-semibold text-sm mb-2">{t('events.about_experience')}</h3>
-            <p className="text-white/60 text-sm leading-relaxed">{event.description}</p>
-          </div>
-        )}
-
-        {/* Tags */}
-        {event.interest_tags && event.interest_tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {event.interest_tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-3 py-1 rounded-full bg-white/10 text-white/60 text-xs font-medium"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Affiliate ticket links — shown for ticketmaster/seatgeek events */}
-        {event.source && ['ticketmaster', 'seatgeek'].includes(event.source) && (
-          <div className="mb-6">
-            {event.source === 'ticketmaster' && (
-              <a
-                href={event.url || `https://www.ticketmaster.com/search?q=${encodeURIComponent(event.title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-[#026CDF] text-white text-sm font-bold hover:bg-[#0256B3] transition-colors min-h-[44px]"
-              >
-                <Ticket size={16} />
-                Køb billetter på Ticketmaster
-                <ExternalLink size={14} />
-              </a>
-            )}
-            {event.source === 'seatgeek' && (
-              <a
-                href={event.url || `https://seatgeek.com/search?search=${encodeURIComponent(event.title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-[#4CAF50] text-white text-sm font-bold hover:bg-[#43A047] transition-colors min-h-[44px]"
-              >
-                <Ticket size={16} />
-                Køb billetter på SeatGeek
-                <ExternalLink size={14} />
-              </a>
-            )}
-          </div>
-        )}
-
-        {/* Nearby Hotels — intelligent section */}
-        <NearbyHotelsSection event={event} />
-      </div>
-
-      {/* Fixed bottom CTA */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] p-4 pb-8 glass-nav">
-        <div className="mb-2 text-center text-white/60 text-sm">{rsvpCount} {rsvpCount === 1 ? 'deltager' : 'deltagere'}</div>
-        <button
-          onClick={handleJoin}
-          disabled={joined || joining}
-          className={`w-full py-4 rounded-2xl font-semibold text-base transition-all duration-200 ${
-            joined
-              ? "bg-white/10 text-[#4ECDC4] border border-[#4ECDC4]/30"
-              : "bg-[#4ECDC4] text-[#0a0f1a] hover:bg-[#3dbdb5] active:scale-98 shadow-lg shadow-[#4ECDC4]/20"
-          }`}
-          data-testid="button-deltag"
-        >
-          {joined ? t('events.joined') : joining ? t('events.joining') : t('events.join_experience')}
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -317,19 +529,16 @@ function NearbyHotelsSection({ event }: { event: Event }) {
   }, [event.latitude, event.longitude]);
 
   if (!event.latitude || !event.longitude) {
-    // Fallback: simple Booking.com link based on location text
     if (!event.location) return null;
     return (
-      <div className="mb-6">
+      <div style={{ marginBottom: 24 }}>
         <a
           href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(event.location.split(',')[0])}${event.date ? `&checkin=${event.date.split('T')[0]}` : ''}&aid=304142`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-[#003580] text-white text-sm font-bold hover:bg-[#00264D] transition-colors min-h-[44px]"
+          className="ed-affiliate-btn ed-affiliate-booking"
         >
-          <BedDouble size={16} />
-          Find overnatning nær eventet
-          <ExternalLink size={14} />
+          <BedDouble /> Find overnatning nær eventet <ExternalLink />
         </a>
       </div>
     );
@@ -339,58 +548,57 @@ function NearbyHotelsSection({ event }: { event: Event }) {
   const bookingSearchUrl = `https://www.booking.com/searchresults.da.html?ss=${encodeURIComponent(event.location?.split(',')[0] || 'Hotel')}&latitude=${event.latitude}&longitude=${event.longitude}${checkinParam}&aid=304142`;
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <BedDouble size={16} className="text-[#4ECDC4]" />
-        <h3 className="text-white font-semibold text-sm">Hoteller i nærheden</h3>
+    <div style={{ marginBottom: 24 }}>
+      <div className="ed-hotels-header">
+        <BedDouble />
+        <h3>Hoteller i nærheden</h3>
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 py-4 text-white/40 text-sm">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
           <Loader2 size={14} className="animate-spin" /> Søger hoteller...
         </div>
       ) : hotels.length > 0 ? (
-        <div className="space-y-2">
+        <div>
           {hotels.map((hotel, i) => (
             <a
               key={i}
               href={`https://www.booking.com/searchresults.da.html?ss=${encodeURIComponent(hotel.name)}&latitude=${hotel.lat}&longitude=${hotel.lon}&radius=1${checkinParam}&aid=304142`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:bg-white/8 transition-colors group"
+              className="ed-hotel-card"
             >
-              <div className="w-10 h-10 rounded-lg bg-[#003580]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <BedDouble size={16} className="text-[#003580]" />
+              <div className="ed-hotel-icon">
+                <BedDouble />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-semibold truncate group-hover:text-[#4ECDC4] transition-colors">{hotel.name}</p>
-                <p className="text-white/40 text-xs truncate">{hotel.address}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  {hotel.brand && <span className="text-white/30 text-[10px]">{hotel.brand}</span>}
+              <div className="ed-hotel-info">
+                <p className="ed-hotel-name">{hotel.name}</p>
+                <p className="ed-hotel-addr">{hotel.address}</p>
+                <div className="ed-hotel-meta">
+                  {hotel.brand && <span>{hotel.brand}</span>}
                   {hotel.distance && (
-                    <span className="text-white/30 text-[10px]">
+                    <span>
                       {hotel.distance < 1000 ? `${hotel.distance} m` : `${(hotel.distance / 1000).toFixed(1)} km`} fra eventet
                     </span>
                   )}
                 </div>
               </div>
-              <ExternalLink size={12} className="text-white/20 group-hover:text-white/50 mt-1 flex-shrink-0" />
+              <ExternalLink size={12} className="ed-hotel-arrow" />
             </a>
           ))}
         </div>
       ) : null}
 
-      {/* See all on Booking.com */}
       <a
         href={bookingSearchUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full mt-3 py-3 rounded-xl bg-[#003580] text-white text-sm font-bold hover:bg-[#00264D] transition-colors min-h-[44px]"
+        className="ed-affiliate-btn ed-affiliate-booking"
+        style={{ marginTop: 12 }}
       >
-        Se alle hoteller på Booking.com
-        <ExternalLink size={14} />
+        Se alle hoteller på Booking.com <ExternalLink />
       </a>
-      <p className="text-white/15 text-[10px] text-center mt-1">Sammenlign priser på hoteller, lejligheder og mere</p>
+      <p className="ed-hotels-note">Sammenlign priser på hoteller, lejligheder og mere</p>
     </div>
   );
 }

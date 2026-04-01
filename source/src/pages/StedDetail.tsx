@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, MapPin, Star, Share2, Bookmark, ExternalLink, Navigation, Clock, Accessibility, Info, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
 
 import { supabase, type Place } from "@/lib/supabase";
 
@@ -49,7 +51,6 @@ const HERO_IMAGES: Record<string, string> = {
 const DEFAULT_HERO = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop";
 
 function getHeroImage(place: Place): string {
-  // Check tags and metadata for best match
   const allTerms = [
     ...(place.tags || []),
     ...(place.main_categories || []),
@@ -64,13 +65,228 @@ function getHeroImage(place: Place): string {
   return DEFAULT_HERO;
 }
 
+const stedCSS = `
+${pageBase("sd")}
+
+/* ── Hero ── */
+.sd-hero {
+  position: relative; width: 100%; height: 280px; overflow: hidden;
+}
+.sd-hero img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.sd-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(6,10,15,1) 0%, rgba(6,10,15,0.4) 40%, transparent 70%);
+}
+.sd-hero-top-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(6,10,15,0.4) 0%, transparent 35%);
+}
+
+/* ── Top controls ── */
+.sd-back-btn {
+  position: absolute; top: 48px; left: 20px; z-index: 10;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.3s; color: rgba(255,255,255,0.7);
+}
+.sd-back-btn:hover { background: rgba(255,255,255,0.18); }
+
+/* ── Category badge ── */
+.sd-cat-badge {
+  position: absolute; top: 48px; right: 20px; z-index: 10;
+  padding: 6px 14px; border-radius: 100px;
+  background: rgba(78,205,196,0.2); backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(78,205,196,0.3);
+  font-size: 11px; font-weight: 600; color: var(--teal);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* ── Content ── */
+.sd-content {
+  padding: 0 20px; margin-top: -32px; position: relative; z-index: 5;
+  padding-bottom: 96px;
+}
+.sd-title {
+  font-family: var(--serif); font-size: clamp(22px, 4.5vw, 32px);
+  font-weight: 400; line-height: 1.15; color: var(--pg-white);
+  margin-bottom: 8px;
+}
+
+/* ── Location + Rating ── */
+.sd-meta-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.sd-meta-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--pg-white-dim);
+}
+.sd-meta-item svg { width: 14px; height: 14px; }
+.sd-meta-rating { color: #fbbf24; font-weight: 500; }
+.sd-meta-rating svg { fill: currentColor; }
+.sd-meta-rating-count { color: var(--pg-white-muted); font-weight: 400; }
+
+/* ── Description ── */
+.sd-desc {
+  font-size: 14px; color: var(--pg-white-dim); line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+/* ── Info chips ── */
+.sd-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.sd-info-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 100px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px; color: var(--pg-white-dim);
+  backdrop-filter: blur(8px);
+}
+.sd-info-chip svg { width: 13px; height: 13px; color: var(--teal); }
+
+/* ── Tags ── */
+.sd-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.sd-tag {
+  padding: 5px 12px; border-radius: 100px;
+  background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.12);
+  font-size: 11px; color: var(--teal); font-weight: 500;
+}
+
+/* ── Action buttons ── */
+.sd-actions { display: flex; gap: 12px; margin-bottom: 24px; }
+.sd-action-primary {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px; border-radius: 14px; border: none;
+  background: var(--teal); color: var(--bg);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.3s; font-family: var(--sans);
+  box-shadow: 0 6px 24px var(--teal-glow);
+  text-decoration: none;
+}
+.sd-action-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px var(--teal-glow);
+}
+.sd-action-primary svg { width: 16px; height: 16px; }
+.sd-action-secondary {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 20px; border-radius: 14px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  color: var(--pg-white-dim); font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all 0.3s;
+}
+.sd-action-secondary:hover {
+  background: var(--glass-bg-hover); border-color: var(--glass-border-hover);
+}
+.sd-action-secondary svg { width: 16px; height: 16px; }
+
+/* ── External links ── */
+.sd-ext-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-radius: 14px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  cursor: pointer; transition: all 0.3s; text-decoration: none;
+  margin-bottom: 8px;
+}
+.sd-ext-link:hover {
+  background: var(--glass-bg-hover); border-color: var(--glass-border-hover);
+}
+.sd-ext-link span { font-size: 14px; color: var(--pg-white-dim); font-weight: 500; }
+.sd-ext-link svg { width: 14px; height: 14px; color: var(--pg-white-muted); }
+
+/* ── Coords card ── */
+.sd-coords-card {
+  border-radius: 16px; overflow: hidden;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  margin-bottom: 24px;
+}
+.sd-coords-map {
+  height: 112px; background: rgba(26,32,53,0.8);
+  display: flex; align-items: center; justify-content: center;
+}
+.sd-coords-pin {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(78,205,196,0.15); border: 1px solid rgba(78,205,196,0.2);
+  display: flex; align-items: center; justify-content: center;
+}
+.sd-coords-pin svg { width: 22px; height: 22px; color: var(--teal); }
+.sd-coords-footer {
+  padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+}
+.sd-coords-text { font-size: 12px; color: var(--pg-white-dim); }
+.sd-coords-link {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--teal); font-weight: 500;
+  text-decoration: none;
+}
+.sd-coords-link svg { width: 12px; height: 12px; }
+
+/* ── Org card ── */
+.sd-org-card {
+  padding: 16px; border-radius: 14px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  margin-bottom: 24px;
+}
+.sd-org-label {
+  font-size: 11px; color: var(--pg-white-muted); text-transform: uppercase;
+  letter-spacing: 1.5px; margin-bottom: 6px;
+}
+.sd-org-name { font-size: 14px; color: var(--pg-white-dim); }
+
+/* ── Attribution ── */
+.sd-attribution {
+  font-size: 11px; color: rgba(255,255,255,0.12); text-align: center;
+  margin-bottom: 16px;
+}
+
+/* ── Loading / Error ── */
+.sd-loading {
+  min-height: 100vh; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.sd-spinner {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid rgba(78,205,196,0.2);
+  border-top-color: var(--teal);
+  animation: sd-spin 0.8s linear infinite;
+}
+@keyframes sd-spin { to { transform: rotate(360deg); } }
+
+.sd-error {
+  min-height: 100vh; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.sd-error-inner { text-align: center; }
+.sd-error-emoji { font-size: 40px; margin-bottom: 12px; display: block; }
+.sd-error-text { font-size: 14px; color: var(--pg-white-dim); margin-bottom: 16px; }
+.sd-error-btn {
+  color: var(--teal); font-size: 14px; font-weight: 500;
+  background: none; border: none; cursor: pointer;
+}
+
+/* ── Responsive ── */
+@media (min-width: 600px) {
+  .sd-hero { height: 360px; }
+  .sd-content { max-width: 640px; margin-left: auto; margin-right: auto; }
+}
+`;
+
 export default function StedDetail() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/sted/:id");
   const rawId = params?.id || "";
-  // Support both "sb-uuid" format (from Kort pins) and plain uuid
   const placeId = rawId.startsWith("sb-") ? rawId.slice(3) : rawId;
+  const containerRef = useFadeUp("sd");
 
   const [place, setPlace] = useState<Place | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,21 +305,27 @@ export default function StedDetail() {
 
   if (loading) {
     return (
-      <div className="relative min-h-svh pb-24 flex items-center justify-center" style={{ background: "#060a0f" }}>
-        <div className="w-8 h-8 border-2 border-[#4ECDC4]/30 border-t-[#4ECDC4] rounded-full animate-spin" />
-      </div>
+      <>
+        <style>{stedCSS}</style>
+        <div className="sd-loading">
+          <div className="sd-spinner" />
+        </div>
+      </>
     );
   }
 
   if (error || !place) {
     return (
-      <div className="relative min-h-svh pb-24 flex items-center justify-center" style={{ background: "#060a0f" }}>
-        <div className="text-center">
-          <span className="text-4xl mb-3 block">🔍</span>
-          <p className="text-white/60 text-sm mb-4">{t('place.not_found')}</p>
-          <button onClick={() => setLocation("/kort")} className="text-[#4ECDC4] text-sm font-medium">{t('place.back_to_map')}</button>
+      <>
+        <style>{stedCSS}</style>
+        <div className="sd-error">
+          <div className="sd-error-inner">
+            <span className="sd-error-emoji">🔍</span>
+            <p className="sd-error-text">{t('place.not_found')}</p>
+            <button className="sd-error-btn" onClick={() => setLocation("/kort")}>{t('place.back_to_map')}</button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -113,138 +335,129 @@ export default function StedDetail() {
   const mainCat = (place.main_categories || [])[0] || "";
 
   return (
-    <div className="relative min-h-svh pb-24" style={{ background: "#060a0f" }} data-testid="sted-detail-page">
-      {/* Hero image */}
-      <div className="relative w-full h-56 overflow-hidden">
-        <img src={heroImg} alt={place.name} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#060a0f] via-black/30 to-transparent" />
-        <button onClick={() => window.history.back()} className="absolute top-12 left-5 w-9 h-9 rounded-full glass-card flex items-center justify-center z-10">
-          <ArrowLeft size={18} className="text-white/70" />
-        </button>
-        {/* Category badge */}
-        {mainCat && (
-          <span className="absolute top-12 right-5 px-3 py-1 rounded-full text-[11px] font-bold text-white bg-[#4ECDC4]/80 backdrop-blur-sm">
-            {mainCat}
-          </span>
-        )}
-      </div>
+    <>
+      <style>{stedCSS}</style>
+      <div className="sd-root" ref={containerRef} data-testid="sted-detail-page">
 
-      {/* Content */}
-      <div className="px-5 -mt-8 relative z-10">
-        <h1 className="text-white text-xl font-serif mb-1 leading-tight" style={{ fontWeight: 400 }}>{place.name}</h1>
-
-        {/* Location + rating */}
-        <div className="flex items-center gap-3 mb-3 flex-wrap">
-          {place.city && (
-            <span className="flex items-center gap-1 text-white/50 text-sm">
-              <MapPin size={13} /> {place.city}{place.region ? `, ${place.region}` : ""}
-            </span>
-          )}
-          {place.rating_avg > 0 && (
-            <span className="flex items-center gap-1 text-amber-400 text-sm font-medium">
-              <Star size={13} fill="currentColor" /> {place.rating_avg.toFixed(1)}
-              {place.rating_count > 0 && <span className="text-white/30 font-normal">({place.rating_count})</span>}
-            </span>
-          )}
-        </div>
-
-        {/* Description */}
-        {place.description && (
-          <p className="text-white/60 text-sm leading-relaxed mb-5">{place.description}</p>
-        )}
-
-        {/* Quick info chips */}
-        <div className="flex flex-wrap gap-2 mb-5">
-          {meta.season && meta.season !== "Ej relevant" && meta.season !== "" && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 text-white/60 text-xs">
-              <Clock size={12} /> {meta.season}
-            </span>
-          )}
-          {meta.handicap && meta.handicap.includes("Handicapegnet") && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 text-white/60 text-xs">
-              <Accessibility size={12} /> {t('place.accessible')}
-            </span>
-          )}
-          {meta.facility_type && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 text-white/60 text-xs">
-              <Info size={12} /> {meta.facility_type}
-            </span>
-          )}
-          {meta.route_length_km && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 text-white/60 text-xs">
-              🛤️ {Number(meta.route_length_km).toFixed(1)} km
-            </span>
-          )}
-        </div>
-
-        {/* Tags */}
-        {place.tags && place.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-5">
-            {place.tags.filter(tag => tag !== place.city).slice(0, 8).map(tag => (
-              <span key={tag} className="px-2.5 py-1 rounded-full bg-[#4ECDC4]/10 text-[#4ECDC4] text-[11px] font-medium">{tag}</span>
-            ))}
-          </div>
-        )}
-
-        {/* Action buttons */}
-        <div className="flex gap-3 mb-6">
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#4ECDC4] text-[#0a0f1a] font-semibold text-sm hover:bg-[#0ea572] transition-colors shadow-lg shadow-[#4ECDC4]/30">
-            <Navigation size={16} /> {t('place.show_route')}
-          </a>
-          <button className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl glass-card text-white/70 font-semibold text-sm hover:bg-white/10 transition-colors">
-            <Bookmark size={16} />
+        {/* ── Hero ── */}
+        <div className="sd-hero">
+          <img src={heroImg} alt={place.name} loading="eager" />
+          <div className="sd-hero-overlay" />
+          <div className="sd-hero-top-overlay" />
+          <button className="sd-back-btn" onClick={() => window.history.back()}>
+            <ArrowLeft size={18} />
           </button>
+          {mainCat && <span className="sd-cat-badge">{mainCat}</span>}
         </div>
 
-        {/* External links */}
-        {(meta.booking_link || meta.external_link) && (
-          <div className="space-y-2 mb-6">
-            {meta.booking_link && meta.booking_link.trim() && (
-              <a href={meta.booking_link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-4 py-3 rounded-xl glass-card hover:bg-white/10 transition-colors">
-                <span className="text-white/70 text-sm font-medium">{t('place.book_accommodation')}</span>
-                <ExternalLink size={14} className="text-white/40" />
-              </a>
+        {/* ── Content ── */}
+        <div className="sd-content">
+          <h1 className="sd-title sd-fade-up">{place.name}</h1>
+
+          {/* Location + rating */}
+          <div className="sd-meta-row sd-fade-up sd-d1">
+            {place.city && (
+              <span className="sd-meta-item">
+                <MapPin /> {place.city}{place.region ? `, ${place.region}` : ""}
+              </span>
             )}
-            {meta.external_link && meta.external_link.trim() && (
-              <a href={meta.external_link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-4 py-3 rounded-xl glass-card hover:bg-white/10 transition-colors">
-                <span className="text-white/70 text-sm font-medium">{t('place.read_more')}</span>
-                <ExternalLink size={14} className="text-white/40" />
-              </a>
+            {place.rating_avg > 0 && (
+              <span className="sd-meta-item sd-meta-rating">
+                <Star /> {place.rating_avg.toFixed(1)}
+                {place.rating_count > 0 && <span className="sd-meta-rating-count">({place.rating_count})</span>}
+              </span>
             )}
           </div>
-        )}
 
-        {/* Coordinates card */}
-        <div className="glass-card rounded-2xl overflow-hidden mb-6">
-          <div className="relative h-28 bg-[#1a2035] flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-[#4ECDC4]/20 flex items-center justify-center">
-              <MapPin size={22} className="text-[#4ECDC4]" />
+          {/* Description */}
+          {place.description && (
+            <p className="sd-desc sd-fade-up sd-d1">{place.description}</p>
+          )}
+
+          {/* Info chips */}
+          <div className="sd-chips sd-fade-up sd-d2">
+            {meta.season && meta.season !== "Ej relevant" && meta.season !== "" && (
+              <span className="sd-info-chip"><Clock /> {meta.season}</span>
+            )}
+            {meta.handicap && meta.handicap.includes("Handicapegnet") && (
+              <span className="sd-info-chip"><Accessibility /> {t('place.accessible')}</span>
+            )}
+            {meta.facility_type && (
+              <span className="sd-info-chip"><Info /> {meta.facility_type}</span>
+            )}
+            {meta.route_length_km && (
+              <span className="sd-info-chip">🛤️ {Number(meta.route_length_km).toFixed(1)} km</span>
+            )}
+          </div>
+
+          {/* Tags */}
+          {place.tags && place.tags.length > 0 && (
+            <div className="sd-tags sd-fade-up sd-d2">
+              {place.tags.filter(tag => tag !== place.city).slice(0, 8).map(tag => (
+                <span key={tag} className="sd-tag">{tag}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="sd-actions sd-fade-up sd-d3">
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="sd-action-primary">
+              <Navigation /> {t('place.show_route')}
+            </a>
+            <button className="sd-action-secondary">
+              <Bookmark />
+            </button>
+          </div>
+
+          {/* External links */}
+          {(meta.booking_link || meta.external_link) && (
+            <div className="sd-fade-up sd-d3" style={{ marginBottom: 24 }}>
+              {meta.booking_link && meta.booking_link.trim() && (
+                <a href={meta.booking_link} target="_blank" rel="noopener noreferrer" className="sd-ext-link">
+                  <span>{t('place.book_accommodation')}</span>
+                  <ExternalLink />
+                </a>
+              )}
+              {meta.external_link && meta.external_link.trim() && (
+                <a href={meta.external_link} target="_blank" rel="noopener noreferrer" className="sd-ext-link">
+                  <span>{t('place.read_more')}</span>
+                  <ExternalLink />
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Coordinates card */}
+          <div className="sd-coords-card sd-fade-up sd-d3">
+            <div className="sd-coords-map">
+              <div className="sd-coords-pin">
+                <MapPin />
+              </div>
+            </div>
+            <div className="sd-coords-footer">
+              <span className="sd-coords-text">
+                {place.latitude.toFixed(4)}°N, {place.longitude.toFixed(4)}°E
+              </span>
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="sd-coords-link">
+                Google Maps <ChevronRight />
+              </a>
             </div>
           </div>
-          <div className="px-4 py-3 flex items-center justify-between">
-            <p className="text-white/50 text-xs">
-              {place.latitude.toFixed(4)}°N, {place.longitude.toFixed(4)}°E
-            </p>
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#4ECDC4] text-xs font-medium">
-              Google Maps <ChevronRight size={12} />
-            </a>
-          </div>
+
+          {/* Organization info */}
+          {meta.organization && meta.organization.trim() && (
+            <div className="sd-org-card sd-fade-up sd-d4">
+              <p className="sd-org-label">{t('place.responsible')}</p>
+              <p className="sd-org-name">{meta.organization}</p>
+            </div>
+          )}
+
+          {/* Attribution */}
+          {meta.attribution && (
+            <p className="sd-attribution">{meta.attribution}</p>
+          )}
         </div>
-
-        {/* Organization info */}
-        {meta.organization && meta.organization.trim() && (
-          <div className="glass-card rounded-xl p-4 mb-6">
-            <p className="text-white/30 text-xs uppercase tracking-wider mb-1">{t('place.responsible')}</p>
-            <p className="text-white/70 text-sm">{meta.organization}</p>
-          </div>
-        )}
-
-        {/* Attribution */}
-        {meta.attribution && (
-          <p className="text-white/20 text-xs text-center mb-4">{meta.attribution}</p>
-        )}
       </div>
-
-    </div>
+    </>
   );
 }

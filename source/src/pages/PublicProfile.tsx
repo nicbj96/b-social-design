@@ -3,7 +3,287 @@ import { useLocation } from "wouter";
 import { ArrowLeft, MapPin, Heart, Users, Send, UserPlus, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
 
+/* ── Scoped CSS ── */
+const publicProfileCSS = `${pageBase("pp")}
+
+/* ── Hero ── */
+.pp-hero {
+  position: relative;
+  min-height: 320px;
+  background: url('/social-hero.png') center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 32px 24px 72px;
+}
+.pp-hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6,10,15,0.3) 0%,
+    rgba(6,10,15,0.6) 50%,
+    rgba(6,10,15,1) 100%
+  );
+  pointer-events: none;
+}
+.pp-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ── Back button ── */
+.pp-back {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 2;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: var(--pg-white);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.pp-back:hover {
+  background: rgba(78,205,196,0.15);
+  border-color: rgba(78,205,196,0.3);
+  color: var(--teal);
+}
+
+/* ── Avatar ── */
+.pp-avatar {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif);
+  font-size: 36px; font-weight: 400;
+  color: var(--bg);
+  background: linear-gradient(135deg, var(--teal), #44A08D);
+  border: 3px solid rgba(255,255,255,0.15);
+  box-shadow: 0 8px 32px rgba(78,205,196,0.25);
+  flex-shrink: 0;
+}
+.pp-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ── Name / city ── */
+.pp-name {
+  font-family: var(--serif);
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  color: var(--pg-white);
+  margin: 0;
+}
+.pp-city {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--pg-white-dim);
+  margin-top: 6px;
+}
+.pp-city svg { color: var(--teal); }
+
+/* ── Content body ── */
+.pp-body {
+  padding: 0 24px;
+  margin-top: -40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Stats grid ── */
+.pp-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.pp-stat-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 22px 16px;
+  text-align: center;
+  transition: all 0.3s;
+}
+.pp-stat-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+}
+.pp-stat-icon {
+  color: var(--teal);
+  margin-bottom: 10px;
+}
+.pp-stat-value {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--pg-white);
+  line-height: 1;
+}
+.pp-stat-label {
+  font-size: 11px;
+  color: var(--pg-white-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 6px;
+}
+
+/* ── Section card (interests, bio) ── */
+.pp-section {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+.pp-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pg-white-dim);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+}
+.pp-section-title svg { color: var(--teal); }
+
+/* ── Interest chips ── */
+.pp-interests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.pp-interest-chip {
+  padding: 8px 18px;
+  background: rgba(78,205,196,0.1);
+  border: 1px solid rgba(78,205,196,0.15);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal);
+  transition: all 0.25s;
+}
+.pp-interest-chip:hover {
+  background: rgba(78,205,196,0.2);
+  border-color: rgba(78,205,196,0.3);
+}
+
+/* ── Action buttons ── */
+.pp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding-bottom: 32px;
+}
+.pp-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+.pp-action-primary {
+  background: var(--teal);
+  color: var(--bg);
+}
+.pp-action-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px var(--teal-glow);
+}
+.pp-action-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.pp-action-ghost {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--pg-white);
+}
+.pp-action-ghost:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+}
+.pp-action-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pp-action-status {
+  background: rgba(78,205,196,0.1);
+  border: 1px solid rgba(78,205,196,0.15);
+  color: var(--teal);
+  cursor: default;
+}
+.pp-action-pending {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--pg-white-dim);
+  cursor: default;
+}
+
+/* ── Loading / empty states ── */
+.pp-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 20px;
+}
+.pp-loader {
+  font-size: 14px;
+  color: var(--pg-white-muted);
+  letter-spacing: 1px;
+}
+.pp-empty-text {
+  font-size: 15px;
+  color: var(--pg-white-dim);
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .pp-hero { min-height: 280px; padding: 24px 20px 64px; }
+  .pp-body { padding: 0 20px; }
+  .pp-back { top: 16px; left: 16px; }
+}
+`;
+
+/* ── Types ── */
 interface UserProfile {
   user_id: string;
   display_name: string | null;
@@ -22,6 +302,7 @@ interface FriendRequest {
 export default function PublicProfile() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const containerRef = useFadeUp("pp");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [friendCount, setFriendCount] = useState<number>(0);
@@ -220,56 +501,61 @@ export default function PublicProfile() {
     ? profile.display_name[0]?.toUpperCase()
     : "?";
 
+  /* ── Loading state ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#060a0f] text-white flex items-center justify-center">
-        <div className="text-white/50">Indlæser...</div>
+      <div className="pp-root" ref={containerRef}>
+        <style>{publicProfileCSS}</style>
+        <div className="pp-center">
+          <div className="pp-loader">Indl&aelig;ser...</div>
+        </div>
       </div>
     );
   }
 
+  /* ── Not found state ── */
   if (!profile) {
     return (
-      <div className="min-h-screen bg-[#060a0f] text-white flex flex-col items-center justify-center">
-        <p className="text-white/50 mb-4">Profil ikke fundet</p>
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 px-4 py-2 bg-[#4ECDC4]/15 text-[#4ECDC4] rounded-xl hover:bg-[#4ECDC4]/25"
-        >
-          <ArrowLeft size={16} />
-          Tilbage
-        </button>
+      <div className="pp-root" ref={containerRef}>
+        <style>{publicProfileCSS}</style>
+        <div className="pp-center">
+          <p className="pp-empty-text">Profil ikke fundet</p>
+          <button className="pp-btn" onClick={() => navigate("/")}>
+            <ArrowLeft size={16} style={{ marginRight: 8, verticalAlign: "middle" }} />
+            Tilbage
+          </button>
+        </div>
       </div>
     );
   }
 
+  /* ── Main profile view ── */
   return (
-    <div className="min-h-screen bg-[#060a0f] text-white pb-20">
-      {/* Header with back button */}
-      <div className="bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] p-6 pb-16">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 bg-white/20 rounded-xl hover:bg-white/30 mb-4 transition-colors"
-        >
+    <div className="pp-root" ref={containerRef}>
+      <style>{publicProfileCSS}</style>
+
+      {/* Hero with background image */}
+      <div className="pp-hero">
+        <button className="pp-back" onClick={() => navigate(-1)}>
           <ArrowLeft size={20} />
         </button>
-        <div className="flex items-center gap-4">
+
+        <div className="pp-hero-inner pp-fade-up">
           {false /* no avatar_url column */ ? (
-            <img
-              src={false /* no avatar_url column */}
-              alt={profile.display_name || "Bruger"}
-              className="w-20 h-20 rounded-full object-cover border-2 border-white/30"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-[#4ECDC4] text-3xl font-bold">
-              {displayInitial}
+            <div className="pp-avatar">
+              <img
+                src={false as unknown as string}
+                alt={profile.display_name || "Bruger"}
+                loading="lazy"
+              />
             </div>
+          ) : (
+            <div className="pp-avatar">{displayInitial}</div>
           )}
           <div>
-            <h1 className="text-2xl font-bold">{profile.display_name || "Bruger"}</h1>
+            <h1 className="pp-name">{profile.display_name || "Bruger"}</h1>
             {profile.home_city && (
-              <p className="text-white/80 flex items-center gap-1 text-sm">
+              <p className="pp-city">
                 <MapPin size={14} /> {profile.home_city}
               </p>
             )}
@@ -277,41 +563,38 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      <div className="px-6 -mt-10">
+      <div className="pp-body">
         {/* Stats cards */}
-        <div className="grid grid-cols-2 gap-3 mb-8">
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <Users size={20} className="mx-auto mb-2 text-[#4ECDC4]" />
-            <p className="text-2xl font-bold">{friendCount}</p>
-            <p className="text-xs text-white/50">Venner</p>
+        <div className="pp-stats pp-fade-up pp-d1">
+          <div className="pp-stat-card">
+            <Users size={20} className="pp-stat-icon" />
+            <p className="pp-stat-value">{friendCount}</p>
+            <p className="pp-stat-label">Venner</p>
           </div>
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <Heart size={20} className="mx-auto mb-2 text-[#4ECDC4]" />
-            <p className="text-2xl font-bold">{profile.interests?.length || 0}</p>
-            <p className="text-xs text-white/50">Interesser</p>
+          <div className="pp-stat-card">
+            <Heart size={20} className="pp-stat-icon" />
+            <p className="pp-stat-value">{profile.interests?.length || 0}</p>
+            <p className="pp-stat-label">Interesser</p>
           </div>
         </div>
 
         {/* Bio */}
         {false /* no bio column */ && (
-          <div className="glass-card rounded-2xl p-4 mb-6">
-            <p className="text-sm text-white/70">{false /* no bio column */}</p>
+          <div className="pp-section pp-fade-up pp-d2">
+            <p className="pp-text">{false /* no bio column */}</p>
           </div>
         )}
 
         {/* Interests */}
         {profile.interests && profile.interests.length > 0 && (
-          <div className="glass-card rounded-2xl p-4 mb-6">
-            <h3 className="text-sm font-semibold text-white/70 mb-3 flex items-center gap-2">
-              <Heart size={16} className="text-[#4ECDC4]" />
+          <div className="pp-section pp-fade-up pp-d2">
+            <h3 className="pp-section-title">
+              <Heart size={16} />
               Interesser
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="pp-interests">
               {profile.interests.map(interest => (
-                <span
-                  key={interest}
-                  className="px-3 py-1.5 bg-[#4ECDC4]/15 text-[#4ECDC4] rounded-full text-xs font-medium"
-                >
+                <span key={interest} className="pp-interest-chip">
                   {interest}
                 </span>
               ))}
@@ -320,56 +603,56 @@ export default function PublicProfile() {
         )}
 
         {/* Action buttons */}
-        <div className="space-y-3">
+        <div className="pp-actions pp-fade-up pp-d3">
           {friendStatus === "not_friends" && (
             <button
               onClick={handleAddFriend}
               disabled={actionLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4ECDC4] text-[#0a0f1a] rounded-xl font-semibold hover:bg-[#4ECDC4]/90 transition-colors disabled:opacity-50"
+              className="pp-action-btn pp-action-primary"
             >
               <UserPlus size={18} />
-              {actionLoading ? "Tilføjer..." : "Tilføj ven"}
+              {actionLoading ? "Tilf\u00f8jer..." : "Tilf\u00f8j ven"}
             </button>
           )}
 
           {friendStatus === "friends" && (
-            <div className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4ECDC4]/15 text-[#4ECDC4] rounded-xl font-semibold">
+            <div className="pp-action-btn pp-action-status">
               <Users size={18} />
               I er venner ✓
             </div>
           )}
 
           {friendStatus === "pending_sent" && (
-            <div className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 text-white/70 rounded-xl font-semibold">
+            <div className="pp-action-btn pp-action-pending">
               <Users size={18} />
               Anmodning sendt
             </div>
           )}
 
           {friendStatus === "pending_received" && (
-            <div className="space-y-2">
+            <>
               <button
                 onClick={handleAcceptRequest}
                 disabled={actionLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4ECDC4] text-[#0a0f1a] rounded-xl font-semibold hover:bg-[#4ECDC4]/90 transition-colors disabled:opacity-50"
+                className="pp-action-btn pp-action-primary"
               >
                 <UserPlus size={18} />
-                {actionLoading ? "Accepterer..." : "Acceptér"}
+                {actionLoading ? "Accepterer..." : "Accept\u00e9r"}
               </button>
               <button
                 onClick={handleRejectRequest}
                 disabled={actionLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 text-white/70 rounded-xl font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"
+                className="pp-action-btn pp-action-ghost"
               >
                 <X size={18} />
                 Afvis
               </button>
-            </div>
+            </>
           )}
 
           <button
             onClick={handleSendMessage}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-colors"
+            className="pp-action-btn pp-action-ghost"
           >
             <Send size={18} />
             Send besked

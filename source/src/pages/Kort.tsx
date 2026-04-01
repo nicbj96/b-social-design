@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPlacesInViewport, fetchEvents, type Place, type Event as SupabaseEvent, type MapBounds } from "@/lib/supabase";
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { pageBase } from "@/lib/pageCSSBase";
 
 // Prevent Leaflet from injecting default marker image (red pin)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -254,11 +255,11 @@ function ZoomControls() {
   const { t } = useTranslation();
   const map = useMap();
   return (
-    <div className="absolute bottom-28 right-3 z-[1000] flex flex-col gap-1.5">
-      <button onClick={() => map.zoomIn()} className="w-10 h-10 rounded-xl bg-[#0f142d]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/15 transition-colors shadow-lg" data-testid="button-zoom-in">
+    <div className="kt-zoom-group">
+      <button onClick={() => map.zoomIn()} className="kt-zoom-btn" data-testid="button-zoom-in">
         <Plus size={18} />
       </button>
-      <button onClick={() => map.zoomOut()} className="w-10 h-10 rounded-xl bg-[#0f142d]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/15 transition-colors shadow-lg" data-testid="button-zoom-out">
+      <button onClick={() => map.zoomOut()} className="kt-zoom-btn" data-testid="button-zoom-out">
         <Minus size={18} />
       </button>
     </div>
@@ -326,25 +327,22 @@ function PinNearbyHotels({ lat, lng, city }: { lat: number; lng: number; city: s
   };
 
   return (
-    <div className="mt-2">
-      <button
-        onClick={loadHotels}
-        className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl bg-[#003580]/80 text-white text-[11px] font-semibold hover:bg-[#003580] transition-colors"
-      >
-        {loading ? "Søger hoteller..." : expanded ? "🏨 Skjul hoteller" : "🏨 Vis hoteller nærby"}
+    <div className="kt-hotels">
+      <button onClick={loadHotels} className="kt-hotels-btn">
+        {loading ? "Soger hoteller..." : expanded ? "Skjul hoteller" : "Vis hoteller naerby"}
       </button>
       {expanded && hotels.length > 0 && (
-        <div className="mt-1.5 space-y-1">
+        <div className="kt-hotels-list">
           {hotels.map((h, i) => (
             <a
               key={i}
               href={`https://www.booking.com/searchresults.da.html?ss=${encodeURIComponent(h.name)}&latitude=${h.lat}&longitude=${h.lon}&radius=1&aid=304142`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/4 hover:bg-white/8 transition-colors"
+              className="kt-hotel-row"
             >
-              <span className="text-white text-[11px] font-medium truncate flex-1">{h.name}</span>
-              <span className="text-white/30 text-[10px] ml-2 flex-shrink-0">
+              <span className="kt-hotel-name">{h.name}</span>
+              <span className="kt-hotel-dist">
                 {h.dist < 1000 ? `${h.dist}m` : `${(h.dist / 1000).toFixed(1)}km`}
               </span>
             </a>
@@ -365,44 +363,44 @@ function PinDetail({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
   const headerImg = pin.image || PIN_HEADER_IMAGES[pin.category] || PIN_HEADER_IMAGES["natur"];
 
   return (
-    <div className="absolute bottom-20 left-3 right-3 z-[1100] animate-in slide-in-from-bottom-4 duration-300" data-testid="pin-detail">
-      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(15, 20, 45, 0.96)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)" }}>
+    <div className="kt-detail" data-testid="pin-detail">
+      <div className="kt-detail-card">
         {/* Header image */}
-        <div className="h-28 relative overflow-hidden">
-          <img src={headerImg} alt={pin.name} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f142d] via-[#0f142d]/40 to-transparent" />
+        <div className="kt-detail-hero">
+          <img src={headerImg} alt={pin.name} className="kt-detail-hero-img" loading="eager" />
+          <div className="kt-detail-hero-grad" />
           {/* Category badge */}
-          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: pin.isSupabaseEvent ? "#f97316" : meta.hex }}>
+          <span className="kt-detail-badge" style={{ background: pin.isSupabaseEvent ? "#f97316" : meta.hex }}>
             {pin.isSupabaseEvent ? `🎉 ${typeof t('map.event_label') === 'string' ? t('map.event_label') : 'Event'}` : `${meta.emoji} ${typeof t(meta.labelKey) === 'string' ? t(meta.labelKey) : meta.labelKey.split('.').pop() || ''}`}
           </span>
           {pin.fromSupabase && (
-            <span className="absolute top-2.5 right-10 px-2 py-0.5 rounded-full bg-[#4ECDC4]/90 text-white text-[11px] font-bold">DB</span>
+            <span className="kt-detail-db-badge">DB</span>
           )}
-          <button onClick={onClose} className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/60" data-testid="button-close-detail">
+          <button onClick={onClose} className="kt-detail-close" data-testid="button-close-detail">
             <X size={14} />
           </button>
         </div>
 
-        <div className="p-3.5">
-          <h3 className="text-white font-bold text-[15px] leading-tight mb-1">{pin.name}</h3>
+        <div className="kt-detail-body">
+          <h3 className="kt-detail-title">{pin.name}</h3>
 
           {/* Rating + distance */}
-          <div className="flex items-center gap-2 mb-2 text-[11px]">
-            <div className="flex items-center gap-0.5">
-              <Star size={11} className="text-amber-400 fill-amber-400" />
-              <span className="text-white/60">{pin.rating.toFixed(1)}</span>
-              {pin.ratingCount ? <span className="text-white/30">({pin.ratingCount})</span> : null}
+          <div className="kt-detail-meta">
+            <div className="kt-detail-rating">
+              <Star size={11} className="kt-star-icon" />
+              <span className="kt-detail-rating-val">{pin.rating.toFixed(1)}</span>
+              {pin.ratingCount ? <span className="kt-detail-rating-count">({pin.ratingCount})</span> : null}
             </div>
-            <span className="text-white/20">·</span>
-            <span className="text-white/50 flex items-center gap-0.5"><MapPinIcon size={10} />{distText}</span>
-            {pin.city && (<><span className="text-white/20">·</span><span className="text-white/50">{pin.city}</span></>)}
+            <span className="kt-detail-sep" />
+            <span className="kt-detail-dist"><MapPinIcon size={10} />{distText}</span>
+            {pin.city && (<><span className="kt-detail-sep" /><span className="kt-detail-city">{pin.city}</span></>)}
             {pin.difficultyKey && (
               <>
-                <span className="text-white/20">·</span>
-                <span className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                  pin.difficultyKey === "map.difficulty.easy" ? "bg-green-500/20 text-green-400" :
-                  pin.difficultyKey === "map.difficulty.medium" ? "bg-amber-500/20 text-amber-400" :
-                  "bg-red-500/20 text-red-400"
+                <span className="kt-detail-sep" />
+                <span className={`kt-difficulty ${
+                  pin.difficultyKey === "map.difficulty.easy" ? "kt-diff-easy" :
+                  pin.difficultyKey === "map.difficulty.medium" ? "kt-diff-med" :
+                  "kt-diff-hard"
                 }`}>{typeof pin.difficultyKey === 'string' && typeof t(pin.difficultyKey) === 'string' ? t(pin.difficultyKey) : pin.difficultyKey?.split('.').pop() || ''}</span>
               </>
             )}
@@ -410,72 +408,72 @@ function PinDetail({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
 
           {/* Tags */}
           {pin.tags && pin.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
+            <div className="kt-detail-tags">
               {pin.tags.slice(0, 5).map(tag => (
-                <span key={tag} className="px-1.5 py-0.5 rounded-full bg-white/8 text-white/40 text-[11px]">{tag}</span>
+                <span key={tag} className="kt-detail-tag">{tag}</span>
               ))}
             </div>
           )}
 
           {/* Event date + price */}
           {pin.isSupabaseEvent && pin.date && (
-            <div className="flex items-center gap-2 mb-2 text-[11px]">
-              <span className="text-[#f97316] font-medium">
+            <div className="kt-detail-event-info">
+              <span className="kt-detail-event-date">
                 {new Date(pin.date).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric" })}
               </span>
               {pin.price != null && (
                 <>
-                  <span className="text-white/20">·</span>
-                  <span className="text-white/60">{pin.price === 0 ? t('map.free') : `${pin.price} kr`}</span>
+                  <span className="kt-detail-sep" />
+                  <span className="kt-detail-event-price">{pin.price === 0 ? t('map.free') : `${pin.price} kr`}</span>
                 </>
               )}
             </div>
           )}
 
-          <p className="text-white/55 text-xs leading-relaxed mb-3">{pin.descriptionKey ? (typeof pin.descriptionKey === 'string' && typeof t(pin.descriptionKey) === 'string' ? t(pin.descriptionKey) : (pin.description || '')) : (pin.description || '')}</p>
+          <p className="kt-detail-desc">{pin.descriptionKey ? (typeof pin.descriptionKey === 'string' && typeof t(pin.descriptionKey) === 'string' ? t(pin.descriptionKey) : (pin.description || '')) : (pin.description || '')}</p>
 
           {/* Event spots */}
           {pin.isEvent && pin.spots && (
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-white/40 text-xs flex items-center gap-1"><Users size={10} />{pin.spots.current}/{pin.spots.total} {t('map.signed_up')}</span>
-                <span className={`text-xs font-semibold ${(pin.spots.total - pin.spots.current) <= 1 ? "text-orange-400" : "text-[#4ECDC4]"}`}>
+            <div className="kt-detail-spots">
+              <div className="kt-detail-spots-row">
+                <span className="kt-detail-spots-info"><Users size={10} />{pin.spots.current}/{pin.spots.total} {t('map.signed_up')}</span>
+                <span className={`kt-detail-spots-left ${(pin.spots.total - pin.spots.current) <= 1 ? "kt-spots-low" : ""}`}>
                   {pin.spots.total - pin.spots.current} {t('map.spots')}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                <div className={`h-full rounded-full ${(pin.spots.total - pin.spots.current) <= 1 ? "bg-orange-400" : "bg-[#4ECDC4]"}`} style={{ width: `${(pin.spots.current / pin.spots.total) * 100}%` }} />
+              <div className="kt-progress-track">
+                <div className={`kt-progress-fill ${(pin.spots.total - pin.spots.current) <= 1 ? "kt-progress-warn" : ""}`} style={{ width: `${(pin.spots.current / pin.spots.total) * 100}%` }} />
               </div>
             </div>
           )}
 
           {/* Action buttons */}
-          <div className="flex gap-2">
+          <div className="kt-detail-actions">
             {pin.isSupabaseEvent && pin.eventId ? (
               <>
-                <Link href={`/event/${pin.eventId}`} className="flex-1 py-2.5 rounded-xl bg-[#f97316] text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#ea580c] transition-colors">
+                <Link href={`/event/${pin.eventId}`} className="kt-action-primary kt-action-event">
                   {t('map.join')}
                 </Link>
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="py-2.5 px-3 rounded-xl bg-white/10 text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-white/15 transition-colors">
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="kt-action-secondary">
                   <Navigation size={13} />
                 </a>
               </>
             ) : pin.fromSupabase ? (
               <>
-                <Link href={`/sted/${pin.id.startsWith('sb-') ? pin.id.slice(3) : pin.id}`} className="flex-1 py-2.5 rounded-xl bg-[#4ECDC4] text-[#0a0f1a] text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#0ea572] transition-colors">
+                <Link href={`/sted/${pin.id.startsWith('sb-') ? pin.id.slice(3) : pin.id}`} className="kt-action-primary">
                   {t('map.see_more')}
                 </Link>
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="py-2.5 px-3 rounded-xl bg-white/10 text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-white/15 transition-colors">
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="kt-action-secondary">
                   <ExternalLink size={13} />
                 </a>
               </>
             ) : (
               <>
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 rounded-xl bg-[#4ECDC4] text-[#0a0f1a] text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#0ea572] transition-colors">
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="kt-action-primary">
                   <Navigation size={13} /> {t('map.show_route')}
                 </a>
                 {pin.isEvent && (
-                  <button className="flex-1 py-2.5 rounded-xl bg-[#f97316] text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#ea580c] transition-colors">
+                  <button className="kt-action-primary kt-action-event">
                     {t('map.join')}
                   </button>
                 )}
@@ -490,6 +488,633 @@ function PinDetail({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
     </div>
   );
 }
+
+/* ── Scoped CSS ── */
+const kortCSS = `${pageBase("kt")}
+
+/* ── Kort wrapper (NOT the map itself) ── */
+.kt-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  padding-bottom: 72px;
+  font-family: var(--sans);
+}
+
+/* ══════════ SEARCH BAR OVERLAY ══════════ */
+.kt-search-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 0 16px 8px;
+  padding-top: max(env(safe-area-inset-top, 12px), 48px);
+  background: linear-gradient(to bottom, rgba(6,10,15,0.94) 60%, rgba(6,10,15,0.6) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.kt-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.kt-search-wrap {
+  position: relative;
+  flex: 1;
+}
+.kt-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.35);
+  pointer-events: none;
+}
+.kt-search-input {
+  width: 100%;
+  padding: 11px 36px 11px 42px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  color: var(--pg-white);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.25s, background 0.25s;
+}
+.kt-search-input:focus {
+  border-color: rgba(78,205,196,0.4);
+  background: rgba(255,255,255,0.09);
+}
+.kt-search-input::placeholder { color: rgba(255,255,255,0.3); }
+
+.kt-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; padding: 4px;
+  color: rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.kt-search-clear:hover { color: var(--pg-white); }
+
+/* ── Price filter pills ── */
+.kt-price-btn {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--sans);
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255,255,255,0.55);
+}
+.kt-price-btn:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.08); }
+.kt-price-btn.active-gratis {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+  box-shadow: 0 4px 20px var(--teal-glow);
+}
+.kt-price-btn.active-premium {
+  background: #f59e0b;
+  color: #fff;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+}
+
+/* ══════════ LAYER TOGGLES ══════════ */
+.kt-layer-row {
+  margin-top: 10px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.kt-layer-group { display: flex; gap: 6px; }
+
+.kt-layer-btn {
+  padding: 8px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  transition: all 0.25s;
+  min-height: 40px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+}
+.kt-layer-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+.kt-layer-btn.active {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+  box-shadow: 0 2px 14px var(--teal-glow);
+}
+.kt-layer-btn.active-event {
+  background: #f97316;
+  color: #fff;
+  border-color: #f97316;
+  box-shadow: 0 2px 14px rgba(249,115,22,0.35);
+}
+.kt-layer-btn.active-hotel {
+  background: #003580;
+  color: #fff;
+  border-color: #003580;
+  box-shadow: 0 2px 14px rgba(0,53,128,0.35);
+}
+.kt-layer-btn.hotel-inactive {
+  background: rgba(0,53,128,0.35);
+  color: rgba(255,255,255,0.65);
+  border-color: rgba(0,53,128,0.3);
+}
+.kt-layer-btn.hotel-inactive:hover { background: rgba(0,53,128,0.55); }
+
+.kt-pin-count {
+  color: rgba(255,255,255,0.3);
+  font-size: 12px;
+  font-family: var(--sans);
+  white-space: nowrap;
+}
+
+/* ══════════ COUNTRY CHIPS ══════════ */
+.kt-country-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.kt-country-row::-webkit-scrollbar { display: none; }
+
+.kt-country-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255,255,255,0.55);
+}
+.kt-country-chip:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.75);
+}
+.kt-country-chip.active {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+  box-shadow: 0 3px 16px var(--teal-glow);
+  font-weight: 700;
+}
+
+/* ══════════ ZOOM / FAB BUTTONS ══════════ */
+.kt-zoom-group {
+  position: absolute;
+  bottom: 112px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kt-zoom-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(6,10,15,0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.kt-zoom-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--pg-white);
+}
+
+.kt-recenter-btn {
+  position: absolute;
+  bottom: 112px;
+  left: 12px;
+  z-index: 1000;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(6,10,15,0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.kt-recenter-btn:hover {
+  background: rgba(78,205,196,0.12);
+  border-color: rgba(78,205,196,0.25);
+}
+
+/* ══════════ LOADING INDICATOR ══════════ */
+.kt-loading {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  background: rgba(6,10,15,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.kt-loading-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  animation: kt-pulse 1.5s ease-in-out infinite;
+}
+.kt-loading-text {
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--sans);
+}
+
+@keyframes kt-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ══════════ PIN DETAIL BOTTOM SHEET ══════════ */
+.kt-detail {
+  position: absolute;
+  bottom: 80px;
+  left: 12px;
+  right: 12px;
+  z-index: 1100;
+  animation: kt-slide-up 0.35s cubic-bezier(0.23,1,0.32,1) both;
+}
+
+@keyframes kt-slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.kt-detail-card {
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(10,15,30,0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(78,205,196,0.06);
+}
+
+.kt-detail-hero {
+  height: 120px;
+  position: relative;
+  overflow: hidden;
+}
+.kt-detail-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kt-detail-hero-grad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,15,30,1) 0%, rgba(10,15,30,0.35) 50%, transparent 100%);
+}
+
+.kt-detail-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--sans);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+.kt-detail-db-badge {
+  position: absolute;
+  top: 10px;
+  right: 38px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: rgba(78,205,196,0.85);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--sans);
+}
+.kt-detail-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.kt-detail-close:hover { background: rgba(0,0,0,0.6); }
+
+.kt-detail-body { padding: 14px; }
+
+.kt-detail-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--pg-white);
+  line-height: 1.2;
+  margin: 0 0 6px;
+}
+
+.kt-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+.kt-detail-rating { display: flex; align-items: center; gap: 3px; }
+.kt-star-icon { color: #fbbf24; fill: #fbbf24; }
+.kt-detail-rating-val { color: rgba(255,255,255,0.6); }
+.kt-detail-rating-count { color: rgba(255,255,255,0.25); }
+.kt-detail-sep {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.kt-detail-dist {
+  color: rgba(255,255,255,0.45);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.kt-detail-city { color: rgba(255,255,255,0.45); }
+
+.kt-difficulty {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--sans);
+}
+.kt-diff-easy { background: rgba(34,197,94,0.15); color: #4ade80; }
+.kt-diff-med  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.kt-diff-hard { background: rgba(239,68,68,0.15); color: #f87171; }
+
+.kt-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.kt-detail-tag {
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.4);
+  font-size: 11px;
+  font-family: var(--sans);
+}
+
+.kt-detail-event-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.kt-detail-event-date {
+  color: #f97316;
+  font-weight: 500;
+  font-family: var(--sans);
+}
+.kt-detail-event-price { color: rgba(255,255,255,0.55); }
+
+.kt-detail-desc {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0 0 12px;
+  font-family: var(--sans);
+}
+
+.kt-detail-spots { margin-bottom: 12px; }
+.kt-detail-spots-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.kt-detail-spots-info {
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.kt-detail-spots-left {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+}
+.kt-detail-spots-left.kt-spots-low { color: #fb923c; }
+
+.kt-progress-track {
+  height: 5px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+.kt-progress-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--teal);
+  transition: width 0.4s ease;
+}
+.kt-progress-fill.kt-progress-warn { background: #fb923c; }
+
+/* ── Detail action buttons ── */
+.kt-detail-actions {
+  display: flex;
+  gap: 8px;
+}
+.kt-action-primary {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 14px;
+  background: var(--teal);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.kt-action-primary:hover {
+  box-shadow: 0 4px 16px var(--teal-glow);
+  transform: translateY(-1px);
+}
+.kt-action-primary.kt-action-event {
+  background: #f97316;
+  color: #fff;
+}
+.kt-action-primary.kt-action-event:hover {
+  box-shadow: 0 4px 16px rgba(249,115,22,0.4);
+}
+.kt-action-secondary {
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--pg-white);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.kt-action-secondary:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* ── Nearby hotels ── */
+.kt-hotels { margin-top: 10px; }
+.kt-hotels-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 0;
+  border-radius: 14px;
+  background: rgba(0,53,128,0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,53,128,0.4);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.kt-hotels-btn:hover { background: rgba(0,53,128,0.9); }
+
+.kt-hotels-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kt-hotel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.kt-hotel-row:hover { background: rgba(255,255,255,0.08); }
+.kt-hotel-name {
+  color: var(--pg-white);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--sans);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.kt-hotel-dist {
+  color: rgba(255,255,255,0.25);
+  font-size: 10px;
+  font-family: var(--sans);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Event pulse (pin marker animation) ── */
+@keyframes b-event-pulse {
+  0% { box-shadow: 0 0 14px rgba(249,115,22,0.6), 0 2px 8px rgba(0,0,0,0.4); }
+  50% { box-shadow: 0 0 22px rgba(249,115,22,0.9), 0 2px 8px rgba(0,0,0,0.4); }
+  100% { box-shadow: 0 0 14px rgba(249,115,22,0.6), 0 2px 8px rgba(0,0,0,0.4); }
+}
+`;
 
 /* ═══════════════════ KORT PAGE ═══════════════════ */
 export default function Kort() {
@@ -682,192 +1307,172 @@ export default function Kort() {
   }
 
   return (
-    <div className="relative w-full h-svh pb-[72px]" data-testid="kort-page">
-      {/* ── Search bar + Gratis / Premium ── */}
-      <div className="absolute top-0 left-0 right-0 z-[1000] px-4 pb-2" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.92) 60%, transparent)", paddingTop: "max(env(safe-area-inset-top, 12px), 48px)" }}>
-        <div className="flex gap-2 items-center">
-          <div className="relative flex-1">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-            <input
-              ref={searchRef}
-              type="search"
-              placeholder={t('map.search_places')}
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
-              className="premium-input w-full pl-10 pr-8 text-sm text-white placeholder:text-white/35 focus:outline-none"
-              style={{ paddingLeft: "40px", paddingTop: "10px", paddingBottom: "10px" }}
-              data-testid="input-search-map"
-            />
-            {search && (
-              <button onClick={() => { setSearch(""); searchRef.current?.blur(); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
-                <X size={14} />
-              </button>
-            )}
-          </div>
-          <button
-            onClick={() => { setPriceFilter(priceFilter === "gratis" ? "alle" : "gratis"); setSelectedPin(null); }}
-            className={`px-3.5 py-2.5 rounded-xl text-[11px] font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
-              priceFilter === "gratis" ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/30" : "text-white/60 hover:text-white/80"
-            }`}
-            style={priceFilter !== "gratis" ? { background: "rgba(20, 26, 55, 0.9)", border: "1px solid rgba(255,255,255,0.1)" } : undefined}
-            data-testid="filter-gratis"
-          >
-            {t('map.free')}
-          </button>
-          <button
-            onClick={() => { setPriceFilter(priceFilter === "premium" ? "alle" : "premium"); setSelectedPin(null); }}
-            className={`px-3.5 py-2.5 rounded-xl text-[11px] font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
-              priceFilter === "premium" ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30" : "text-white/60 hover:text-white/80"
-            }`}
-            style={priceFilter !== "premium" ? { background: "rgba(20, 26, 55, 0.9)", border: "1px solid rgba(255,255,255,0.1)" } : undefined}
-            data-testid="filter-premium"
-          >
-            {t('map.premium')}
-          </button>
-        </div>
-        {/* Layer toggle + pin count */}
-        <div className="mt-2 px-1 flex items-center gap-3">
-          <div className="flex gap-1.5">
-            {(["alle", "steder", "events"] as const).map(layer => (
-              <button
-                key={layer}
-                onClick={() => { setShowLayer(layer); setSelectedPin(null); }}
-                className={`px-3 py-2 rounded-full text-xs font-semibold transition-all min-h-[44px] ${
-                  showLayer === layer
-                    ? layer === "events"
-                      ? "bg-[#f97316] text-white"
-                      : "bg-[#4ECDC4] text-[#0a0f1a]"
-                    : "bg-white/8 text-white/40 hover:text-white/60"
-                }`}
-                data-testid={`filter-layer-${layer}`}
-              >
-                {layer === "alle" ? `📍 ${typeof t('map.all') === 'string' ? t('map.all') : 'Alle'}` : layer === "steder" ? `🏛️ ${typeof t('map.places') === 'string' ? t('map.places') : 'Steder'}` : `🎉 ${typeof t('map.events') === 'string' ? t('map.events') : 'Events'}`}
-              </button>
-            ))}
+    <>
+      <style>{kortCSS}</style>
+      <div className="kt-wrapper" data-testid="kort-page">
+        {/* ── Search bar + Gratis / Premium ── */}
+        <div className="kt-search-overlay">
+          <div className="kt-search-row">
+            <div className="kt-search-wrap">
+              <Search size={15} className="kt-search-icon" />
+              <input
+                ref={searchRef}
+                type="search"
+                placeholder={t('map.search_places')}
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
+                className="kt-search-input"
+                data-testid="input-search-map"
+              />
+              {search && (
+                <button onClick={() => { setSearch(""); searchRef.current?.blur(); }} className="kt-search-clear">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
             <button
-              onClick={() => { setShowLayer(showLayer === "hoteller" ? "alle" : "hoteller"); setSelectedPin(null); }}
-              className={`px-3 py-2 rounded-full text-xs font-semibold transition-all min-h-[44px] ${
-                showLayer === "hoteller"
-                  ? "bg-[#003580] text-white"
-                  : "bg-[#003580]/40 text-white/70 hover:bg-[#003580]/60"
-              }`}
+              onClick={() => { setPriceFilter(priceFilter === "gratis" ? "alle" : "gratis"); setSelectedPin(null); }}
+              className={`kt-price-btn ${priceFilter === "gratis" ? "active-gratis" : ""}`}
+              data-testid="filter-gratis"
             >
-              🏨 Hoteller
+              {t('map.free')}
+            </button>
+            <button
+              onClick={() => { setPriceFilter(priceFilter === "premium" ? "alle" : "premium"); setSelectedPin(null); }}
+              className={`kt-price-btn ${priceFilter === "premium" ? "active-premium" : ""}`}
+              data-testid="filter-premium"
+            >
+              {t('map.premium')}
             </button>
           </div>
-          <span className="text-white/30 text-xs">
-            {filteredPins.length} {showLayer === "events" ? t('map.events') : showLayer === "steder" ? t('map.places') : t('map.places')}
-            {showLayer === "alle" && eventPins.length > 0 && ` (${eventPins.length} ${t('map.events')})`}
-          </span>
-        </div>
 
-        {/* Country / Region chip bar */}
-        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-          {MAP_COUNTRY_CHIPS.map((code) => {
-            const region = MAP_REGIONS[code];
-            if (!region) return null;
-            const isActive = mapCountry === code;
-            return (
+          {/* Layer toggle + pin count */}
+          <div className="kt-layer-row">
+            <div className="kt-layer-group">
+              {(["alle", "steder", "events"] as const).map(layer => (
+                <button
+                  key={layer}
+                  onClick={() => { setShowLayer(layer); setSelectedPin(null); }}
+                  className={`kt-layer-btn ${
+                    showLayer === layer
+                      ? layer === "events" ? "active-event" : "active"
+                      : ""
+                  }`}
+                  data-testid={`filter-layer-${layer}`}
+                >
+                  {layer === "alle" ? `📍 ${typeof t('map.all') === 'string' ? t('map.all') : 'Alle'}` : layer === "steder" ? `🏛️ ${typeof t('map.places') === 'string' ? t('map.places') : 'Steder'}` : `🎉 ${typeof t('map.events') === 'string' ? t('map.events') : 'Events'}`}
+                </button>
+              ))}
               <button
-                key={code}
-                onClick={() => handleCountrySelect(code)}
-                className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] ${
-                  isActive
-                    ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/20"
-                    : "text-white/60 hover:text-white/80"
+                onClick={() => { setShowLayer(showLayer === "hoteller" ? "alle" : "hoteller"); setSelectedPin(null); }}
+                className={`kt-layer-btn ${
+                  showLayer === "hoteller" ? "active-hotel" : "hotel-inactive"
                 }`}
-                style={!isActive ? { background: "rgba(20, 26, 55, 0.9)", border: "1px solid rgba(255,255,255,0.1)" } : undefined}
-                data-testid={`map-country-${code}`}
               >
-                <span>{region.flag}</span>
-                {region.label}
+                🏨 Hoteller
               </button>
-            );
-          })}
+            </div>
+            <span className="kt-pin-count">
+              {filteredPins.length} {showLayer === "events" ? t('map.events') : showLayer === "steder" ? t('map.places') : t('map.places')}
+              {showLayer === "alle" && eventPins.length > 0 && ` (${eventPins.length} ${t('map.events')})`}
+            </span>
+          </div>
+
+          {/* Country / Region chip bar */}
+          <div className="kt-country-row">
+            {MAP_COUNTRY_CHIPS.map((code) => {
+              const region = MAP_REGIONS[code];
+              if (!region) return null;
+              const isActive = mapCountry === code;
+              return (
+                <button
+                  key={code}
+                  onClick={() => handleCountrySelect(code)}
+                  className={`kt-country-chip ${isActive ? "active" : ""}`}
+                  data-testid={`map-country-${code}`}
+                >
+                  <span>{region.flag}</span>
+                  {region.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* ── Leaflet Map ── */}
-      <MapContainer
-        center={[USER_LAT, USER_LNG]}
-        zoom={12}
-        zoomControl={false}
-        attributionControl={false}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#060a0f" }}
-      >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-        />
-        <MapResizeFix />
-
-        {/* Map event listener for viewport-based loading */}
-        <MapEventListener onBoundsChange={handleMapBoundsChange} />
-
-        {/* User location pulse */}
-        <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
-        <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
-
-        {/* Clustered pins — mobile optimized */}
-        <MarkerClusterGroup
-          chunkedLoading
-          chunkInterval={100}
-          chunkDelay={50}
-          maxClusterRadius={isMobile ? 60 : 80}
-          disableClusteringAtZoom={isMobile ? 17 : 18}
-          spiderfyOnMaxZoom
-          showCoverageOnHover={false}
-          iconCreateFunction={(cluster: any) => {
-            const count = cluster.getChildCount();
-            const size = count > 50 ? 48 : count > 20 ? 42 : 36;
-            return L.divIcon({
-              html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(16,185,129,0.85);border:2.5px solid rgba(255,255,255,0.8);box-shadow:0 2px 12px rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:${size > 42 ? 14 : 12}px;font-weight:700;color:white;">${count}</div>`,
-              className: "b-pin",
-              iconSize: L.point(size, size),
-            });
-          }}
+        {/* ── Leaflet Map ── */}
+        <MapContainer
+          center={[USER_LAT, USER_LNG]}
+          zoom={12}
+          zoomControl={false}
+          attributionControl={false}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#060a0f" }}
         >
-          {filteredPins.map((pin) => (
-            <Marker
-              key={pin.id}
-              position={[pin.lat, pin.lng]}
-              icon={pin.isSupabaseEvent ? supabaseEventIcon : (categoryIcons[pin.category] || createEmojiIcon("📍", "#4ECDC4", 34))}
-              eventHandlers={{ click: () => handlePinClick(pin) }}
-            />
-          ))}
-        </MarkerClusterGroup>
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          />
+          <MapResizeFix />
 
-        <ZoomControls />
-        {flyTo && <MapRecenter center={flyTo.center} zoom={flyTo.zoom} />}
-      </MapContainer>
+          {/* Map event listener for viewport-based loading */}
+          <MapEventListener onBoundsChange={handleMapBoundsChange} />
 
-      {/* ── Recenter button ── */}
-      <button
-        onClick={handleRecenter}
-        className="absolute bottom-28 left-3 z-[1000] w-10 h-10 rounded-xl bg-[#0f142d]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-[#4ECDC4] hover:bg-white/15 transition-colors shadow-lg"
-        data-testid="button-near-me"
-      >
-        <Navigation size={18} />
-      </button>
+          {/* User location pulse */}
+          <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
+          <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
 
-      {/* ── Loading Indicator for Viewport Loading ── */}
-      {isLoadingViewport && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[999] px-4 py-2 rounded-full bg-[#0f142d]/90 backdrop-blur-md border border-white/10 flex items-center gap-2" data-testid="loading-viewport">
-          <div className="w-3 h-3 rounded-full bg-[#4ECDC4] animate-pulse" />
-          <span className="text-white/70 text-xs font-medium">Loading places...</span>
-        </div>
-      )}
+          {/* Clustered pins — mobile optimized */}
+          <MarkerClusterGroup
+            chunkedLoading
+            chunkInterval={100}
+            chunkDelay={50}
+            maxClusterRadius={isMobile ? 60 : 80}
+            disableClusteringAtZoom={isMobile ? 17 : 18}
+            spiderfyOnMaxZoom
+            showCoverageOnHover={false}
+            iconCreateFunction={(cluster: any) => {
+              const count = cluster.getChildCount();
+              const size = count > 50 ? 48 : count > 20 ? 42 : 36;
+              return L.divIcon({
+                html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(16,185,129,0.85);border:2.5px solid rgba(255,255,255,0.8);box-shadow:0 2px 12px rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:${size > 42 ? 14 : 12}px;font-weight:700;color:white;">${count}</div>`,
+                className: "b-pin",
+                iconSize: L.point(size, size),
+              });
+            }}
+          >
+            {filteredPins.map((pin) => (
+              <Marker
+                key={pin.id}
+                position={[pin.lat, pin.lng]}
+                icon={pin.isSupabaseEvent ? supabaseEventIcon : (categoryIcons[pin.category] || createEmojiIcon("📍", "#4ECDC4", 34))}
+                eventHandlers={{ click: () => handlePinClick(pin) }}
+              />
+            ))}
+          </MarkerClusterGroup>
 
-      {/* ── Pin Detail ── */}
-      {selectedPin && <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />}
+          <ZoomControls />
+          {flyTo && <MapRecenter center={flyTo.center} zoom={flyTo.zoom} />}
+        </MapContainer>
 
-      <style>{`
-        @keyframes b-event-pulse {
-          0% { box-shadow: 0 0 14px rgba(249,115,22,0.6), 0 2px 8px rgba(0,0,0,0.4); }
-          50% { box-shadow: 0 0 22px rgba(249,115,22,0.9), 0 2px 8px rgba(0,0,0,0.4); }
-          100% { box-shadow: 0 0 14px rgba(249,115,22,0.6), 0 2px 8px rgba(0,0,0,0.4); }
-        }
-      `}</style>
-    </div>
+        {/* ── Recenter button ── */}
+        <button
+          onClick={handleRecenter}
+          className="kt-recenter-btn"
+          data-testid="button-near-me"
+        >
+          <Navigation size={18} />
+        </button>
+
+        {/* ── Loading Indicator for Viewport Loading ── */}
+        {isLoadingViewport && (
+          <div className="kt-loading" data-testid="loading-viewport">
+            <div className="kt-loading-dot" />
+            <span className="kt-loading-text">Loading places...</span>
+          </div>
+        )}
+
+        {/* ── Pin Detail ── */}
+        {selectedPin && <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />}
+      </div>
+    </>
   );
-   }
+}

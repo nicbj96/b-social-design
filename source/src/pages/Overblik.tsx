@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces, fetchEvents, type Place, type Event as SupabaseEvent } from "@/lib/supabase";
-
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
 
 const MONTHLY_DATA = [
   { monthKey: "overview.month_oct", count: 3 }, { monthKey: "overview.month_nov", count: 5 }, { monthKey: "overview.month_dec", count: 2 },
@@ -12,9 +13,234 @@ const MONTHLY_DATA = [
 
 const maxCount = Math.max(...MONTHLY_DATA.map(d => d.count));
 
+/* ── Scoped CSS ── */
+const overblikCSS = `
+${pageBase("ov")}
+
+/* ── Hero background ── */
+.ov-hero-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: url('/dashboard-hero.png') center/cover no-repeat;
+  pointer-events: none;
+}
+.ov-hero-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(6,10,15,0.55) 0%,
+    rgba(6,10,15,0.8) 40%,
+    rgba(6,10,15,0.95) 70%,
+    rgba(6,10,15,1) 100%);
+}
+
+/* ── Sticky header ── */
+.ov-header {
+  position: sticky; top: 0; z-index: 30;
+  padding: 48px 20px 12px;
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent);
+}
+.ov-back {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.3s; color: var(--pg-white);
+}
+.ov-back:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(78,205,196,0.3);
+}
+.ov-title {
+  font-family: var(--serif);
+  font-size: 22px; font-weight: 400;
+  color: var(--pg-white);
+}
+
+/* ── Body wrapper ── */
+.ov-body {
+  position: relative; z-index: 1;
+  padding: 0 20px 96px;
+  display: flex; flex-direction: column; gap: 20px;
+  margin-top: 8px;
+}
+
+/* ── Stat grid ── */
+.ov-stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.ov-stat-card {
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.ov-stat-card:hover {
+  border-color: rgba(255,255,255,0.14);
+  transform: translateY(-2px);
+}
+.ov-stat-icon {
+  width: 36px; height: 36px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.ov-stat-icon--teal    { background: rgba(78,205,196,0.15); color: #4ECDC4; }
+.ov-stat-icon--purple  { background: rgba(168,85,247,0.15); color: #c084fc; }
+.ov-stat-icon--orange  { background: rgba(249,115,22,0.15); color: #fb923c; }
+.ov-stat-icon--blue    { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.ov-stat-value {
+  font-family: var(--serif);
+  font-size: 26px; font-weight: 400;
+  color: var(--pg-white); line-height: 1;
+}
+.ov-stat-desc {
+  font-size: 11px; color: var(--pg-white-muted);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  margin-top: 6px;
+}
+
+/* ── Chart section ── */
+.ov-chart-card {
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+}
+.ov-chart-title {
+  font-family: var(--sans);
+  font-size: 14px; font-weight: 600;
+  color: var(--pg-white); margin-bottom: 16px;
+}
+.ov-chart-bars {
+  display: flex; align-items: flex-end; gap: 8px;
+  height: 128px;
+}
+.ov-bar-col {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 4px; height: 100%;
+  justify-content: flex-end;
+}
+.ov-bar-value {
+  font-size: 11px; font-weight: 500;
+  color: rgba(255,255,255,0.5);
+}
+.ov-bar {
+  width: 100%; border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, rgba(78,205,196,0.9) 0%, rgba(78,205,196,0.45) 100%);
+  transition: height 0.6s cubic-bezier(0.23,1,0.32,1);
+  position: relative;
+}
+.ov-bar::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px; border-radius: 6px 6px 0 0;
+  background: #4ECDC4;
+  box-shadow: 0 0 8px rgba(78,205,196,0.6);
+}
+.ov-bar-label {
+  font-size: 11px; color: rgba(255,255,255,0.3);
+  margin-top: 4px;
+}
+
+/* ── Category breakdown ── */
+.ov-cat-card {
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+}
+.ov-cat-title {
+  font-family: var(--sans);
+  font-size: 14px; font-weight: 600;
+  color: var(--pg-white); margin-bottom: 16px;
+}
+.ov-cat-subtitle {
+  font-size: 11px; font-weight: 400;
+  color: var(--pg-white-muted); margin-left: 6px;
+}
+.ov-cat-list {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.ov-cat-row-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.ov-cat-name {
+  font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.7);
+}
+.ov-cat-pct {
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,0.45);
+}
+.ov-cat-track {
+  height: 6px; border-radius: 100px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.ov-cat-fill {
+  height: 100%; border-radius: 100px;
+  transition: width 0.7s cubic-bezier(0.23,1,0.32,1);
+}
+.ov-cat-fill--teal    { background: linear-gradient(90deg, rgba(78,205,196,0.5), #4ECDC4); }
+.ov-cat-fill--orange  { background: linear-gradient(90deg, rgba(251,146,60,0.5), #fb923c); }
+.ov-cat-fill--amber   { background: linear-gradient(90deg, rgba(251,191,36,0.5), #fbbf24); }
+.ov-cat-fill--purple  { background: linear-gradient(90deg, rgba(192,132,252,0.5), #c084fc); }
+.ov-cat-fill--pink    { background: linear-gradient(90deg, rgba(244,114,182,0.5), #f472b6); }
+.ov-cat-fill--blue    { background: linear-gradient(90deg, rgba(96,165,250,0.5), #60a5fa); }
+.ov-cat-fill--default { background: linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.35)); }
+
+/* ── Database status ── */
+.ov-db-card {
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+}
+.ov-db-title {
+  font-family: var(--sans);
+  font-size: 14px; font-weight: 600;
+  color: var(--pg-white); margin-bottom: 14px;
+}
+.ov-db-rows {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.ov-db-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ov-db-key {
+  font-size: 13px; color: rgba(255,255,255,0.5);
+}
+.ov-db-val {
+  font-size: 13px; font-weight: 700; color: var(--teal);
+}
+.ov-db-val--amber { color: #fbbf24; }
+`;
+
+/* ── Color helpers ── */
+const catFillClass: Record<string, string> = {
+  "bg-[#4ECDC4]": "ov-cat-fill--teal",
+  "bg-orange-400": "ov-cat-fill--orange",
+  "bg-amber-400": "ov-cat-fill--amber",
+  "bg-purple-400": "ov-cat-fill--purple",
+  "bg-pink-400": "ov-cat-fill--pink",
+  "bg-blue-400": "ov-cat-fill--blue",
+  "bg-white/30": "ov-cat-fill--default",
+};
+
 export default function Overblik() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
+  const containerRef = useFadeUp("ov");
 
   const { data: places } = useQuery<Place[]>({
     queryKey: ["supabase-places-overview"],
@@ -71,104 +297,119 @@ export default function Overblik() {
   const topCategory = categoryStats[0];
 
   return (
-    <div
-      className="relative min-h-svh pb-24"
-      style={{ background: "#060a0f" }}
-      data-testid="overblik-page"
-    >
-      <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent)" }}>
-        <button onClick={() => setLocation("/min-side")} className="w-9 h-9 rounded-full glass-card flex items-center justify-center"><ArrowLeft size={18} className="text-white" /></button>
-        <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('overview.title')}</h1>
-      </div>
+    <>
+      <style>{overblikCSS}</style>
+      <div
+        className="ov-root"
+        ref={containerRef}
+        data-testid="overblik-page"
+      >
+        {/* Background image + overlay */}
+        <div className="ov-hero-bg" />
 
-      <div className="px-5 mt-2 space-y-5">
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="glass-card-strong rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-xl bg-[#4ECDC4]/20 flex items-center justify-center"><Target size={16} className="text-[#4ECDC4]" /></div>
-            </div>
-            <p className="text-white text-2xl font-bold">{eventsCount > 0 ? eventsCount : 29}</p>
-            <p className="text-white/40 text-xs">{t('overview.events_in_db')}</p>
-          </div>
-          <div className="glass-card-strong rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center"><MapPin size={16} className="text-purple-400" /></div>
-            </div>
-            <p className="text-white text-2xl font-bold">{placesCount}</p>
-            <p className="text-white/40 text-xs">{t('overview.places_in_db')}</p>
-          </div>
-          <div className="glass-card-strong rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center"><Flame size={16} className="text-orange-400" /></div>
-            </div>
-            <p className="text-white text-2xl font-bold">12 {t('overview.days')}</p>
-            <p className="text-white/40 text-xs">{t('overview.active_streak')}</p>
-          </div>
-          <div className="glass-card-strong rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center"><Award size={16} className="text-blue-400" /></div>
-            </div>
-            <p className="text-white text-2xl font-bold">{topCategory.emoji} {topCategory.name}</p>
-            <p className="text-white/40 text-xs">{t('overview.most_active_category')}</p>
-          </div>
+        {/* Sticky header */}
+        <div className="ov-header">
+          <button onClick={() => setLocation("/min-side")} className="ov-back">
+            <ArrowLeft size={18} />
+          </button>
+          <h1 className="ov-title">{t('overview.title')}</h1>
         </div>
 
-        {/* Monthly activity chart */}
-        <div className="glass-card-strong rounded-2xl p-4">
-          <h3 className="text-white font-semibold text-sm mb-4">{t('overview.activity_per_month')}</h3>
-          <div className="flex items-end gap-2 h-32">
-            {MONTHLY_DATA.map((d) => (
-              <div key={d.monthKey} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-white/60 text-xs font-medium">{d.count}</span>
-                <div className="w-full rounded-t-lg bg-[#4ECDC4]/80 transition-all duration-500" style={{ height: `${(d.count / maxCount) * 100}%` }} />
-                <span className="text-white/40 text-xs">{t(d.monthKey)}</span>
+        <div className="ov-body">
+          {/* Stat cards */}
+          <div className="ov-stat-grid ov-fade-up">
+            <div className="ov-stat-card">
+              <div className="ov-stat-icon ov-stat-icon--teal">
+                <Target size={16} />
               </div>
-            ))}
+              <p className="ov-stat-value">{eventsCount > 0 ? eventsCount : 29}</p>
+              <p className="ov-stat-desc">{t('overview.events_in_db')}</p>
+            </div>
+            <div className="ov-stat-card">
+              <div className="ov-stat-icon ov-stat-icon--purple">
+                <MapPin size={16} />
+              </div>
+              <p className="ov-stat-value">{placesCount}</p>
+              <p className="ov-stat-desc">{t('overview.places_in_db')}</p>
+            </div>
+            <div className="ov-stat-card">
+              <div className="ov-stat-icon ov-stat-icon--orange">
+                <Flame size={16} />
+              </div>
+              <p className="ov-stat-value">12 {t('overview.days')}</p>
+              <p className="ov-stat-desc">{t('overview.active_streak')}</p>
+            </div>
+            <div className="ov-stat-card">
+              <div className="ov-stat-icon ov-stat-icon--blue">
+                <Award size={16} />
+              </div>
+              <p className="ov-stat-value">{topCategory.emoji} {topCategory.name}</p>
+              <p className="ov-stat-desc">{t('overview.most_active_category')}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Category breakdown */}
-        <div className="glass-card-strong rounded-2xl p-4">
-          <h3 className="text-white font-semibold text-sm mb-4">{t('overview.categories')} {placesCount > 0 && <span className="text-white/30 text-xs font-normal">({t('overview.from_database')})</span>}</h3>
-          <div className="space-y-3">
-            {categoryStats.map((cat) => (
-              <div key={cat.name}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-white/70 text-xs font-medium">{cat.emoji} {cat.name}</span>
-                  <span className="text-white/50 text-xs">{cat.pct}%</span>
+          {/* Monthly activity chart */}
+          <div className="ov-chart-card ov-fade-up ov-d1">
+            <h3 className="ov-chart-title">{t('overview.activity_per_month')}</h3>
+            <div className="ov-chart-bars">
+              {MONTHLY_DATA.map((d) => (
+                <div key={d.monthKey} className="ov-bar-col">
+                  <span className="ov-bar-value">{d.count}</span>
+                  <div className="ov-bar" style={{ height: `${(d.count / maxCount) * 100}%` }} />
+                  <span className="ov-bar-label">{t(d.monthKey)}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div className={`h-full rounded-full ${cat.color} transition-all duration-700`} style={{ width: `${cat.pct}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Database overview */}
-        {placesCount > 0 && (
-          <div className="glass-card-strong rounded-2xl p-4">
-            <h3 className="text-white font-semibold text-sm mb-3">{t('overview.database_status')}</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-white/60 text-xs">{t('overview.places')}</span>
-                <span className="text-[#4ECDC4] text-xs font-bold">{placesCount}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/60 text-xs">{t('overview.events')}</span>
-                <span className="text-[#4ECDC4] text-xs font-bold">{eventsCount}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/60 text-xs">{t('overview.average_rating')}</span>
-                <span className="text-amber-400 text-xs font-bold">
-                  {places ? (places.reduce((s, p) => s + (p.rating_avg || 0), 0) / places.length).toFixed(1) : "–"}
-                </span>
-              </div>
+              ))}
             </div>
           </div>
-        )}
+
+          {/* Category breakdown */}
+          <div className="ov-cat-card ov-fade-up ov-d2">
+            <h3 className="ov-cat-title">
+              {t('overview.categories')}
+              {placesCount > 0 && <span className="ov-cat-subtitle">({t('overview.from_database')})</span>}
+            </h3>
+            <div className="ov-cat-list">
+              {categoryStats.map((cat) => (
+                <div key={cat.name}>
+                  <div className="ov-cat-row-head">
+                    <span className="ov-cat-name">{cat.emoji} {cat.name}</span>
+                    <span className="ov-cat-pct">{cat.pct}%</span>
+                  </div>
+                  <div className="ov-cat-track">
+                    <div
+                      className={`ov-cat-fill ${catFillClass[cat.color] || "ov-cat-fill--default"}`}
+                      style={{ width: `${cat.pct}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Database overview */}
+          {placesCount > 0 && (
+            <div className="ov-db-card ov-fade-up ov-d3">
+              <h3 className="ov-db-title">{t('overview.database_status')}</h3>
+              <div className="ov-db-rows">
+                <div className="ov-db-row">
+                  <span className="ov-db-key">{t('overview.places')}</span>
+                  <span className="ov-db-val">{placesCount}</span>
+                </div>
+                <div className="ov-db-row">
+                  <span className="ov-db-key">{t('overview.events')}</span>
+                  <span className="ov-db-val">{eventsCount}</span>
+                </div>
+                <div className="ov-db-row">
+                  <span className="ov-db-key">{t('overview.average_rating')}</span>
+                  <span className="ov-db-val ov-db-val--amber">
+                    {places ? (places.reduce((s, p) => s + (p.rating_avg || 0), 0) / places.length).toFixed(1) : "–"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

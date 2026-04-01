@@ -17,6 +17,403 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
+
+/* ── Scoped CSS ─────────────────────────────────────────────────────────── */
+const henvisningCSS = `
+${pageBase("hv")}
+
+/* ── Hero background ── */
+.hv-hero-bg {
+  position: relative;
+  min-height: 320px;
+  background: url('/revenue-hero.png') center/cover no-repeat;
+}
+.hv-hero-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(6,10,15,0.4) 0%,
+    rgba(6,10,15,0.75) 50%,
+    rgba(6,10,15,1) 100%);
+  pointer-events: none;
+}
+.hv-hero-inner {
+  position: relative; z-index: 1;
+  max-width: 720px; margin: 0 auto;
+  padding: 72px 24px 48px;
+}
+
+/* ── Header bar ── */
+.hv-header {
+  position: sticky; top: 0; z-index: 20;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(6,10,15,0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.hv-header-inner {
+  max-width: 720px; margin: 0 auto;
+  padding: 0 24px; height: 60px;
+  display: flex; align-items: center; gap: 14px;
+}
+.hv-back {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--pg-white-dim); cursor: pointer;
+  transition: all 0.25s;
+}
+.hv-back:hover { background: rgba(255,255,255,0.1); color: var(--teal); }
+.hv-header-title {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--sans); font-size: 16px; font-weight: 600;
+  color: var(--pg-white);
+}
+.hv-header-title svg { color: var(--teal); }
+
+/* ── Content wrapper ── */
+.hv-content {
+  max-width: 720px; margin: 0 auto;
+  padding: 32px 24px 64px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+/* ── Hero card ── */
+.hv-hero-card {
+  position: relative; overflow: hidden;
+  border-radius: 20px; padding: 32px;
+  background: linear-gradient(135deg,
+    rgba(78,205,196,0.12) 0%,
+    rgba(78,205,196,0.04) 40%,
+    rgba(6,10,15,0.6) 100%);
+  border: 1px solid rgba(78,205,196,0.15);
+}
+.hv-hero-glow {
+  position: absolute; top: -60px; right: -60px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: rgba(78,205,196,0.08);
+  filter: blur(60px); pointer-events: none;
+}
+.hv-hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: var(--teal);
+  text-transform: uppercase; letter-spacing: 2px;
+  background: rgba(78,205,196,0.12);
+  border: 1px solid rgba(78,205,196,0.2);
+  padding: 5px 14px; border-radius: 100px;
+}
+.hv-hero-title {
+  font-family: var(--serif); font-size: clamp(26px, 4vw, 36px);
+  font-weight: 400; line-height: 1.1; margin-top: 16px;
+  color: var(--pg-white);
+}
+.hv-hero-title em { font-style: italic; color: var(--teal); }
+.hv-hero-desc {
+  font-size: 14px; color: var(--pg-white-dim);
+  line-height: 1.65; margin-top: 10px; max-width: 420px;
+}
+
+/* ── Stats grid ── */
+.hv-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+.hv-stat-card {
+  padding: 20px; border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  display: flex; flex-direction: column; gap: 10px;
+  transition: background 0.3s, border-color 0.3s;
+}
+.hv-stat-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
+.hv-stat-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.hv-stat-icon-teal  { background: rgba(78,205,196,0.1); color: var(--teal); }
+.hv-stat-icon-amber { background: rgba(251,191,36,0.1); color: #fbbf24; }
+.hv-stat-icon-green { background: rgba(52,211,153,0.1); color: #34d399; }
+.hv-stat-val {
+  font-family: var(--serif); font-size: 24px;
+  font-weight: 400; color: var(--pg-white); line-height: 1;
+}
+.hv-stat-lbl {
+  font-size: 11px; color: var(--pg-white-muted);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  line-height: 1.3;
+}
+
+/* ── Link card ── */
+.hv-link-card {
+  border-radius: 16px; padding: 24px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+.hv-link-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 16px;
+}
+.hv-link-header svg { color: var(--teal); }
+.hv-link-header span {
+  font-size: 13px; font-weight: 600; color: var(--pg-white-dim);
+}
+.hv-link-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.hv-link-input {
+  flex: 1; padding: 12px 16px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; color: var(--pg-white-dim);
+  font-size: 13px; font-family: 'DM Mono', monospace;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hv-copy-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 13px; font-weight: 600; font-family: var(--sans);
+  cursor: pointer; transition: all 0.25s; white-space: nowrap;
+  border: none;
+}
+.hv-copy-btn-default {
+  background: var(--teal); color: var(--bg);
+}
+.hv-copy-btn-default:hover {
+  box-shadow: 0 4px 20px var(--teal-glow);
+  transform: translateY(-1px);
+}
+.hv-copy-btn-done {
+  background: rgba(52,211,153,0.15);
+  color: #34d399;
+  border: 1px solid rgba(52,211,153,0.25);
+}
+.hv-link-hint {
+  font-size: 12px; color: var(--pg-white-muted);
+  margin-top: 12px; line-height: 1.5;
+}
+
+/* ── Section card (reusable) ── */
+.hv-section {
+  border-radius: 16px; padding: 24px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+.hv-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600; color: var(--pg-white-dim);
+  text-transform: uppercase; letter-spacing: 1.8px;
+  margin-bottom: 20px;
+}
+.hv-section-title svg { color: var(--teal); }
+
+/* ── How-it-works steps ── */
+.hv-steps { display: flex; flex-direction: column; gap: 20px; }
+.hv-step {
+  display: flex; align-items: flex-start; gap: 16px;
+}
+.hv-step-icon {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.hv-step-body { flex: 1; padding-top: 2px; }
+.hv-step-name {
+  font-size: 14px; font-weight: 600; color: var(--pg-white);
+  margin-bottom: 2px;
+}
+.hv-step-desc {
+  font-size: 12px; color: var(--pg-white-muted); line-height: 1.55;
+}
+
+/* ── Commission table ── */
+.hv-comm-list { display: flex; flex-direction: column; gap: 12px; }
+.hv-comm-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; border-radius: 14px; padding: 16px 18px;
+  transition: background 0.25s;
+}
+.hv-comm-row-starter {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.hv-comm-row-vaekst {
+  background: rgba(78,205,196,0.05);
+  border: 1px solid rgba(78,205,196,0.15);
+}
+.hv-comm-row-partner {
+  background: rgba(52,211,153,0.05);
+  border: 1px solid rgba(52,211,153,0.15);
+}
+.hv-comm-left { flex: 1; }
+.hv-comm-plan {
+  font-size: 14px; font-weight: 700; margin-bottom: 2px;
+}
+.hv-comm-plan-muted { color: var(--pg-white-muted); }
+.hv-comm-plan-teal  { color: var(--teal); }
+.hv-comm-plan-green { color: #34d399; }
+.hv-comm-share {
+  font-size: 11px; color: var(--pg-white-muted);
+  margin-left: 8px; font-weight: 400;
+}
+.hv-comm-desc { font-size: 12px; color: var(--pg-white-muted); }
+.hv-comm-right { text-align: right; flex-shrink: 0; }
+.hv-comm-cut {
+  font-size: 14px; font-weight: 700;
+}
+.hv-comm-cut-muted { color: var(--pg-white-muted); }
+.hv-comm-cut-teal  { color: var(--teal); }
+.hv-comm-cut-green { color: #34d399; }
+.hv-comm-sub {
+  font-size: 11px; color: var(--pg-white-muted);
+}
+.hv-comm-note {
+  font-size: 12px; color: var(--pg-white-muted);
+  margin-top: 16px; line-height: 1.55;
+}
+
+/* ── Referred users ── */
+.hv-ref-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.hv-ref-list { display: flex; flex-direction: column; gap: 6px; }
+.hv-ref-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 12px;
+  transition: background 0.25s; cursor: default;
+}
+.hv-ref-row:hover { background: rgba(255,255,255,0.04); }
+.hv-ref-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(78,205,196,0.12);
+  border: 1px solid rgba(78,205,196,0.18);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--teal); font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+}
+.hv-ref-info { flex: 1; min-width: 0; }
+.hv-ref-name {
+  font-size: 14px; font-weight: 500; color: var(--pg-white);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hv-ref-meta {
+  font-size: 12px; color: var(--pg-white-muted);
+}
+.hv-ref-chevron { color: rgba(255,255,255,0.15); flex-shrink: 0; }
+.hv-ref-empty {
+  text-align: center; padding: 40px 0;
+}
+.hv-ref-empty-icon { font-size: 36px; margin-bottom: 12px; }
+.hv-ref-empty-text { font-size: 14px; color: var(--pg-white-muted); }
+.hv-ref-empty-hint { font-size: 12px; color: var(--pg-white-muted); margin-top: 4px; }
+
+/* ── Skeleton shimmer ── */
+.hv-skeleton {
+  display: flex; align-items: center; gap: 12px;
+}
+.hv-skeleton-circle {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  animation: hv-pulse 1.5s ease-in-out infinite;
+}
+.hv-skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.hv-skeleton-line {
+  height: 10px; border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  animation: hv-pulse 1.5s ease-in-out infinite;
+}
+.hv-skeleton-line-short { width: 45%; }
+.hv-skeleton-line-long  { width: 70%; }
+@keyframes hv-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Footer note ── */
+.hv-footer {
+  text-align: center; padding: 8px 0 24px;
+  font-size: 12px; color: var(--pg-white-muted);
+  line-height: 1.55; max-width: 360px; margin: 0 auto;
+}
+
+/* ── Anonymous view ── */
+.hv-anon {
+  min-height: 100vh; display: flex;
+  align-items: center; justify-content: center; padding: 24px;
+}
+.hv-anon-inner { width: 100%; max-width: 420px; }
+.hv-anon-center { text-align: center; margin-bottom: 40px; }
+.hv-anon-icon-wrap {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 80px; height: 80px; border-radius: 24px;
+  background: linear-gradient(135deg, rgba(78,205,196,0.25), rgba(78,205,196,0.06));
+  border: 1px solid rgba(78,205,196,0.18);
+  margin-bottom: 24px;
+}
+.hv-anon-icon-wrap svg { color: var(--teal); }
+.hv-anon-h1 {
+  font-family: var(--serif); font-size: 28px; font-weight: 400;
+  color: var(--pg-white); margin-bottom: 12px;
+}
+.hv-anon-h1 em { font-style: italic; color: var(--teal); }
+.hv-anon-sub {
+  font-size: 15px; color: var(--pg-white-dim);
+  line-height: 1.6; max-width: 320px; margin: 0 auto;
+}
+.hv-anon-steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
+.hv-anon-step {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px; border-radius: 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+}
+.hv-anon-step-emoji { font-size: 22px; }
+.hv-anon-step-text {
+  font-size: 14px; font-weight: 500; color: var(--pg-white-dim);
+}
+.hv-anon-cta {
+  width: 100%; padding: 16px; border-radius: 14px;
+  background: var(--teal); color: var(--bg);
+  font-size: 15px; font-weight: 600; font-family: var(--sans);
+  border: none; cursor: pointer; transition: all 0.3s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.hv-anon-cta:hover {
+  box-shadow: 0 8px 32px var(--teal-glow);
+  transform: translateY(-1px);
+}
+.hv-anon-cta:active { transform: scale(0.98); }
+.hv-anon-back {
+  width: 100%; padding: 14px; border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--pg-white-dim); font-size: 13px; font-weight: 500;
+  font-family: var(--sans); cursor: pointer; transition: all 0.25s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.hv-anon-back:hover { background: rgba(255,255,255,0.08); }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .hv-stats { grid-template-columns: 1fr; }
+  .hv-hero-card { padding: 24px; }
+  .hv-comm-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .hv-comm-right { text-align: left; }
+}
+`;
 
 interface ReferredUser {
   id: string;
@@ -32,6 +429,7 @@ export default function Henvisning() {
   const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
   const [referredCount, setReferredCount] = useState<number | null>(null);
   const [loadingReferrals, setLoadingReferrals] = useState(false);
+  const containerRef = useFadeUp("hv");
 
   const referralLink = user ? `https://b-social.net/?ref=${user.id}` : "";
 
@@ -84,314 +482,295 @@ export default function Henvisning() {
   // ─── Anonymous view ───────────────────────────────────────────────────────
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#060a0f] flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          {/* Icon + headline */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/20 mb-6">
-              <CircleDollarSign size={38} className="text-emerald-400" />
-            </div>
-            <h1 className="text-3xl font-serif text-white mb-3" style={{ fontWeight: 400 }}>Tjen penge med B-Social</h1>
-            <p className="text-white/50 text-base leading-relaxed max-w-xs mx-auto">
-              Del dit link — og tjen provision hver gang dine henvisninger bruger platformen.
-            </p>
-          </div>
-
-          {/* Preview steps */}
-          <div className="space-y-3 mb-10">
-            {[
-              { icon: "🔗", text: "Del dit personlige henvisningslink" },
-              { icon: "👤", text: "Nye brugere opretter konto via dit link" },
-              { icon: "💰", text: "Tjen provision når de køber billetter eller bruger Firma" },
-            ].map((step, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 bg-white/5 border border-white/8 rounded-2xl px-5 py-4"
-              >
-                <span className="text-2xl">{step.icon}</span>
-                <span className="text-white/70 text-sm font-medium">{step.text}</span>
+      <>
+        <style>{henvisningCSS}</style>
+        <div ref={containerRef} className="hv-root">
+          <div className="hv-anon">
+            <div className="hv-anon-inner">
+              {/* Icon + headline */}
+              <div className="hv-anon-center hv-fade-up">
+                <div className="hv-anon-icon-wrap">
+                  <CircleDollarSign size={38} />
+                </div>
+                <h1 className="hv-anon-h1">Tjen penge med <em>B-Social</em></h1>
+                <p className="hv-anon-sub">
+                  Del dit link — og tjen provision hver gang dine henvisninger bruger platformen.
+                </p>
               </div>
-            ))}
-          </div>
 
-          <button
-            onClick={() => setLocation("/auth")}
-            className="w-full py-4 rounded-2xl bg-emerald-500 text-white font-semibold text-base hover:bg-emerald-400 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 mb-3"
-          >
-            <LogIn size={18} />
-            Log ind for at starte med at tjene penge
-          </button>
-          <button
-            onClick={() => setLocation("/feed")}
-            className="w-full py-3 rounded-2xl bg-white/5 text-white/50 text-sm font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            Tilbage til feed
-          </button>
+              {/* Preview steps */}
+              <div className="hv-anon-steps hv-fade-up hv-d1">
+                {[
+                  { icon: "🔗", text: "Del dit personlige henvisningslink" },
+                  { icon: "👤", text: "Nye brugere opretter konto via dit link" },
+                  { icon: "💰", text: "Tjen provision når de køber billetter eller bruger Firma" },
+                ].map((step, i) => (
+                  <div key={i} className="hv-anon-step">
+                    <span className="hv-anon-step-emoji">{step.icon}</span>
+                    <span className="hv-anon-step-text">{step.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hv-fade-up hv-d2">
+                <button
+                  onClick={() => setLocation("/auth")}
+                  className="hv-anon-cta"
+                >
+                  <LogIn size={18} />
+                  Log ind for at starte med at tjene penge
+                </button>
+                <button
+                  onClick={() => setLocation("/feed")}
+                  className="hv-anon-back"
+                >
+                  <ArrowLeft size={16} />
+                  Tilbage til feed
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // ─── Logged-in view ───────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#060a0f] text-white">
-      {/* Header */}
-      <div className="border-b border-white/8 bg-[#060a0f]/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-5 h-16 flex items-center gap-4">
-          <button
-            onClick={() => setLocation("/feed")}
-            className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div className="flex items-center gap-2">
-            <CircleDollarSign size={20} className="text-emerald-400" />
-            <h1 className="text-lg font-bold">Tjen penge med B-Social</h1>
-          </div>
-        </div>
-      </div>
+    <>
+      <style>{henvisningCSS}</style>
+      <div ref={containerRef} className="hv-root">
 
-      <div className="max-w-2xl mx-auto px-5 py-8 space-y-5">
-
-        {/* Hero banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900/50 via-teal-900/30 to-[#060a0f] border border-emerald-500/20 p-6">
-          {/* Decorative glow */}
-          <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-3xl">💰</span>
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest bg-emerald-500/15 border border-emerald-500/25 px-3 py-1 rounded-full">
-                Passiv indkomst
-              </span>
-            </div>
-            <h2 className="text-2xl font-bold mb-2 leading-tight">
-              Henvisningsprogram
-            </h2>
-            <p className="text-white/55 text-sm leading-relaxed max-w-sm">
-              Del dit unikke link og tjen provision når dine henvisninger opretter en Firma-konto og køber billetter på B-Social.
-            </p>
-          </div>
-        </div>
-
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            {
-              icon: <Users size={18} className="text-[#4ECDC4]" />,
-              bg: "bg-[#4ECDC4]/10",
-              label: "Henviste brugere",
-              value: referredCount === null ? "–" : String(referredCount),
-            },
-            {
-              icon: <Clock size={18} className="text-amber-400" />,
-              bg: "bg-amber-400/10",
-              label: "Ventende provision",
-              value: "0 kr",
-            },
-            {
-              icon: <Wallet size={18} className="text-emerald-400" />,
-              bg: "bg-emerald-400/10",
-              label: "Udbetalt",
-              value: "0 kr",
-            },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white/5 border border-white/8 rounded-2xl p-4 flex flex-col gap-2">
-              <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                {stat.icon}
-              </div>
-              <p className="text-xl font-bold">{stat.value}</p>
-              <p className="text-white/40 text-xs leading-tight">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Referral link card */}
-        <div className="bg-white/5 border border-white/8 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Link2 size={16} className="text-emerald-400" />
-            <p className="text-white/70 text-sm font-semibold">Dit henvisningslink</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-black/30 rounded-xl px-3 py-2.5 text-white/60 text-sm font-mono truncate border border-white/8">
-              {referralLink}
-            </div>
-            <button
-              onClick={copyLink}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
-                copied
-                  ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                  : "bg-emerald-500 text-white hover:bg-emerald-400"
-              }`}
-            >
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? "Kopieret!" : "Kopiér"}
+        {/* Header */}
+        <div className="hv-header">
+          <div className="hv-header-inner">
+            <button onClick={() => setLocation("/feed")} className="hv-back">
+              <ArrowLeft size={18} />
             </button>
-          </div>
-          <p className="text-white/30 text-xs mt-3">
-            Del dette link på sociale medier, i din bio eller direkte til kontakter.
-          </p>
-        </div>
-
-        {/* How it works */}
-        <div className="bg-white/5 border border-white/8 rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-white/70 mb-5 uppercase tracking-wider flex items-center gap-2">
-            <TrendingUp size={14} className="text-emerald-400" />
-            Sådan virker det
-          </h3>
-          <div className="space-y-5">
-            {[
-              {
-                icon: "🔗",
-                title: "Del dit link",
-                desc: "Kopiér dit personlige link og del det overalt — sociale medier, e-mail eller direkte til din netværk.",
-              },
-              {
-                icon: "👤",
-                title: "Nye brugere opretter konto",
-                desc: "Når nogen klikker på dit link og opretter en konto, registreres de automatisk under dig.",
-              },
-              {
-                icon: "💰",
-                title: "Tjen provision",
-                desc: "Hver gang dine henvisninger køber billetter til events eller opgraderer til Firma, tjener du provision.",
-              },
-            ].map((step, i) => (
-              <div key={i} className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center flex-shrink-0 text-xl">
-                  {step.icon}
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <p className="text-sm font-semibold text-white mb-0.5">{step.title}</p>
-                  <p className="text-xs text-white/40 leading-relaxed">{step.desc}</p>
-                </div>
-                {i < 2 && (
-                  <div className="absolute left-[calc(2.5rem+1.25rem)] mt-10 h-5 w-px bg-white/10" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Commission rates */}
-        <div className="bg-white/5 border border-white/8 rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-white/70 mb-5 uppercase tracking-wider flex items-center gap-2">
-            <Banknote size={14} className="text-emerald-400" />
-            Provisionssatser — Firma abonnementer
-          </h3>
-          <div className="space-y-3">
-            {[
-              {
-                plan: "Starter",
-                bsocial: "0% rev. share",
-                yourCut: "0 kr",
-                desc: "Gratis plan — ingen omsætningsdeling",
-                accent: "text-white/40",
-                bg: "bg-white/3",
-                border: "border-white/8",
-              },
-              {
-                plan: "Vækst",
-                bsocial: "5% rev. share",
-                yourCut: "0,5% af omsætning",
-                desc: "Du får 10% af B-Socials andel",
-                accent: "text-[#4ECDC4]",
-                bg: "bg-[#4ECDC4]/5",
-                border: "border-[#4ECDC4]/20",
-              },
-              {
-                plan: "Partner",
-                bsocial: "3% rev. share",
-                yourCut: "0,3% af omsætning",
-                desc: "Du får 10% af B-Socials andel",
-                accent: "text-emerald-400",
-                bg: "bg-emerald-500/5",
-                border: "border-emerald-500/20",
-              },
-            ].map((row) => (
-              <div
-                key={row.plan}
-                className={`${row.bg} border ${row.border} rounded-2xl px-4 py-3.5 flex items-center justify-between gap-3`}
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`text-sm font-bold ${row.accent}`}>{row.plan}</span>
-                    <span className="text-white/30 text-xs">{row.bsocial}</span>
-                  </div>
-                  <p className="text-white/40 text-xs">{row.desc}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className={`text-sm font-bold ${row.accent}`}>{row.yourCut}</p>
-                  <p className="text-white/30 text-xs">din provision</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-white/25 text-xs mt-4 leading-relaxed">
-            Provision beregnes automatisk og udbetales månedligt. Minimum udbetaling: 100 kr. Stripe-integration kommer snart.
-          </p>
-        </div>
-
-        {/* Referred users list */}
-        <div className="bg-white/5 border border-white/8 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wider flex items-center gap-2">
-              <Gift size={14} className="text-emerald-400" />
-              Dine henvisninger ({referredCount === null ? "–" : referredCount})
-            </h3>
-          </div>
-
-          {loadingReferrals ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-3 animate-pulse">
-                  <div className="w-9 h-9 rounded-full bg-white/10" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="h-3 bg-white/10 rounded w-32" />
-                    <div className="h-2 bg-white/5 rounded w-20" />
-                  </div>
-                </div>
-              ))}
+            <div className="hv-header-title">
+              <CircleDollarSign size={20} />
+              <span>Tjen penge med B-Social</span>
             </div>
-          ) : referredUsers.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-3">🔗</div>
-              <p className="text-white/40 text-sm">Ingen henvisninger endnu</p>
-              <p className="text-white/25 text-xs mt-1">
-                Del dit link for at komme i gang
+          </div>
+        </div>
+
+        <div className="hv-content">
+
+          {/* Hero card */}
+          <div className="hv-hero-card hv-fade-up">
+            <div className="hv-hero-glow" />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 28 }}>💰</span>
+                <span className="hv-hero-badge">Passiv indkomst</span>
+              </div>
+              <h2 className="hv-hero-title">
+                <em>Henvisnings</em>program
+              </h2>
+              <p className="hv-hero-desc">
+                Del dit unikke link og tjen provision når dine henvisninger opretter en Firma-konto og køber billetter på B-Social.
               </p>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {referredUsers.map((u) => (
-                <div
-                  key={u.id}
-                  className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-white/5 transition-all"
-                >
-                  <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">
-                    {u.name?.charAt(0)?.toUpperCase() || "?"}
+          </div>
+
+          {/* Stats row */}
+          <div className="hv-stats hv-fade-up hv-d1">
+            {[
+              {
+                icon: <Users size={18} />,
+                cls: "hv-stat-icon-teal",
+                label: "Henviste brugere",
+                value: referredCount === null ? "–" : String(referredCount),
+              },
+              {
+                icon: <Clock size={18} />,
+                cls: "hv-stat-icon-amber",
+                label: "Ventende provision",
+                value: "0 kr",
+              },
+              {
+                icon: <Wallet size={18} />,
+                cls: "hv-stat-icon-green",
+                label: "Udbetalt",
+                value: "0 kr",
+              },
+            ].map((stat, i) => (
+              <div key={i} className="hv-stat-card">
+                <div className={`hv-stat-icon ${stat.cls}`}>
+                  {stat.icon}
+                </div>
+                <p className="hv-stat-val">{stat.value}</p>
+                <p className="hv-stat-lbl">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Referral link card */}
+          <div className="hv-link-card hv-fade-up hv-d2">
+            <div className="hv-link-header">
+              <Link2 size={16} />
+              <span>Dit henvisningslink</span>
+            </div>
+            <div className="hv-link-row">
+              <div className="hv-link-input">{referralLink}</div>
+              <button
+                onClick={copyLink}
+                className={`hv-copy-btn ${copied ? "hv-copy-btn-done" : "hv-copy-btn-default"}`}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? "Kopieret!" : "Kopiér"}
+              </button>
+            </div>
+            <p className="hv-link-hint">
+              Del dette link på sociale medier, i din bio eller direkte til kontakter.
+            </p>
+          </div>
+
+          {/* How it works */}
+          <div className="hv-section hv-fade-up hv-d3">
+            <h3 className="hv-section-title">
+              <TrendingUp size={14} />
+              Sådan virker det
+            </h3>
+            <div className="hv-steps">
+              {[
+                {
+                  icon: "🔗",
+                  title: "Del dit link",
+                  desc: "Kopiér dit personlige link og del det overalt — sociale medier, e-mail eller direkte til din netværk.",
+                },
+                {
+                  icon: "👤",
+                  title: "Nye brugere opretter konto",
+                  desc: "Når nogen klikker på dit link og opretter en konto, registreres de automatisk under dig.",
+                },
+                {
+                  icon: "💰",
+                  title: "Tjen provision",
+                  desc: "Hver gang dine henvisninger køber billetter til events eller opgraderer til Firma, tjener du provision.",
+                },
+              ].map((step, i) => (
+                <div key={i} className="hv-step">
+                  <div className="hv-step-icon">{step.icon}</div>
+                  <div className="hv-step-body">
+                    <p className="hv-step-name">{step.title}</p>
+                    <p className="hv-step-desc">{step.desc}</p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{u.name}</p>
-                    <p className="text-xs text-white/35">
-                      {u.city ? `${u.city} · ` : ""}Tilmeldt {formatDate(u.created_at)}
-                    </p>
-                  </div>
-                  <ChevronRight size={14} className="text-white/20 flex-shrink-0" />
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Bottom note */}
-        <div className="text-center py-2 pb-6">
-          <p className="text-white/25 text-xs leading-relaxed max-w-xs mx-auto">
+          {/* Commission rates */}
+          <div className="hv-section hv-fade-up hv-d4">
+            <h3 className="hv-section-title">
+              <Banknote size={14} />
+              Provisionssatser — Firma abonnementer
+            </h3>
+            <div className="hv-comm-list">
+              {[
+                {
+                  plan: "Starter",
+                  bsocial: "0% rev. share",
+                  yourCut: "0 kr",
+                  desc: "Gratis plan — ingen omsætningsdeling",
+                  rowCls: "hv-comm-row-starter",
+                  planCls: "hv-comm-plan-muted",
+                  cutCls: "hv-comm-cut-muted",
+                },
+                {
+                  plan: "Vækst",
+                  bsocial: "5% rev. share",
+                  yourCut: "0,5% af omsætning",
+                  desc: "Du får 10% af B-Socials andel",
+                  rowCls: "hv-comm-row-vaekst",
+                  planCls: "hv-comm-plan-teal",
+                  cutCls: "hv-comm-cut-teal",
+                },
+                {
+                  plan: "Partner",
+                  bsocial: "3% rev. share",
+                  yourCut: "0,3% af omsætning",
+                  desc: "Du får 10% af B-Socials andel",
+                  rowCls: "hv-comm-row-partner",
+                  planCls: "hv-comm-plan-green",
+                  cutCls: "hv-comm-cut-green",
+                },
+              ].map((row) => (
+                <div key={row.plan} className={`hv-comm-row ${row.rowCls}`}>
+                  <div className="hv-comm-left">
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span className={`hv-comm-plan ${row.planCls}`}>{row.plan}</span>
+                      <span className="hv-comm-share">{row.bsocial}</span>
+                    </div>
+                    <p className="hv-comm-desc">{row.desc}</p>
+                  </div>
+                  <div className="hv-comm-right">
+                    <p className={`hv-comm-cut ${row.cutCls}`}>{row.yourCut}</p>
+                    <p className="hv-comm-sub">din provision</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="hv-comm-note">
+              Provision beregnes automatisk og udbetales månedligt. Minimum udbetaling: 100 kr. Stripe-integration kommer snart.
+            </p>
+          </div>
+
+          {/* Referred users list */}
+          <div className="hv-section hv-fade-up">
+            <div className="hv-ref-header">
+              <h3 className="hv-section-title" style={{ marginBottom: 0 }}>
+                <Gift size={14} />
+                Dine henvisninger ({referredCount === null ? "–" : referredCount})
+              </h3>
+            </div>
+
+            {loadingReferrals ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="hv-skeleton">
+                    <div className="hv-skeleton-circle" />
+                    <div className="hv-skeleton-lines">
+                      <div className="hv-skeleton-line hv-skeleton-line-long" />
+                      <div className="hv-skeleton-line hv-skeleton-line-short" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : referredUsers.length === 0 ? (
+              <div className="hv-ref-empty">
+                <div className="hv-ref-empty-icon">🔗</div>
+                <p className="hv-ref-empty-text">Ingen henvisninger endnu</p>
+                <p className="hv-ref-empty-hint">Del dit link for at komme i gang</p>
+              </div>
+            ) : (
+              <div className="hv-ref-list">
+                {referredUsers.map((u) => (
+                  <div key={u.id} className="hv-ref-row">
+                    <div className="hv-ref-avatar">
+                      {u.name?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                    <div className="hv-ref-info">
+                      <p className="hv-ref-name">{u.name}</p>
+                      <p className="hv-ref-meta">
+                        {u.city ? `${u.city} · ` : ""}Tilmeldt {formatDate(u.created_at)}
+                      </p>
+                    </div>
+                    <ChevronRight size={14} className="hv-ref-chevron" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom note */}
+          <p className="hv-footer hv-fade-up">
             Provisionssystemet er under udvikling. Alle henvisninger registreres nu og vil tælle med, når udbetaling aktiveres.
           </p>
-        </div>
 
+        </div>
       </div>
-    </div>
+    </>
   );
 }

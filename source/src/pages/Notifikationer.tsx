@@ -8,15 +8,417 @@ import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from 'react-i18next';
 import { supabase } from "@/lib/supabase";
 import UserSearch from "@/components/UserSearch";
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
+
+/* ── Scoped CSS ── */
+const notifikationerCSS = `
+${pageBase("nf")}
+
+/* ── Header ── */
+.nf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 24px 20px;
+}
+.nf-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--pg-white);
+  line-height: 1.1;
+}
+.nf-title-accent {
+  color: var(--teal);
+  font-style: italic;
+}
+.nf-unread-count {
+  font-size: 12px;
+  color: var(--pg-white-muted);
+  margin-top: 4px;
+}
+.nf-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nf-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pg-white-dim);
+  cursor: pointer;
+  transition: all 0.25s;
+  backdrop-filter: blur(12px);
+}
+.nf-icon-btn:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--teal);
+}
+.nf-mark-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--pg-white-dim);
+  font-size: 12px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.25s;
+  backdrop-filter: blur(12px);
+}
+.nf-mark-all-btn:hover {
+  background: var(--teal-dim);
+  border-color: rgba(78,205,196,0.25);
+  color: var(--teal);
+}
+
+/* ── Content area ── */
+.nf-content {
+  padding: 0 16px 96px;
+}
+
+/* ── Section label ── */
+.nf-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pg-white-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 0 8px;
+  margin-bottom: 12px;
+  font-family: var(--sans);
+}
+
+/* ── Group ── */
+.nf-group {
+  margin-bottom: 28px;
+}
+.nf-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Notification row ── */
+.nf-row {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: var(--sans);
+}
+.nf-row:hover {
+  background: var(--glass-bg);
+}
+.nf-row--read {
+  opacity: 0.5;
+}
+.nf-row--read:hover {
+  opacity: 0.75;
+}
+
+/* Type-specific icon containers */
+.nf-row-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s;
+}
+.nf-row:hover .nf-row-icon {
+  transform: scale(1.05);
+}
+
+/* Type accents */
+.nf-type-event_invite .nf-row-icon    { background: rgba(78,205,196,0.12); color: #4ECDC4; }
+.nf-type-friend_request .nf-row-icon  { background: rgba(192,132,252,0.12); color: #c084fc; }
+.nf-type-friend_accepted .nf-row-icon { background: rgba(74,222,128,0.12); color: #4ade80; }
+.nf-type-new_message .nf-row-icon     { background: rgba(96,165,250,0.12); color: #60a5fa; }
+.nf-type-event_reminder .nf-row-icon  { background: rgba(251,191,36,0.12); color: #fbbf24; }
+.nf-type-tag_match .nf-row-icon       { background: rgba(249,115,22,0.12); color: #f97316; }
+
+/* Left accent bar on unread */
+.nf-type-event_invite.nf-row--unread    { border-left: 2px solid rgba(78,205,196,0.5); }
+.nf-type-friend_request.nf-row--unread  { border-left: 2px solid rgba(192,132,252,0.5); }
+.nf-type-friend_accepted.nf-row--unread { border-left: 2px solid rgba(74,222,128,0.5); }
+.nf-type-new_message.nf-row--unread     { border-left: 2px solid rgba(96,165,250,0.5); }
+.nf-type-event_reminder.nf-row--unread  { border-left: 2px solid rgba(251,191,36,0.5); }
+.nf-type-tag_match.nf-row--unread       { border-left: 2px solid rgba(249,115,22,0.5); }
+
+.nf-row-body {
+  flex: 1;
+  min-width: 0;
+}
+.nf-row-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nf-row-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pg-white);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-row--read .nf-row-title {
+  color: var(--pg-white-dim);
+}
+.nf-row-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+  flex-shrink: 0;
+  box-shadow: 0 0 8px var(--teal-glow);
+}
+.nf-row-body-text {
+  font-size: 12px;
+  color: var(--pg-white-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.nf-row-time {
+  font-size: 11px;
+  color: rgba(255,255,255,0.18);
+  margin-top: 4px;
+}
+.nf-row-chevron {
+  color: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  margin-top: 12px;
+  transition: transform 0.2s;
+}
+.nf-row:hover .nf-row-chevron {
+  transform: translateX(2px);
+  color: var(--pg-white-muted);
+}
+
+/* ── Friend requests ── */
+.nf-fr-section {
+  margin-bottom: 32px;
+}
+.nf-fr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nf-fr-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  transition: all 0.25s;
+}
+.nf-fr-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
+.nf-fr-info {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.nf-fr-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pg-white);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-fr-city {
+  font-size: 12px;
+  color: var(--pg-white-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-fr-time {
+  font-size: 11px;
+  color: rgba(255,255,255,0.18);
+  margin-top: 3px;
+}
+.nf-fr-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nf-fr-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.nf-fr-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.nf-fr-btn--accept {
+  background: rgba(74,222,128,0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74,222,128,0.2);
+}
+.nf-fr-btn--accept:hover:not(:disabled) {
+  background: rgba(74,222,128,0.25);
+  border-color: rgba(74,222,128,0.4);
+  box-shadow: 0 4px 16px rgba(74,222,128,0.2);
+  transform: translateY(-1px);
+}
+.nf-fr-btn--decline {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.2);
+}
+.nf-fr-btn--decline:hover:not(:disabled) {
+  background: rgba(248,113,113,0.25);
+  border-color: rgba(248,113,113,0.4);
+  box-shadow: 0 4px 16px rgba(248,113,113,0.2);
+  transform: translateY(-1px);
+}
+
+/* ── Empty state ── */
+.nf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+.nf-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.nf-empty-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pg-white-dim);
+}
+.nf-empty-sub {
+  font-size: 12px;
+  color: var(--pg-white-muted);
+  margin-top: 4px;
+}
+
+/* ── Loading spinner ── */
+.nf-spinner-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+.nf-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(78,205,196,0.2);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: nf-spin 0.75s linear infinite;
+}
+@keyframes nf-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Auth states ── */
+.nf-center {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+.nf-login-text {
+  font-size: 14px;
+  color: var(--pg-white-dim);
+  margin-top: 16px;
+}
+
+/* ── Modal overlay ── */
+.nf-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+.nf-modal-content {
+  background: var(--bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header teal line ── */
+.nf-header-line {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  opacity: 0.4;
+  margin: 0 24px;
+}
+`;
 
 /* ── Icon + color per notification type ── */
-const TYPE_META: Record<NotificationType, { icon: typeof Bell; color: string; bg: string }> = {
-  event_invite:    { icon: Calendar,       color: "text-[#4ECDC4]", bg: "bg-[#4ECDC4]/15" },
-  friend_request:  { icon: UserPlus,       color: "text-purple-400", bg: "bg-purple-400/15" },
-  friend_accepted: { icon: UserCheck,      color: "text-green-400",  bg: "bg-green-400/15" },
-  new_message:     { icon: MessageCircle,  color: "text-blue-400",   bg: "bg-blue-400/15" },
-  event_reminder:  { icon: BellRing,       color: "text-amber-400",  bg: "bg-amber-400/15" },
-  tag_match:       { icon: Tag,            color: "text-[#f97316]",  bg: "bg-[#f97316]/15" },
+const TYPE_META: Record<NotificationType, { icon: typeof Bell }> = {
+  event_invite:    { icon: Calendar },
+  friend_request:  { icon: UserPlus },
+  friend_accepted: { icon: UserCheck },
+  new_message:     { icon: MessageCircle },
+  event_reminder:  { icon: BellRing },
+  tag_match:       { icon: Tag },
 };
 
 /* ── Date grouping helpers ── */
@@ -83,26 +485,20 @@ function NotificationRow({ n, onClick }: { n: Notification; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-all rounded-xl ${
-        n.is_read ? "opacity-60 hover:opacity-80" : "hover:bg-white/5"
-      }`}
+      className={`nf-row nf-type-${n.type} ${n.is_read ? "nf-row--read" : "nf-row--unread"}`}
     >
-      <div className={`w-10 h-10 rounded-xl ${meta.bg} flex items-center justify-center flex-shrink-0`}>
-        <Icon size={18} className={meta.color} />
+      <div className="nf-row-icon">
+        <Icon size={18} />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className={`text-sm font-medium truncate ${n.is_read ? "text-white/60" : "text-white"}`}>
-            {n.title}
-          </p>
-          {!n.is_read && (
-            <span className="w-2 h-2 rounded-full bg-[#4ECDC4] flex-shrink-0" />
-          )}
+      <div className="nf-row-body">
+        <div className="nf-row-title-row">
+          <p className="nf-row-title">{n.title}</p>
+          {!n.is_read && <span className="nf-row-dot" />}
         </div>
-        <p className="text-xs text-white/40 truncate mt-0.5">{n.body}</p>
-        <p className="text-xs text-white/25 mt-1">{timeAgo(n.created_at, t)}</p>
+        <p className="nf-row-body-text">{n.body}</p>
+        <p className="nf-row-time">{timeAgo(n.created_at, t)}</p>
       </div>
-      <ChevronRight size={14} className="text-white/20 flex-shrink-0 mt-3" />
+      <ChevronRight size={14} className="nf-row-chevron" />
     </button>
   );
 }
@@ -149,28 +545,28 @@ function FriendRequestCard({ req, onUpdate }: { req: FriendRequest; onUpdate: ()
   }
 
   return (
-    <div className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-white/5 border border-white/10">
+    <div className="nf-fr-card">
       <div
-        className="flex-1 min-w-0 cursor-pointer"
+        className="nf-fr-info"
         onClick={() => setLocation(`/profil/${req.sender_id}`)}
       >
-        <p className="text-sm font-medium text-white truncate">{displayName}</p>
-        {displayCity && <p className="text-xs text-white/40 truncate">{displayCity}</p>}
-        <p className="text-xs text-white/25 mt-0.5">{timeAgo(req.created_at, t)}</p>
+        <p className="nf-fr-name">{displayName}</p>
+        {displayCity && <p className="nf-fr-city">{displayCity}</p>}
+        <p className="nf-fr-time">{timeAgo(req.created_at, t)}</p>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="nf-fr-actions">
         <button
           onClick={handleAccept}
           disabled={updating}
-          className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center hover:bg-green-500/30 transition-all disabled:opacity-50"
-          title={t('notifications.accept') || 'Acceptér'}
+          className="nf-fr-btn nf-fr-btn--accept"
+          title={t('notifications.accept') || 'Accepter'}
         >
           <Check size={16} />
         </button>
         <button
           onClick={handleDecline}
           disabled={updating}
-          className="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/30 transition-all disabled:opacity-50"
+          className="nf-fr-btn nf-fr-btn--decline"
           title={t('notifications.decline') || 'Afvis'}
         >
           <X size={16} />
@@ -189,6 +585,7 @@ export default function Notifikationer() {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [loadingFriendRequests, setLoadingFriendRequests] = useState(false);
   const [showUserSearch, setShowUserSearch] = useState(false);
+  const containerRef = useFadeUp("nf");
 
   const grouped = groupNotifications(notifications, t);
 
@@ -252,20 +649,23 @@ export default function Notifikationer() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#060a0f] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#4ECDC4]/30 border-t-[#4ECDC4] rounded-full animate-spin" />
+      <div className="nf-root nf-center">
+        <style>{notifikationerCSS}</style>
+        <div className="nf-spinner" />
       </div>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#060a0f] flex flex-col items-center justify-center px-6">
-        <Inbox size={48} className="text-white/20 mb-4" />
-        <p className="text-white/50 text-sm">{t('notifications.login_to_see')}</p>
+      <div className="nf-root nf-center">
+        <style>{notifikationerCSS}</style>
+        <Inbox size={48} style={{ color: "rgba(255,255,255,0.15)" }} />
+        <p className="nf-login-text">{t('notifications.login_to_see')}</p>
         <button
           onClick={() => setLocation("/auth")}
-          className="mt-4 px-6 py-2.5 rounded-2xl bg-[#4ECDC4] text-[#0a0f1a] font-semibold text-sm"
+          className="nf-btn"
+          style={{ marginTop: 16 }}
         >
           {t('notifications.log_in')}
         </button>
@@ -274,29 +674,29 @@ export default function Notifikationer() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060a0f] text-white">
+    <div className="nf-root" ref={containerRef}>
+      <style>{notifikationerCSS}</style>
+
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-4">
+      <div className="nf-header nf-fade-up">
         <div>
-          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('notifications.title')}</h1>
-          {/* Already has serif styling */}
+          <h1 className="nf-title">
+            {t('notifications.title')}<span className="nf-title-accent">.</span>
+          </h1>
           {unreadCount > 0 && (
-            <p className="text-white/40 text-xs mt-0.5">{unreadCount} {t('notifications.unread')}</p>
+            <p className="nf-unread-count">{unreadCount} {t('notifications.unread')}</p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="nf-header-actions">
           <button
             onClick={() => setShowUserSearch(true)}
-            className="w-10 h-10 rounded-xl bg-white/8 flex items-center justify-center text-white/60 hover:bg-white/12 transition-all"
-            title={t('notifications.search_users') || 'Søg brugere'}
+            className="nf-icon-btn"
+            title={t('notifications.search_users') || 'Sog brugere'}
           >
             <Search size={18} />
           </button>
           {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/8 text-white/60 text-xs hover:bg-white/12 transition-all"
-            >
+            <button onClick={markAllAsRead} className="nf-mark-all-btn">
               <CheckCheck size={14} />
               {t('notifications.mark_all_read')}
             </button>
@@ -304,15 +704,17 @@ export default function Notifikationer() {
         </div>
       </div>
 
+      <div className="nf-header-line nf-fade-up nf-d1" />
+
       {/* Content */}
-      <div className="px-4 pb-24">
+      <div className="nf-content">
         {/* Friend Requests Section */}
         {!loadingFriendRequests && friendRequests.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-white/30 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+          <div className="nf-fr-section nf-fade-up nf-d2">
+            <h2 className="nf-section-label">
               {t('notifications.friend_requests') || 'Venneanmodninger'}
             </h2>
-            <div className="space-y-2">
+            <div className="nf-fr-list">
               {friendRequests.map(req => (
                 <FriendRequestCard
                   key={req.id}
@@ -328,24 +730,22 @@ export default function Notifikationer() {
 
         {/* Notifications Section */}
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[#4ECDC4]/30 border-t-[#4ECDC4] rounded-full animate-spin" />
+          <div className="nf-spinner-wrap">
+            <div className="nf-spinner" />
           </div>
         ) : notifications.length === 0 && friendRequests.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-              <Bell size={28} className="text-white/20" />
+          <div className="nf-empty nf-fade-up nf-d2">
+            <div className="nf-empty-icon">
+              <Bell size={28} style={{ color: "rgba(255,255,255,0.15)" }} />
             </div>
-            <p className="text-white/40 text-sm font-medium">{t('notifications.no_notifications')}</p>
-            <p className="text-white/25 text-xs mt-1">{t('notifications.we_will_notify')}</p>
+            <p className="nf-empty-title">{t('notifications.no_notifications')}</p>
+            <p className="nf-empty-sub">{t('notifications.we_will_notify')}</p>
           </div>
         ) : (
-          grouped.map(group => (
-            <div key={group.label} className="mb-6">
-              <h2 className="text-white/30 text-xs font-semibold uppercase tracking-wider px-2 mb-2">
-                {group.label}
-              </h2>
-              <div className="space-y-0.5">
+          grouped.map((group, gi) => (
+            <div key={group.label} className={`nf-group nf-fade-up nf-d${Math.min(gi + 2, 4)}`}>
+              <h2 className="nf-section-label">{group.label}</h2>
+              <div className="nf-group-items">
                 {group.items.map(n => (
                   <NotificationRow key={n.id} n={n} onClick={() => handleClick(n)} />
                 ))}
@@ -357,8 +757,8 @@ export default function Notifikationer() {
 
       {/* User Search Modal */}
       {showUserSearch && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#060a0f] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="nf-modal-overlay">
+          <div className="nf-modal-content">
             <UserSearch onClose={() => setShowUserSearch(false)} />
           </div>
         </div>

@@ -14,6 +14,795 @@ import type { TagNode } from "@/lib/tagTree";
 import { lazyLoadTagTree, lazyLoadTagFunctions, lazyLoadCategoryFunctions } from "@/lib/lazyDataLoader";
 import type { CategoryPlace, CategoryActivity } from "@/data/categoryContent";
 
+import { useFadeUp } from "@/lib/useFadeUp";
+import { pageBase } from "@/lib/pageCSSBase";
+
+/* ═══════════════════════════════════════════════
+   SCOPED CSS
+   ═══════════════════════════════════════════════ */
+const categoryDetailCSS = `${pageBase("cd")}
+
+/* ── Hero ── */
+.cd-hero {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+.cd-hero-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.cd-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, var(--bg) 0%, rgba(6,10,15,0.55) 40%, rgba(0,0,0,0.2) 100%);
+}
+.cd-hero-back {
+  position: absolute; top: 48px; left: 20px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10;
+  color: rgba(255,255,255,0.7);
+  transition: background 0.25s, border-color 0.25s;
+}
+.cd-hero-back:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+}
+.cd-hero-content {
+  position: absolute; bottom: 16px; left: 20px; right: 20px;
+}
+.cd-hero-breadcrumb {
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  margin-bottom: 2px;
+  font-family: var(--sans);
+}
+.cd-hero-title {
+  font-family: var(--serif);
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 400;
+  color: var(--pg-white);
+  line-height: 1.15;
+}
+.cd-hero-title-bold {
+  font-family: var(--sans);
+  font-size: clamp(20px, 4vw, 26px);
+  font-weight: 700;
+  color: var(--pg-white);
+  line-height: 1.15;
+}
+.cd-hero-sub-desc {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  margin-top: 4px;
+  font-family: var(--sans);
+}
+.cd-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+.cd-hero-meta-text {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  font-family: var(--sans);
+}
+
+/* ── Active Users ── */
+.cd-avatars-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cd-avatars-stack {
+  display: flex;
+}
+.cd-avatars-stack img + img {
+  margin-left: -8px;
+}
+.cd-avatar-img {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  object-fit: cover;
+}
+.cd-avatars-text {
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  font-family: var(--sans);
+}
+
+/* ── Subcategory chip bar ── */
+.cd-chips-bar {
+  padding: 0 20px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+.cd-chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.cd-chips-scroll::-webkit-scrollbar { display: none; }
+
+/* ── SubChip ── */
+.cd-subchip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: var(--sans);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255,255,255,0.6);
+}
+.cd-subchip:hover {
+  color: var(--pg-white);
+  background: rgba(255,255,255,0.1);
+}
+.cd-subchip.active {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(78,205,196,0.2);
+}
+.cd-subchip-count {
+  font-size: 11px;
+  margin-left: 2px;
+}
+.cd-subchip.active .cd-subchip-count {
+  color: rgba(255,255,255,0.7);
+}
+.cd-subchip:not(.active) .cd-subchip-count {
+  color: rgba(255,255,255,0.3);
+}
+
+/* ── Search + price section ── */
+.cd-search-section {
+  padding: 0 20px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.cd-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cd-search-wrap {
+  position: relative;
+  flex: 1;
+}
+.cd-search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.3);
+}
+.cd-search-input {
+  width: 100%;
+  padding: 10px 32px 10px 36px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--pg-white);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.25s, background 0.25s;
+}
+.cd-search-input:focus {
+  border-color: rgba(78,205,196,0.4);
+  background: rgba(255,255,255,0.08);
+}
+.cd-search-input::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+.cd-search-clear {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  background: none; border: none; padding: 0;
+  transition: color 0.2s;
+}
+.cd-search-clear:hover {
+  color: rgba(255,255,255,0.6);
+}
+
+/* ── Price filter buttons ── */
+.cd-price-btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: var(--sans);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+}
+.cd-price-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+.cd-price-btn.active-gratis {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+  box-shadow: 0 4px 20px rgba(78,205,196,0.25);
+}
+.cd-price-btn.active-premium {
+  background: #f59e0b;
+  color: #fff;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 20px rgba(245,158,11,0.25);
+}
+
+/* ── Autocomplete suggestions dropdown ── */
+.cd-suggestions {
+  position: absolute;
+  left: 20px; right: 20px;
+  margin-top: 6px;
+  z-index: 20;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+}
+.cd-suggestions-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.cd-suggestions-header svg {
+  color: var(--teal);
+}
+.cd-suggestions-label {
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--sans);
+}
+.cd-suggestions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── Suggestion chip ── */
+.cd-suggestion-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  border: none;
+  font-family: var(--sans);
+}
+.cd-suggestion-chip:hover {
+  background: rgba(78,205,196,0.15);
+  color: var(--teal);
+}
+
+/* ── Filter results bar ── */
+.cd-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.cd-filter-count {
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  font-family: var(--sans);
+}
+.cd-filter-reset {
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  background: none; border: none; padding: 0;
+  font-family: var(--sans);
+}
+
+/* ── Content area ── */
+.cd-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+/* ── Collapsible Section ── */
+.cd-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  margin-bottom: 8px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+.cd-section-icon {
+  font-size: 14px;
+}
+.cd-section-title {
+  color: var(--pg-white);
+  font-weight: 600;
+  font-size: 14px;
+  font-family: var(--sans);
+}
+.cd-section-badge {
+  padding: 2px 6px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--sans);
+}
+.cd-section-badge-default {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
+}
+.cd-section-chevron {
+  color: rgba(255,255,255,0.3);
+  margin-left: auto;
+  transition: transform 0.3s cubic-bezier(0.23,1,0.32,1);
+}
+.cd-section-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ── Grid ── */
+.cd-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 0 20px;
+}
+
+/* ── Show-all button ── */
+.cd-show-all {
+  margin: 8px 20px 0;
+}
+.cd-show-all-btn {
+  width: 100%;
+  padding: 8px 0;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: background 0.2s;
+}
+.cd-show-all-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* ── Events list ── */
+.cd-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 20px;
+}
+
+/* ── CompactCard ── */
+.cd-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+}
+.cd-card:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+  transform: translateY(-2px);
+}
+.cd-card-img-wrap {
+  position: relative;
+  height: 112px;
+}
+.cd-card-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.cd-card-img-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 40%, transparent 100%);
+}
+.cd-card-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  padding: 2px 6px;
+  border-radius: 100px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--sans);
+}
+.cd-badge-teal { background: rgba(78,205,196,0.8); }
+.cd-badge-amber { background: rgba(245,158,11,0.8); }
+.cd-card-title-area {
+  position: absolute;
+  bottom: 8px; left: 10px; right: 10px;
+}
+.cd-card-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--sans);
+}
+.cd-card-emoji {
+  margin-right: 2px;
+}
+.cd-card-body {
+  padding: 10px 10px 10px;
+}
+.cd-card-subtitle {
+  color: rgba(255,255,255,0.45);
+  font-size: 11px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+  font-family: var(--sans);
+}
+.cd-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.cd-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: rgba(255,255,255,0.5);
+}
+.cd-card-rating svg { color: #fbbf24; }
+.cd-card-distance {
+  color: rgba(255,255,255,0.35);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.cd-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.cd-card-tag {
+  padding: 2px 6px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.35);
+  font-size: 11px;
+  font-family: var(--sans);
+}
+
+/* ── SpotsBar ── */
+.cd-spots {
+  margin-top: 6px;
+}
+.cd-spots-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+.cd-spots-left {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--sans);
+}
+.cd-spots-right {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+}
+.cd-spots-right.teal { color: var(--teal); }
+.cd-spots-right.orange { color: #fb923c; }
+.cd-spots-track {
+  height: 4px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+.cd-spots-fill {
+  height: 100%;
+  border-radius: 100px;
+}
+.cd-spots-fill.teal { background: var(--teal); }
+.cd-spots-fill.orange { background: #fb923c; }
+
+/* ── Join button ── */
+.cd-join-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 0;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+  font-family: var(--sans);
+}
+.cd-join-btn.join {
+  background: rgba(78,205,196,0.15);
+  color: var(--teal);
+}
+.cd-join-btn.join:hover {
+  background: rgba(78,205,196,0.25);
+}
+.cd-join-btn.joined {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+}
+
+/* ── EventMiniCard ── */
+.cd-event-card {
+  display: flex;
+  gap: 10px;
+  padding-right: 12px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: background 0.25s;
+}
+.cd-event-card:hover {
+  background: rgba(255,255,255,0.08);
+}
+.cd-event-img-wrap {
+  position: relative;
+  width: 64px; height: 64px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cd-event-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.cd-event-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 0;
+  min-width: 0;
+  flex: 1;
+}
+.cd-event-title {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--sans);
+}
+.cd-event-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.cd-event-date {
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  font-family: var(--sans);
+}
+.cd-event-price {
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--sans);
+}
+.cd-event-price.free {
+  background: rgba(78,205,196,0.2);
+  color: var(--teal);
+}
+.cd-event-price.paid {
+  background: rgba(245,158,11,0.2);
+  color: #fbbf24;
+}
+
+/* ── SupabasePlaceCard ── */
+.cd-supa-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+}
+.cd-supa-card:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+  transform: translateY(-2px);
+}
+.cd-supa-body {
+  padding: 12px;
+}
+.cd-supa-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.cd-supa-name {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  padding-right: 8px;
+  font-family: var(--sans);
+}
+.cd-supa-free-badge {
+  padding: 2px 6px;
+  border-radius: 100px;
+  background: rgba(78,205,196,0.2);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-family: var(--sans);
+}
+.cd-supa-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.cd-supa-rating {
+  color: rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.cd-supa-rating svg { color: #fbbf24; }
+.cd-supa-dot {
+  color: rgba(255,255,255,0.25);
+}
+.cd-supa-city {
+  color: rgba(255,255,255,0.35);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.cd-supa-region {
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+}
+.cd-supa-desc {
+  color: rgba(255,255,255,0.3);
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 6px;
+  line-height: 1.5;
+  font-family: var(--sans);
+}
+.cd-supa-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.cd-supa-tag {
+  padding: 2px 6px;
+  border-radius: 100px;
+  background: rgba(78,205,196,0.08);
+  color: rgba(78,205,196,0.6);
+  font-size: 8px;
+  font-family: var(--sans);
+}
+
+/* ── Empty state ── */
+.cd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 20px;
+  text-align: center;
+}
+.cd-empty-emoji {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+.cd-empty-text {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-family: var(--sans);
+}
+.cd-empty-sub {
+  color: rgba(255,255,255,0.3);
+  font-size: 12px;
+  margin-top: 4px;
+  font-family: var(--sans);
+}
+.cd-empty-btn {
+  margin-top: 12px;
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .cd-root { padding-bottom: 96px; }
+}
+`;
+
 /* ═══════════════════════════════════════════════
    SMART SEARCH ENGINE
    Maps category keys to related tag-tree entries
@@ -63,10 +852,10 @@ function getSmartSuggestions(query: string, categoryKey: string, tagTree: any): 
   if (!query.trim()) return [];
   const q = query.toLowerCase().trim();
   const relatedTags = getCategoryRelatedTags(categoryKey, tagTree);
-  
+
   const results: TagNode[] = [];
   const seen = new Set<string>();
-  
+
   if (!tagTree || !Array.isArray(tagTree)) return [];
   for (const parent of tagTree) {
     // Check parent match
@@ -103,7 +892,7 @@ function getSmartSuggestions(query: string, categoryKey: string, tagTree: any): 
       }
     }
   }
-  
+
   return results.slice(0, 8);
 }
 
@@ -116,16 +905,17 @@ function SpotsBar({ current, total }: { current: number; total: number }) {
   const remaining = total - current;
   const pct = Math.round((current / total) * 100);
   const almostFull = remaining <= 2;
+  const tone = almostFull ? "orange" : "teal";
   return (
-    <div className="mt-1.5">
-      <div className="flex items-center justify-between mb-0.5">
-        <span className="text-xs text-white/50 flex items-center gap-1"><Users size={9} />{current}/{total}</span>
-        <span className={`text-xs font-semibold ${almostFull ? "text-orange-400" : "text-[#4ECDC4]"}`}>
+    <div className="cd-spots">
+      <div className="cd-spots-row">
+        <span className="cd-spots-left"><Users size={9} />{current}/{total}</span>
+        <span className={`cd-spots-right ${tone}`}>
           {t('category.spots_remaining', { count: remaining })}
         </span>
       </div>
-      <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-        <div className={`h-full rounded-full ${almostFull ? "bg-orange-400" : "bg-[#4ECDC4]"}`} style={{ width: `${pct}%` }} />
+      <div className="cd-spots-track">
+        <div className={`cd-spots-fill ${tone}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -140,40 +930,41 @@ function CompactCard({
   spots?: { current: number; total: number }; onJoin?: () => void; isJoined?: boolean; emoji?: string;
 }) {
   const { t } = useTranslation();
+  const badgeClass = badge?.color.includes("4ECDC4") ? "cd-badge-teal" : "cd-badge-amber";
   return (
-    <div className="glass-card rounded-2xl overflow-hidden">
-      <div className="relative h-28">
-        <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+    <div className="cd-card">
+      <div className="cd-card-img-wrap">
+        <img src={image} alt={title} className="cd-card-img" loading="lazy" />
+        <div className="cd-card-img-gradient" />
         {badge && (
-          <span className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-white text-[11px] font-bold ${badge.color}`}>
+          <span className={`cd-card-badge ${badgeClass}`}>
             {badge.text}
           </span>
         )}
-        <div className="absolute bottom-2 left-2.5 right-2.5">
-          <h3 className="text-white font-semibold text-[13px] leading-tight line-clamp-2">
-            {emoji && <span className="mr-0.5">{emoji}</span>}{title}
+        <div className="cd-card-title-area">
+          <h3 className="cd-card-title">
+            {emoji && <span className="cd-card-emoji">{emoji}</span>}{title}
           </h3>
         </div>
       </div>
-      <div className="p-2.5 pt-2">
-        <p className="text-white/45 text-[11px] line-clamp-1 mb-1">{subtitle}</p>
-        <div className="flex items-center gap-2 text-xs">
+      <div className="cd-card-body">
+        <p className="cd-card-subtitle">{subtitle}</p>
+        <div className="cd-card-meta">
           {rating && (
-            <span className="flex items-center gap-0.5 text-white/50">
-              <Star size={9} className="text-amber-400 fill-amber-400" /> {rating}
+            <span className="cd-card-rating">
+              <Star size={9} fill="#fbbf24" /> {rating}
             </span>
           )}
           {distance && (
-            <span className="text-white/35 flex items-center gap-0.5">
+            <span className="cd-card-distance">
               <MapPin size={8} /> {distance}
             </span>
           )}
         </div>
         {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1.5">
+          <div className="cd-card-tags">
             {tags.slice(0, 2).map(tag => (
-              <span key={tag} className="px-1.5 py-0.5 rounded-full bg-white/6 text-white/35 text-[11px]">{tag}</span>
+              <span key={tag} className="cd-card-tag">{tag}</span>
             ))}
           </div>
         )}
@@ -183,11 +974,7 @@ function CompactCard({
         {onJoin && (
           <button
             onClick={onJoin}
-            className={`w-full mt-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
-              isJoined
-                ? "bg-white/10 text-white/60"
-                : "bg-[#4ECDC4]/15 text-[#4ECDC4] hover:bg-[#4ECDC4]/25"
-            }`}
+            className={`cd-join-btn ${isJoined ? "joined" : "join"}`}
           >
             {isJoined ? t('category.unsubscribe') : t('category.join')}
           </button>
@@ -203,15 +990,15 @@ function EventMiniCard({ event }: { event: Event }) {
   const isGratis = !event.price || event.price === 0;
   return (
     <Link href={`/event/${event.id}`}>
-      <div className="glass-card rounded-xl flex gap-2.5 pr-3 cursor-pointer hover:bg-white/8 transition-all">
-        <div className="relative w-16 h-16 flex-shrink-0 rounded-l-xl overflow-hidden">
-          <img src={getEventImage(event)} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
+      <div className="cd-event-card">
+        <div className="cd-event-img-wrap">
+          <img src={getEventImage(event)} alt={event.title} className="cd-event-img" loading="lazy" />
         </div>
-        <div className="flex flex-col justify-center py-1.5 min-w-0 flex-1">
-          <h3 className="text-white text-[12px] font-semibold line-clamp-1">{event.title}</h3>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="text-white/40 text-xs">{formatDanishDate(event.date)}</span>
-            <span className={`px-1 py-0 rounded text-[11px] font-semibold ${isGratis ? "bg-[#4ECDC4]/20 text-[#4ECDC4]" : "bg-amber-500/20 text-amber-400"}`}>
+        <div className="cd-event-body">
+          <h3 className="cd-event-title">{event.title}</h3>
+          <div className="cd-event-meta">
+            <span className="cd-event-date">{formatDanishDate(event.date)}</span>
+            <span className={`cd-event-price ${isGratis ? "free" : "paid"}`}>
               {isGratis ? t('events.free') : `${event.price} ${t('events.currency')}`}
             </span>
           </div>
@@ -226,33 +1013,35 @@ function SupabasePlaceCard({ place }: { place: Place }) {
   const { t } = useTranslation();
   const isFree = place.smart_tags?.includes("gratis");
   return (
-    <div className="glass-card rounded-2xl overflow-hidden">
-      <div className="p-3">
-        <div className="flex items-start justify-between mb-1">
-          <h3 className="text-white text-[13px] font-semibold line-clamp-2 flex-1 pr-2">{place.name}</h3>
+    <div className="cd-supa-card">
+      <div className="cd-supa-body">
+        <div className="cd-supa-header">
+          <h3 className="cd-supa-name">{place.name}</h3>
           {isFree && (
-            <span className="px-1.5 py-0.5 rounded-full bg-[#4ECDC4]/20 text-[#4ECDC4] text-[11px] font-bold whitespace-nowrap">{t('events.free')}</span>
+            <span className="cd-supa-free-badge">{t('events.free')}</span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <Star size={9} className="text-amber-400 fill-amber-400" />
-          <span className="text-white/50 text-xs">{place.rating_avg?.toFixed(1)}</span>
-          <span className="text-white/25">·</span>
-          <span className="text-white/35 text-xs flex items-center gap-0.5">
+        <div className="cd-supa-meta">
+          <span className="cd-supa-rating">
+            <Star size={9} fill="#fbbf24" />
+            {place.rating_avg?.toFixed(1)}
+          </span>
+          <span className="cd-supa-dot">&middot;</span>
+          <span className="cd-supa-city">
             <MapPin size={8} />{place.city}
           </span>
           {place.region && place.region !== "Nordjylland" && (
             <>
-              <span className="text-white/25">·</span>
-              <span className="text-white/30 text-[11px]">{place.region}</span>
+              <span className="cd-supa-dot">&middot;</span>
+              <span className="cd-supa-region">{place.region}</span>
             </>
           )}
         </div>
-        <p className="text-white/30 text-xs line-clamp-2 mb-1.5">{place.description}</p>
+        <p className="cd-supa-desc">{place.description}</p>
         {place.tags && place.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="cd-supa-tags">
             {place.tags.slice(0, 3).map(tag => (
-              <span key={tag} className="px-1.5 py-0.5 rounded-full bg-[#4ECDC4]/8 text-[#4ECDC4]/60 text-[8px]">{tag}</span>
+              <span key={tag} className="cd-supa-tag">{tag}</span>
             ))}
           </div>
         )}
@@ -267,20 +1056,27 @@ function Section({ title, icon, count, badge, children, defaultOpen = true }: {
   children: React.ReactNode; defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const badgeStyle = badge ? {
+    background: badge.color.includes("4ECDC4") ? "rgba(78,205,196,0.2)" : badge.color.includes("amber") ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.1)",
+    color: badge.color.includes("4ECDC4") ? "#4ECDC4" : badge.color.includes("amber") ? "#fbbf24" : "rgba(255,255,255,0.4)",
+  } : undefined;
   return (
-    <section>
+    <section className="cd-fade-up">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-5 mb-2 w-full text-left"
+        className="cd-section-header"
       >
-        <span className="text-sm">{icon}</span>
-        <h2 className="text-white font-semibold text-sm">{title}</h2>
+        <span className="cd-section-icon">{icon}</span>
+        <h2 className="cd-section-title">{title}</h2>
         {count !== undefined && (
-          <span className={`px-1.5 py-0.5 rounded-full text-[11px] font-bold ${badge ? badge.color : "bg-white/10 text-white/40"}`}>
+          <span
+            className={`cd-section-badge ${!badge ? "cd-section-badge-default" : ""}`}
+            style={badgeStyle}
+          >
             {badge ? badge.text : count}
           </span>
         )}
-        <ChevronDown size={14} className={`text-white/30 ml-auto transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} className={`cd-section-chevron ${open ? "open" : ""}`} />
       </button>
       {open && children}
     </section>
@@ -292,15 +1088,11 @@ function SubChip({ label, emoji, active, count, onClick }: { label: string; emoj
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1 px-3 py-2 rounded-2xl text-xs font-medium whitespace-nowrap transition-all ${
-        active
-          ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/20"
-          : "glass-card text-white/60 hover:text-white hover:bg-white/10"
-      }`}
+      className={`cd-subchip ${active ? "active" : ""}`}
     >
       <span>{emoji}</span>
       <span>{label}</span>
-      {count > 0 && <span className={`text-[11px] ml-0.5 ${active ? "text-white/70" : "text-white/30"}`}>{count}</span>}
+      {count > 0 && <span className="cd-subchip-count">{count}</span>}
     </button>
   );
 }
@@ -315,13 +1107,13 @@ const AVATARS = [
 function ActiveUsers({ count }: { count: number }) {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex -space-x-2">
+    <div className="cd-avatars-wrap">
+      <div className="cd-avatars-stack">
         {AVATARS.map((a, i) => (
-          <img key={i} src={a} alt="" className="w-5 h-5 rounded-full border-2 border-[#0d1117] object-cover" loading="lazy" />
+          <img key={i} src={a} alt="" className="cd-avatar-img" loading="lazy" />
         ))}
       </div>
-      <span className="text-white/40 text-xs">+{count} {t('category.active_users')}</span>
+      <span className="cd-avatars-text">+{count} {t('category.active_users')}</span>
     </div>
   );
 }
@@ -331,7 +1123,7 @@ function SuggestionChip({ node, onClick }: { node: TagNode; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/6 hover:bg-[#4ECDC4]/15 text-white/60 hover:text-[#4ECDC4] text-[11px] transition-all whitespace-nowrap"
+      className="cd-suggestion-chip"
     >
       <span>{node.emoji}</span>
       <span>{node.label}</span>
@@ -345,6 +1137,7 @@ function SuggestionChip({ node, onClick }: { node: TagNode; onClick: () => void 
    ═══════════════════════════════════════════════ */
 export default function CategoryDetail() {
   const { t } = useTranslation();
+  const containerRef = useFadeUp("cd");
 
   // Lazy load data
   const [tagTree, setTagTree] = useState<any>(null);
@@ -361,7 +1154,7 @@ export default function CategoryDetail() {
     }).catch(err => console.error('Error loading data:', err));
   }, []);
 
-  
+
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/kategori/:category");
   const category = params?.category || "";
@@ -416,29 +1209,29 @@ export default function CategoryDetail() {
     const catLower = category.toLowerCase();
     const subLower = activeSub?.toLowerCase();
     const q = searchQuery.toLowerCase().trim();
-    
+
     return evts.filter(e => {
       const eCat = (e.category || "").toLowerCase();
       const tags = (e.interest_tags || []).map(item => item.toLowerCase());
       const title = (e.title || "").toLowerCase();
       const desc = (e.description || "").toLowerCase();
-      
+
       // Category match (broad)
       const matchesCat = eCat.includes(catLower) || tags.some(item => item.includes(catLower));
-      
+
       if (!matchesCat) return false;
-      
+
       // Search filter
       if (q) {
         const matchesQ = title.includes(q) || desc.includes(q) || tags.some(item => item.includes(q)) || eCat.includes(q);
         if (!matchesQ) return false;
       }
-      
+
       // Sub filter
       if (subLower) {
         return eCat.includes(subLower) || tags.some(item => item.includes(subLower)) || title.includes(subLower) || desc.includes(subLower);
       }
-      
+
       return true;
     }).slice(0, 6);
   }, [allJsonEvents, category, activeSub, searchQuery]);
@@ -448,7 +1241,7 @@ export default function CategoryDetail() {
     if (!supabasePlaces) return [];
     const q = searchQuery.toLowerCase().trim();
     const relatedTags = getCategoryRelatedTags(category, tagTree);
-    
+
     return supabasePlaces.filter(p => {
       const cats = (p.main_categories || []).map(c => c.toLowerCase());
       const tags = (p.tags || []).map(item => item.toLowerCase());
@@ -456,7 +1249,7 @@ export default function CategoryDetail() {
       const name = p.name.toLowerCase();
       const desc = (p.description || "").toLowerCase();
       const allText = [...cats, ...tags, ...smartTags, name, desc];
-      
+
       // Must match category (broad: check main_categories OR if tags overlap with category's related tags)
       const matchesCat = cats.some(c => {
         // Direct category name match
@@ -466,21 +1259,21 @@ export default function CategoryDetail() {
         if (catLabel && c.includes(catLabel)) return true;
         return false;
       }) || tags.some(item => relatedTags.includes(item)) || smartTags.some(item => relatedTags.includes(item));
-      
+
       if (!matchesCat) return false;
-      
+
       // Search filter — smart: expand query through tag tree
       if (q) {
         // Direct text match
         const directMatch = allText.some(item => item.includes(q));
         if (directMatch) return true;
-        
+
         // Tag tree expansion: if user types "jazz", also match "musik", "koncert" etc.
         const tagResults = searchTags(q);
         const expandedTerms = tagResults.map(item => item.tag.toLowerCase());
         return tags.some(item => expandedTerms.includes(item)) || smartTags.some(item => expandedTerms.includes(item));
       }
-      
+
       // Price filter
       if (priceFilter === "gratis") {
         return smartTags.includes("gratis");
@@ -488,7 +1281,7 @@ export default function CategoryDetail() {
       if (priceFilter === "premium") {
         return !smartTags.includes("gratis");
       }
-      
+
       return true;
     });
   }, [supabasePlaces, category, searchQuery, priceFilter, catData]);
@@ -576,265 +1369,260 @@ export default function CategoryDetail() {
   }, []);
 
   return (
-    <div
-      className="relative min-h-svh pb-24"
-      style={{ background: "#060a0f" }}
-      data-testid="category-detail-page"
-    >
-      {/* ── Compact Hero ── */}
-      <div className="relative w-full h-44 overflow-hidden">
-        <img
-          src={subInfo?.heroImage || heroImg || ""}
-          alt={label}
-          className="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1a] via-black/40 to-black/20" />
-        <button
-          onClick={() => activeSub ? setActiveSub(null) : setLocation("/udforsk")}
-          className="absolute top-12 left-5 w-9 h-9 rounded-full glass-card flex items-center justify-center z-10"
-          data-testid="btn-back"
-        >
-          <ArrowLeft size={18} className="text-white/70" />
-        </button>
-        <div className="absolute bottom-3 left-5 right-5">
-          {activeSub && subInfo ? (
-            <>
-              <p className="text-white/50 text-[11px] mb-0.5">{emoji} {label}</p>
-              <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{subInfo.emoji} {subInfo.label}</h1>
-              <p className="text-white/50 text-xs mt-0.5">{subInfo.description}</p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-white text-xl font-bold">{emoji} {label}</h1>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-white/50 text-xs">{totalContent} {t('category.experiences')}</span>
-                <ActiveUsers count={subcats.length * 15 + 20} />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* ── Subcategory Filter Bar (sticky feel) ── */}
-      {subcats.length > 0 && (
-        <div className="px-5 mt-3 mb-2">
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-            <SubChip
-              label={t('category.all')}
-              emoji={emoji}
-              active={!activeSub}
-              count={places.length + activities.length}
-              onClick={() => setActiveSub(null)}
-            />
-            {subcats.map(sub => (
-              <SubChip
-                key={sub.key}
-                label={sub.label}
-                emoji={sub.emoji}
-                active={activeSub === sub.key}
-                count={subCounts[sub.key] || 0}
-                onClick={() => setActiveSub(activeSub === sub.key ? null : sub.key)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Smart Search + Gratis / Premium ── */}
-      <div className="px-5 mt-2 mb-3 relative" data-testid="search-price-section" ref={suggestionsRef}>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-            <input
-              ref={searchRef}
-              type="text"
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
-              onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
-              placeholder={t('category.search_in', { label })}
-              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#4ECDC4]/40 focus:bg-white/8 transition-all"
-              data-testid="search-input"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => { setSearchQuery(""); setShowSuggestions(false); }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
-              >
-                <X size={14} />
-              </button>
+    <>
+      <style>{categoryDetailCSS}</style>
+      <div
+        ref={containerRef}
+        className="cd-root"
+        data-testid="category-detail-page"
+      >
+        {/* ── Compact Hero ── */}
+        <div className="cd-hero cd-fade-up">
+          <img
+            src={subInfo?.heroImage || heroImg || ""}
+            alt={label}
+            className="cd-hero-img"
+            loading="eager"
+          />
+          <div className="cd-hero-overlay" />
+          <button
+            onClick={() => activeSub ? setActiveSub(null) : setLocation("/udforsk")}
+            className="cd-hero-back"
+            data-testid="btn-back"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div className="cd-hero-content">
+            {activeSub && subInfo ? (
+              <>
+                <p className="cd-hero-breadcrumb">{emoji} {label}</p>
+                <h1 className="cd-hero-title">{subInfo.emoji} {subInfo.label}</h1>
+                <p className="cd-hero-sub-desc">{subInfo.description}</p>
+              </>
+            ) : (
+              <>
+                <h1 className="cd-hero-title-bold">{emoji} {label}</h1>
+                <div className="cd-hero-meta">
+                  <span className="cd-hero-meta-text">{totalContent} {t('category.experiences')}</span>
+                  <ActiveUsers count={subcats.length * 15 + 20} />
+                </div>
+              </>
             )}
           </div>
-          <button
-            onClick={() => setPriceFilter(priceFilter === "gratis" ? "alle" : "gratis")}
-            className={`px-3 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              priceFilter === "gratis"
-                ? "bg-[#4ECDC4] text-[#0a0f1a] shadow-lg shadow-[#4ECDC4]/25"
-                : "bg-white/6 text-white/50 border border-white/10 hover:bg-white/10"
-            }`}
-            data-testid="btn-gratis"
-          >
-            {t('events.free')}
-          </button>
-          <button
-            onClick={() => setPriceFilter(priceFilter === "premium" ? "alle" : "premium")}
-            className={`px-3 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              priceFilter === "premium"
-                ? "bg-amber-500 text-white shadow-lg shadow-amber-500/25"
-                : "bg-white/6 text-white/50 border border-white/10 hover:bg-white/10"
-            }`}
-            data-testid="btn-premium"
-          >
-            {t('category.premium')}
-          </button>
         </div>
 
-        {/* ── Smart Autocomplete Suggestions ── */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute left-5 right-5 mt-1.5 z-20 glass-card rounded-xl border border-white/10 p-2.5 shadow-xl shadow-black/40">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Sparkles size={12} className="text-[#4ECDC4]" />
-              <span className="text-white/40 text-xs font-medium">{t('category.suggestions_in', { label })}</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {suggestions.map(s => (
-                <SuggestionChip key={s.tag} node={s} onClick={() => applySuggestion(s)} />
+        {/* ── Subcategory Filter Bar (sticky feel) ── */}
+        {subcats.length > 0 && (
+          <div className="cd-chips-bar cd-fade-up cd-d1">
+            <div className="cd-chips-scroll">
+              <SubChip
+                label={t('category.all')}
+                emoji={emoji}
+                active={!activeSub}
+                count={places.length + activities.length}
+                onClick={() => setActiveSub(null)}
+              />
+              {subcats.map(sub => (
+                <SubChip
+                  key={sub.key}
+                  label={sub.label}
+                  emoji={sub.emoji}
+                  active={activeSub === sub.key}
+                  count={subCounts[sub.key] || 0}
+                  onClick={() => setActiveSub(activeSub === sub.key ? null : sub.key)}
+                />
               ))}
             </div>
           </div>
         )}
 
-        {hasActiveFilter && (
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-white/40 text-xs">{totalContent} {t('category.results')}</span>
+        {/* ── Smart Search + Gratis / Premium ── */}
+        <div className="cd-search-section cd-fade-up cd-d2" data-testid="search-price-section" ref={suggestionsRef}>
+          <div className="cd-search-row">
+            <div className="cd-search-wrap">
+              <Search size={16} className="cd-search-icon" />
+              <input
+                ref={searchRef}
+                type="text"
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
+                onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
+                placeholder={t('category.search_in', { label })}
+                className="cd-search-input"
+                data-testid="search-input"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(""); setShowSuggestions(false); }}
+                  className="cd-search-clear"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
             <button
-              onClick={() => { setSearchQuery(""); setPriceFilter("alle"); setShowSuggestions(false); }}
-              className="text-[#4ECDC4] text-xs font-medium"
-              data-testid="clear-filter-btn"
+              onClick={() => setPriceFilter(priceFilter === "gratis" ? "alle" : "gratis")}
+              className={`cd-price-btn ${priceFilter === "gratis" ? "active-gratis" : ""}`}
+              data-testid="btn-gratis"
             >
-              {t('category.reset')}
+              {t('events.free')}
+            </button>
+            <button
+              onClick={() => setPriceFilter(priceFilter === "premium" ? "alle" : "premium")}
+              className={`cd-price-btn ${priceFilter === "premium" ? "active-premium" : ""}`}
+              data-testid="btn-premium"
+            >
+              {t('category.premium')}
             </button>
           </div>
-        )}
-      </div>
 
-      {/* ═══ CONTENT — compact grid layout ═══ */}
-      <div className="space-y-5 mt-2">
-
-        {/* ── Supabase steder (real data first!) ── */}
-        {matchingSupabasePlaces.length > 0 && (
-          <Section title={t('category.places_in_denmark')} icon="📍" count={matchingSupabasePlaces.length} badge={{ text: `${matchingSupabasePlaces.length}`, color: "bg-[#4ECDC4]/20 text-[#4ECDC4]" }} defaultOpen={true}>
-            <div className="grid grid-cols-2 gap-2.5 px-5">
-              {matchingSupabasePlaces.slice(0, 12).map(p => (
-                <SupabasePlaceCard key={p.id} place={p} />
-              ))}
-            </div>
-            {matchingSupabasePlaces.length > 12 && (
-              <div className="px-5 mt-2">
-                <button className="w-full py-2 rounded-xl bg-white/5 text-white/40 text-xs hover:bg-white/10 transition-colors">
-                  {t('category.show_all_places', { count: matchingSupabasePlaces.length })}
-                </button>
+          {/* ── Smart Autocomplete Suggestions ── */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="cd-suggestions">
+              <div className="cd-suggestions-header">
+                <Sparkles size={12} />
+                <span className="cd-suggestions-label">{t('category.suggestions_in', { label })}</span>
               </div>
-            )}
-          </Section>
-        )}
-
-        {/* ── Hardcoded steder — 2-column compact grid ── */}
-        {filteredPlaces.length > 0 && (
-          <Section title={t('category.places')} icon="🏟️" count={filteredPlaces.length} defaultOpen={true}>
-            <div className="grid grid-cols-2 gap-2.5 px-5">
-              {filteredPlaces.map(p => (
-                <CompactCard
-                  key={p.id}
-                  image={p.image}
-                  title={p.name}
-                  subtitle={p.description}
-                  badge={p.isFree ? { text: t('events.free'), color: "bg-[#4ECDC4]/80" } : p.price ? { text: `${p.price} ${t('events.currency')}`, color: "bg-amber-500/80" } : undefined}
-                  rating={p.rating}
-                  distance={p.distance}
-                  tags={p.tags}
-                />
-              ))}
+              <div className="cd-suggestions-grid">
+                {suggestions.map(s => (
+                  <SuggestionChip key={s.tag} node={s} onClick={() => applySuggestion(s)} />
+                ))}
+              </div>
             </div>
-          </Section>
-        )}
+          )}
 
-        {/* ── Gratis aktiviteter — compact grid ── */}
-        {freeActivities.length > 0 && (
-          <Section title={t('events.free')} icon="🎯" count={freeActivities.length} badge={{ text: `${freeActivities.length}`, color: "bg-[#4ECDC4]/20 text-[#4ECDC4]" }} defaultOpen={true}>
-            <div className="grid grid-cols-2 gap-2.5 px-5">
-              {freeActivities.map(a => (
-                <CompactCard
-                  key={a.id}
-                  image={a.image}
-                  title={a.title}
-                  subtitle={a.description}
-                  emoji={a.emoji}
-                  badge={{ text: t('events.free'), color: "bg-[#4ECDC4]/80" }}
-                  distance={a.distance}
-                  spots={a.spots}
-                  onJoin={() => isJoined(a.id) ? leaveEvent(a.id) : joinEvent(a.id, a.title)}
-                  isJoined={isJoined(a.id)}
-                />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {/* ── Betalte oplevelser — compact grid ── */}
-        {paidActivities.length > 0 && (
-          <Section title={t('category.paid_experiences')} icon="💎" count={paidActivities.length} badge={{ text: `${paidActivities.length}`, color: "bg-amber-500/20 text-amber-400" }} defaultOpen={true}>
-            <div className="grid grid-cols-2 gap-2.5 px-5">
-              {paidActivities.map(a => (
-                <CompactCard
-                  key={a.id}
-                  image={a.image}
-                  title={a.title}
-                  subtitle={a.description}
-                  emoji={a.emoji}
-                  badge={{ text: `${a.price} ${t('events.currency')}`, color: "bg-amber-500/80" }}
-                  distance={a.distance}
-                  spots={a.spots}
-                  onJoin={() => isJoined(a.id) ? leaveEvent(a.id) : joinEvent(a.id, a.title)}
-                  isJoined={isJoined(a.id)}
-                />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {/* ── Events from events.json ── */}
-        {matchingEvents.length > 0 && (
-          <Section title={t('category.upcoming_events')} icon="🎪" count={matchingEvents.length} defaultOpen={matchingEvents.length <= 4}>
-            <div className="space-y-2 px-5">
-              {matchingEvents.map(e => <EventMiniCard key={e.id} event={e} />)}
-            </div>
-          </Section>
-        )}
-
-        {/* ── Empty state ── */}
-        {totalContent === 0 && (
-          <div className="flex flex-col items-center py-16 text-center px-5">
-            <span className="text-4xl mb-3">🔍</span>
-            <p className="text-white/60 text-sm">
-              {hasActiveFilter ? t('category.no_results_with_filters') : t('category.no_experiences_yet')}
-            </p>
-            <p className="text-white/30 text-xs mt-1">
-              {hasActiveFilter ? t('category.try_changing_filters') : t('category.be_first_create_activity')}
-            </p>
-            {hasActiveFilter ? (
-              <button onClick={() => { setSearchQuery(""); setPriceFilter("alle"); }} className="mt-3 text-[#4ECDC4] text-sm font-medium">
-                {t('category.reset_filters')}
+          {hasActiveFilter && (
+            <div className="cd-filter-bar">
+              <span className="cd-filter-count">{totalContent} {t('category.results')}</span>
+              <button
+                onClick={() => { setSearchQuery(""); setPriceFilter("alle"); setShowSuggestions(false); }}
+                className="cd-filter-reset"
+                data-testid="clear-filter-btn"
+              >
+                {t('category.reset')}
               </button>
-            ) : (
-              <button onClick={() => setActiveSub(null)} className="mt-3 text-[#4ECDC4] text-sm font-medium">
-                {t('category.show_all_in', { label })}
-              </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+
+        {/* ═══ CONTENT — compact grid layout ═══ */}
+        <div className="cd-content cd-fade-up cd-d3">
+
+          {/* ── Supabase steder (real data first!) ── */}
+          {matchingSupabasePlaces.length > 0 && (
+            <Section title={t('category.places_in_denmark')} icon="📍" count={matchingSupabasePlaces.length} badge={{ text: `${matchingSupabasePlaces.length}`, color: "bg-[#4ECDC4]/20 text-[#4ECDC4]" }} defaultOpen={true}>
+              <div className="cd-grid">
+                {matchingSupabasePlaces.slice(0, 12).map(p => (
+                  <SupabasePlaceCard key={p.id} place={p} />
+                ))}
+              </div>
+              {matchingSupabasePlaces.length > 12 && (
+                <div className="cd-show-all">
+                  <button className="cd-show-all-btn">
+                    {t('category.show_all_places', { count: matchingSupabasePlaces.length })}
+                  </button>
+                </div>
+              )}
+            </Section>
+          )}
+
+          {/* ── Hardcoded steder — 2-column compact grid ── */}
+          {filteredPlaces.length > 0 && (
+            <Section title={t('category.places')} icon="🏟️" count={filteredPlaces.length} defaultOpen={true}>
+              <div className="cd-grid">
+                {filteredPlaces.map(p => (
+                  <CompactCard
+                    key={p.id}
+                    image={p.image}
+                    title={p.name}
+                    subtitle={p.description}
+                    badge={p.isFree ? { text: t('events.free'), color: "bg-[#4ECDC4]/80" } : p.price ? { text: `${p.price} ${t('events.currency')}`, color: "bg-amber-500/80" } : undefined}
+                    rating={p.rating}
+                    distance={p.distance}
+                    tags={p.tags}
+                  />
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* ── Gratis aktiviteter — compact grid ── */}
+          {freeActivities.length > 0 && (
+            <Section title={t('events.free')} icon="🎯" count={freeActivities.length} badge={{ text: `${freeActivities.length}`, color: "bg-[#4ECDC4]/20 text-[#4ECDC4]" }} defaultOpen={true}>
+              <div className="cd-grid">
+                {freeActivities.map(a => (
+                  <CompactCard
+                    key={a.id}
+                    image={a.image}
+                    title={a.title}
+                    subtitle={a.description}
+                    emoji={a.emoji}
+                    badge={{ text: t('events.free'), color: "bg-[#4ECDC4]/80" }}
+                    distance={a.distance}
+                    spots={a.spots}
+                    onJoin={() => isJoined(a.id) ? leaveEvent(a.id) : joinEvent(a.id, a.title)}
+                    isJoined={isJoined(a.id)}
+                  />
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* ── Betalte oplevelser — compact grid ── */}
+          {paidActivities.length > 0 && (
+            <Section title={t('category.paid_experiences')} icon="💎" count={paidActivities.length} badge={{ text: `${paidActivities.length}`, color: "bg-amber-500/20 text-amber-400" }} defaultOpen={true}>
+              <div className="cd-grid">
+                {paidActivities.map(a => (
+                  <CompactCard
+                    key={a.id}
+                    image={a.image}
+                    title={a.title}
+                    subtitle={a.description}
+                    emoji={a.emoji}
+                    badge={{ text: `${a.price} ${t('events.currency')}`, color: "bg-amber-500/80" }}
+                    distance={a.distance}
+                    spots={a.spots}
+                    onJoin={() => isJoined(a.id) ? leaveEvent(a.id) : joinEvent(a.id, a.title)}
+                    isJoined={isJoined(a.id)}
+                  />
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* ── Events from events.json ── */}
+          {matchingEvents.length > 0 && (
+            <Section title={t('category.upcoming_events')} icon="🎪" count={matchingEvents.length} defaultOpen={matchingEvents.length <= 4}>
+              <div className="cd-events-list">
+                {matchingEvents.map(e => <EventMiniCard key={e.id} event={e} />)}
+              </div>
+            </Section>
+          )}
+
+          {/* ── Empty state ── */}
+          {totalContent === 0 && (
+            <div className="cd-empty">
+              <span className="cd-empty-emoji">🔍</span>
+              <p className="cd-empty-text">
+                {hasActiveFilter ? t('category.no_results_with_filters') : t('category.no_experiences_yet')}
+              </p>
+              <p className="cd-empty-sub">
+                {hasActiveFilter ? t('category.try_changing_filters') : t('category.be_first_create_activity')}
+              </p>
+              {hasActiveFilter ? (
+                <button onClick={() => { setSearchQuery(""); setPriceFilter("alle"); }} className="cd-empty-btn">
+                  {t('category.reset_filters')}
+                </button>
+              ) : (
+                <button onClick={() => setActiveSub(null)} className="cd-empty-btn">
+                  {t('category.show_all_in', { label })}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
-
-    </div>
+    </>
   );
 }
