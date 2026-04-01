@@ -32,6 +32,7 @@ const KortPage = lazy(() => import("@/pages/Kort"));
 const Beskeder = lazy(() => import("@/pages/Beskeder"));
 const MinSide = lazy(() => import("@/pages/MinSide"));
 const EventDetail = lazy(() => import("@/pages/EventDetail"));
+const PublicProfile = lazy(() => import("@/pages/PublicProfile"));
 const Indstillinger = lazy(() => import("@/pages/Indstillinger"));
 const Privatlivspolitik = lazy(() => import("@/pages/Privatlivspolitik"));
 const Vilkaar = lazy(() => import("@/pages/Vilkaar"));
@@ -61,6 +62,7 @@ function MainRouter() {
           <Route path="/beskeder" component={Beskeder} />
           <Route path="/min-side" component={MinSide} />
           <Route path="/event/:id" component={EventDetail} />
+          <Route path="/profil/:id" component={PublicProfile} />
           <Route path="/indstillinger" component={Indstillinger} />
           <Route path="/notifikationer" component={Notifikationer} />
           <Route component={NotFound} />

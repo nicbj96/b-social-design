@@ -8,6 +8,7 @@ import { getEventById } from "@/lib/data";
 import { getCategoryEmoji, getEventImage, formatDanishDate } from "@/lib/eventHelpers";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/lib/supabase";
 
 const GEOAPIFY_KEY = "c6ed42e8addb457ebf24265a045b892b";
 
@@ -55,6 +56,7 @@ export default function EventDetail() {
   const [favorited, setFavorited] = useState(false);
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [rsvpCount, setRsvpCount] = useState(0);
 
   const { data: event, isLoading } = useQuery<Event | null>({
     queryKey: ["event", id],
@@ -62,18 +64,35 @@ export default function EventDetail() {
     staleTime: 5 * 60 * 1000, // 5 min — global default is reasonable for single event detail
   });
 
-  const handleJoin = () => {
+  useEffect(() => {
+    if (!user || !id) return;
+    supabase.from("event_rsvps").select("status").eq("event_id", id).eq("user_id", user.id).single()
+      .then(({ data }) => { if (data) setJoined(true); });
+  }, [user, id]);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("event_rsvps").select("*", { count: 'exact' }).eq("event_id", id).eq("status", "going")
+      .then(({ count }) => { if (count !== null) setRsvpCount(count); });
+  }, [id]);
+
+  const handleJoin = async () => {
     if (!user) {
       sessionStorage.setItem('returnTo', `/event/${id}`);
       setLocation("/auth");
       return;
     }
     setJoining(true);
-    // Simulate a join action (no backend in static mode)
-    setTimeout(() => {
-      setJoined(true);
+    try {
+      const { error } = await supabase
+        .from("event_rsvps")
+        .upsert({ event_id: id, user_id: user.id, status: 'going' }, { onConflict: 'event_id,user_id' });
+      if (!error) setJoined(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
       setJoining(false);
-    }, 600);
+    }
   };
 
   if (isLoading) {
@@ -264,6 +283,7 @@ export default function EventDetail() {
 
       {/* Fixed bottom CTA */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] p-4 pb-8 glass-nav">
+        <div className="mb-2 text-center text-white/60 text-sm">{rsvpCount} {rsvpCount === 1 ? 'deltager' : 'deltagere'}</div>
         <button
           onClick={handleJoin}
           disabled={joined || joining}

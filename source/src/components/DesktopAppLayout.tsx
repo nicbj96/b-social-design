@@ -1,10 +1,12 @@
 import { Link } from "wouter";
 import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNotifications } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const NAV_MAIN = [
   { key: "nav.feed", icon: Home, href: "/feed" },
@@ -18,8 +20,29 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const { unreadCount } = useNotifications();
-  const { isLoggedIn, profile, signOut, loading: authLoading } = useAuth();
+  const { isLoggedIn, profile, signOut, loading: authLoading, user } = useAuth();
   const loggedIn = !authLoading && isLoggedIn;
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Load unread messages count on mount
+  useEffect(() => {
+    if (!loggedIn || !user?.id) return;
+
+    const loadUnreadMessages = async () => {
+      try {
+        const { count } = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .neq("sender_id", user.id)
+          .gt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+        setUnreadMessages(count || 0);
+      } catch (error) {
+        console.error("Failed to load unread messages:", error);
+      }
+    };
+
+    loadUnreadMessages();
+  }, [loggedIn, user?.id]);
 
   const navLink = (href: string, icon: any, label: string, opts?: { badge?: number; mt?: boolean }) => {
     const Icon = icon;
@@ -67,7 +90,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
 
         {/* Main navigation */}
         <nav className="flex-1 px-3">
-          {NAV_MAIN.map((item) => navLink(item.href, item.icon, t(item.key)))}
+          {NAV_MAIN.map((item) => navLink(item.href, item.icon, t(item.key), item.key === "nav.beskeder" ? { badge: unreadMessages } : undefined))}
           {/* Invitér — right under Beskeder/Min Side */}
           {navLink("/inviter", UserPlus, "Invitér")}
 

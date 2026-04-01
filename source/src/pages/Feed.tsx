@@ -32,6 +32,14 @@ export default function Feed() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
 
+  // Debounced search: 300ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["/api/events"],
     queryFn: getEvents,
