@@ -37,10 +37,7 @@ export default function CallModal({
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const [displayDuration, setDisplayDuration] = useState('00:00');
 
-  // Only render if not idle
-  if (callState === 'idle') {
-    return null;
-  }
+  // ALL hooks MUST be called before any early return (React rules of hooks)
 
   // Attach streams to video elements
   useEffect(() => {
@@ -70,6 +67,11 @@ export default function CallModal({
       `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
     );
   }, [callDuration]);
+
+  // Only render if not idle — AFTER all hooks
+  if (callState === 'idle') {
+    return null;
+  }
 
   // Get user initials for avatar
   const getUserInitials = (name: string): string => {
