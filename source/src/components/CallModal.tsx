@@ -40,24 +40,25 @@ export default function CallModal({
   // ALL hooks MUST be called before any early return (React rules of hooks)
 
   // Attach streams to video elements
+  // Include callState + isVideo in deps so effects re-run when video elements mount
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
     }
-  }, [remoteStream]);
+  }, [remoteStream, callState, isVideo]);
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
     }
-  }, [localStream]);
+  }, [localStream, callState, isVideo]);
 
   // Attach remote stream to audio element for audio-only calls
   useEffect(() => {
     if (remoteAudioRef.current && remoteStream) {
       remoteAudioRef.current.srcObject = remoteStream;
     }
-  }, [remoteStream]);
+  }, [remoteStream, callState]);
 
   // Format call duration as MM:SS
   useEffect(() => {

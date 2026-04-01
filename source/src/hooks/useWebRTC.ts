@@ -47,6 +47,8 @@ export function useWebRTC(
   const remoteOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
   const remoteIdRef = useRef<string | null>(null);
   const withVideoRef = useRef(false);
+  const iceCandidateBuffer = useRef<RTCIceCandidateInit[]>([]);
+  const remoteDescriptionSet = useRef(false);
 
   // Clean up media tracks
   const stopMediaTracks = (stream: MediaStream | null) => {
@@ -83,9 +85,29 @@ export function useWebRTC(
     }, 1000);
   };
 
-  // Handle incoming ICE candidates
+  // Flush buffered ICE candidates after remote description is set
+  const flushIceCandidateBuffer = async () => {
+    if (!peerConnection.current) return;
+    const candidates = iceCandidateBuffer.current;
+    iceCandidateBuffer.current = [];
+    for (const candidate of candidates) {
+      try {
+        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log('[WebRTC] Flushed buffered ICE candidate');
+      } catch (error) {
+        console.error('[WebRTC] Error adding buffered ICE candidate:', error);
+      }
+    }
+  };
+
+  // Handle incoming ICE candidates — buffer if remote description not yet set
   const handleIncomingIceCandidate = async (candidate: RTCIceCandidateInit) => {
     if (!peerConnection.current) return;
+    if (!remoteDescriptionSet.current) {
+      console.log('[WebRTC] Buffering ICE candidate (remote description not set yet)');
+      iceCandidateBuffer.current.push(candidate);
+      return;
+    }
     try {
       await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
     } catch (error) {
@@ -211,8 +233,10 @@ export function useWebRTC(
         peerConnection.current!.addTrack(track, stream);
       });
 
-      // Set remote description
+      // Set remote description and flush buffered ICE candidates
       await peerConnection.current.setRemoteDescription(remoteOfferRef.current);
+      remoteDescriptionSet.current = true;
+      await flushIceCandidateBuffer();
 
       // Create and send answer
       const answer = await peerConnection.current.createAnswer();
@@ -250,6 +274,8 @@ export function useWebRTC(
     stopDurationTimer();
     remoteOfferRef.current = null;
     remoteIdRef.current = null;
+    iceCandidateBuffer.current = [];
+    remoteDescriptionSet.current = false;
   };
 
   // Toggle mute
@@ -304,7 +330,9 @@ export function useWebRTC(
           if (peerConnection.current && payload.sdp) {
             peerConnection.current
               .setRemoteDescription(payload.sdp)
-              .then(() => {
+              .then(async () => {
+                remoteDescriptionSet.current = true;
+                await flushIceCandidateBuffer();
                 setCallState('connected');
                 startDurationTimer();
               })
