@@ -1229,7 +1229,7 @@ export default function Beskeder() {
 
       {/* ── New Conversation Modal ── */}
       {showNewConvo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onKeyDown={(e) => { if (e.key === 'Escape') { setShowNewConvo(false); setUserSearch(''); setUserResults([]); } }} tabIndex={-1} ref={(el) => el?.focus()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onKeyDown={(e) => { if (e.key === 'Escape') { setShowNewConvo(false); setUserSearch(''); setUserResults([]); } }} tabIndex={-1}>
           <div className="bg-[#0d1225] border border-white/10 rounded-2xl w-full max-w-md mx-4 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <h2 className="text-white font-bold">{t('beskeder.new_conversation')}</h2>
