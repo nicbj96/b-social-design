@@ -911,154 +911,409 @@ export default function Beskeder() {
               <div className="flex items-center gap-1 relative">
                 <button
                   onClick={() => { setIsVideoCall(false); webrtc.startCall(false); }}
-                  className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all>
-                  title="Opkald"
+                  className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                  title="Starte opkald"
                 >
                   <Phone size={16} />
                 </button>
                 <button
                   onClick={() => { setIsVideoCall(true); webrtc.startCall(true); }}
                   className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-                  title="Videokald"
+                  title="Starte videoopkald"
                 >
                   <Video size={16} />
                 </button>
-                <button
-                  onClick={() => setShowChatMenu(!showChatMenu)}
-                  className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all relative"
-                  title="Mere"
-                >
-                  <MoreVertical size={16} />
+                <div className="relative" ref={chatMenuRef}>
+                  <button
+                    onClick={() => setShowChatMenu(!showChatMenu)}
+                    className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
                   {showChatMenu && (
-                    <div className="absolute right-0 top-10 bg-[#1a1f2e] border border-white/10 rounded-lg p-2 min-w-40 shadow-lg z-20">
+                    <div className="absolute right-0 top-full mt-1 bg-[#0d1225] border border-white/10 rounded-xl shadow-lg z-50 overflow-hidden">
                       <button
-                        onClick={() => {
-                          // Delete conversation action
-                          setShowChatMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-white/5 rounded transition-colors"
+                        onClick={handleDeleteConversation}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors"
                       >
-                        Slet
+                        Slet samtale
+                      </button>
+                      <button
+                        onClick={handleBlockUser}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors border-t border-white/10"
+                      >
+                        Bloker bruger
+                      </button>
+                      <button
+                        onClick={() => { showToastMsg("Rapport sendt"); setShowChatMenu(false); }}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors border-t border-white/10"
+                      >
+                        Rapportér
+                      </button>
+                      <button
+                        onClick={() => { showToastMsg("Notifikationer slået fra"); setShowChatMenu(false); }}
+                        className="w-full px-4 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors border-t border-white/10"
+                      >
+                        Slå notifikationer fra
                       </button>
                     </div>
                   )}
-                </button>
+                </div>
               </div>
             </div>
 
-            {/* Messages list */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 space-y-3">
-              {messages.length === 0 ? (
-                <div className="text-center py-12">
-                  <MessageCircle size={32} className="text-white/15 mx-auto mb-3" />
-                  <p className="text-white/30 text-sm">{t('beskeder.no_messages_yet')}</p>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+              {msgsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 size={20} className="animate-spin text-white/30" />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-white/20 text-sm">{t('beskeder.write_first_message')}</p>
                 </div>
               ) : (
-                messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex gap-3 ${msg.sender_id === myId ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs px-4 py-2.5 rounded-2xl ${
-                        msg.sender_id === myId
-                          ? 'bg-[#4ECDC4] text-[#0a0f1a]'
-                          : 'bg-white/10 text-white'
-                      }`}
-                    >
-                      {renderMessage(msg)}
+                messages.map(msg => {
+                  const isMe = msg.sender_id === myId;
+                  const isFileMessage = msg.content.match(/^\[file:.+?:.+?:.+?\]$/);
+                  const msgReactions = reactions[msg.id] ?? [];
+                  const reactionGroups = msgReactions.reduce((acc, r) => {
+                    const group = acc.find(g => g.emoji === r.emoji);
+                    if (group) {
+                      group.reactions.push(r);
+                    } else {
+                      acc.push({ emoji: r.emoji, reactions: [r] });
+                    }
+                    return acc;
+                  }, [] as Array<{ emoji: string; reactions: MessageReaction[] }>);
+
+                  return (
+                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} group relative`}>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
+                          isMe ? "bg-[#4ECDC4] text-[#0a0f1a]" : "bg-white/8 text-white/90"
+                        }`}>
+                          {isFileMessage ? (
+                            <div>{renderFileAttachment(msg.content)}</div>
+                          ) : (
+                            <p className="mb-1">{msg.content}</p>
+                          )}
+                          <div className={`flex items-center justify-end gap-1 text-[11px] ${
+                            isMe ? "text-[#0a0f1a]/50" : "text-white/30"
+                          }`}>
+                            {formatMessageTime(msg.created_at)}
+                            {isMe && <CheckCheck size={10} />}
+                          </div>
+                        </div>
+
+                        {/* Reactions display */}
+                        {reactionGroups.length > 0 && (
+                          <div className="flex gap-1 flex-wrap justify-end px-2">
+                            {reactionGroups.map(group => {
+                              const userReacted = group.reactions.some(r => r.user_id === myId);
+                              return (
+                                <button
+                                  key={group.emoji}
+                                  onClick={() => {
+                                    if (userReacted) {
+                                      removeReaction(msg.id, group.emoji);
+                                    } else {
+                                      addReaction(msg.id, group.emoji);
+                                    }
+                                  }}
+                                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs ${
+                                    userReacted
+                                      ? "bg-[#4ECDC4]/30 text-[#4ECDC4]"
+                                      : "bg-white/5 hover:bg-white/10"
+                                  } transition-colors`}
+                                >
+                                  <span>{group.emoji}</span>
+                                  <span className="text-[10px]">{group.reactions.length}</span>
+                                </button>
+                              );
+                            })}
+                            {reactionPickerMsgId === msg.id && (
+                              <div ref={reactionPickerRef} className="flex gap-1 bg-white/5 rounded-full p-1">
+                                {["❤️", "😂", "👍", "😮", "😢", "🔥"].map(emoji => (
+                                  <button
+                                    key={emoji}
+                                    onClick={() => addReaction(msg.id, emoji)}
+                                    className="p-1 hover:bg-white/10 rounded-full transition-colors text-lg"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Reaction picker button (on hover) */}
+                        {reactionPickerMsgId !== msg.id && (
+                          <button
+                            onClick={() => setReactionPickerMsgId(msg.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 text-xs text-white/40 hover:text-white/60"
+                            title="Tilføj reaction"
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Message input area */}
-            <div className="flex-shrink-0 border-t border-white/10 px-4 md:px-6 py-4 bg-[#0a0f1a]/50">
-              <div className="flex items-end gap-2">
+            {/* Message input */}
+            <div className="p-4 border-t border-white/10 flex-shrink-0 relative">
+              {showEmojiPicker && (
+                <div ref={emojiPickerRef} className="absolute bottom-20 left-4 right-4 bg-[#0d1225] border border-white/10 rounded-2xl shadow-lg z-40 max-h-80 flex flex-col">
+                  {/* Category tabs */}
+                  <div className="flex gap-1 p-2 border-b border-white/10 overflow-x-auto flex-shrink-0">
+                    {Object.keys(EMOJI_CATEGORIES).map(category => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedEmojiCategory(category as keyof typeof EMOJI_CATEGORIES)}
+                        className={`text-xl p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                          selectedEmojiCategory === category
+                            ? "bg-[#4ECDC4]/30 text-[#4ECDC4]"
+                            : "hover:bg-white/5"
+                        }`}
+                        title={category}
+                      >
+                        {CATEGORY_ICONS[category]}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Emoji grid */}
+                  <div className="overflow-y-auto p-2 grid grid-cols-6 gap-1">
+                    {EMOJI_CATEGORIES[selectedEmojiCategory].map((emoji, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleEmojiClick(emoji)}
+                        className="text-xl hover:bg-white/10 rounded-lg p-1.5 transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+                className="bg-white/5 border border-white/10 rounded-2xl px-3 py-2 flex items-center gap-2"
+              >
                 <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="p-2 text-white/30 hover:text-white disabled:opacity-50 transition-colors"
-                  title="Vedhæft fil"
+                  className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors disabled:opacity-50"
                 >
-                  <Paperclip size={20} />
+                  {uploading ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}
                 </button>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf,video/mp4,audio/*" onChange={handleFileUpload} />
                 <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                  accept="image/*,application/pdf,.doc,.docx"
+                  ref={inputRef}
+                  type="text"
+                  placeholder={t('beskeder.message_placeholder')}
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  className="flex-1 bg-transparent border-none focus:outline-none text-sm text-white/90 placeholder:text-white/30"
                 />
-                <div className="flex-1 relative">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder={t('beskeder.message_placeholder')}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/50"
-                  />
-                  <button
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors"
-                    title="Emoji"
-                  >
-                    <Smile size={18} />
-                  </button>
-                  {showEmojiPicker && (
-                    <div
-                      ref={emojiPickerRef}
-                      className="absolute bottom-12 right-0 z-20 bg-[#1a1f2e] border border-white/10 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                    >
-                      {/* Emoji picker would go here */}
-                    </div>
-                  )}
-                </div>
                 <button
-                  onClick={handleSendMessage}
-                  disabled={!messageText.trim() || sending}
-                  className="p-2.5 bg-[#4ECDC4] text-[#0a0f1a] rounded-lg hover:bg-[#3db8af] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title="Send"
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-1.5 text-white/30 hover:text-[#4ECDC4] transition-colors"
+                  aria-label="emoji"
                 >
-                  <Send size={18} />
+                  <Smile size={16} />
                 </button>
-              </div>
+                <button
+                  type="submit"
+                  disabled={!messageText.trim() || sending}
+                  className="p-2 bg-[#4ECDC4] text-[#0a0f1a] rounded-xl hover:bg-[#3dbdb5] transition-all disabled:opacity-40"
+                >
+                  <Send size={16} />
+                </button>
+              </form>
             </div>
           </>
         ) : (
+          /* No conversation selected */
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <MessageCircle size={48} className="text-white/10 mx-auto mb-4" />
-              <p className="text-white/30">{t('beskeder.select_conversation')}</p>
+            <div className="text-center space-y-4 max-w-xs">
+              <MessageCircle size={48} className="text-white/10 mx-auto" />
+              <h3 className="text-white/40 font-semibold">{t('beskeder.select_conversation')}</h3>
+              <p className="text-white/20 text-sm">
+                {t('beskeder.or_start_new')}
+              </p>
+              <button
+                onClick={() => setShowNewConvo(true)}
+                className="px-5 py-2.5 rounded-xl bg-[#4ECDC4]/15 text-[#4ECDC4] text-sm font-semibold hover:bg-[#4ECDC4]/25 transition-all"
+              >
+                {t('beskeder.new_conversation')}
+              </button>
             </div>
           </div>
         )}
+
+        {/* WebRTC Call Modal */}
+        <CallModal
+          callState={webrtc.callState}
+          localStream={webrtc.localStream}
+          remoteStream={webrtc.remoteStream}
+          isMuted={webrtc.isMuted}
+          isVideoOff={webrtc.isVideoOff}
+          callDuration={webrtc.callDuration}
+          isVideo={isVideoCall}
+          otherUserName={activeConvo?.otherUser.display_name ?? "Ukendt"}
+          onAccept={webrtc.acceptCall}
+          onEnd={webrtc.endCall}
+          onToggleMute={webrtc.toggleMute}
+          onToggleVideo={webrtc.toggleVideo}
+        />
       </div>
 
-      {/* CallModal component */}
-      <CallModal
-        callState={webrtc.callState}
-        localStream={webrtc.localStream}
-        remoteStream={webrtc.remoteStream}
-        isMuted={webrtc.isMuted}
-        isVideoOff={webrtc.isVideoOff}
-        callDuration={webrtc.callDuration}
-        isVideo={isVideoCall}
-        otherUserName={activeConvo?.otherUser.display_name ?? "Ukendt"}
-        onAccept={webrtc.acceptCall}
-        onEnd={webrtc.endCall}
-        onToggleMute={webrtc.toggleMute}
-        onToggleVideo={webrtc.toggleVideo}
-      />
+      {/* ── Right Column - News Sidebar ── */}
+      <div className="w-80 px-6 py-8 space-y-6 overflow-y-auto hidden xl:flex flex-col custom-scrollbar border-l border-white/10">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Newspaper size={16} className="text-[#4ECDC4]" />
+              <h3 className="text-sm font-bold">{t('beskeder.latest_news')}</h3>
+            </div>
+            <span className="text-[11px] font-bold text-[#4ECDC4] bg-[#4ECDC4]/10 px-2 py-0.5 rounded-full">LIVE</span>
+          </div>
+          {newsLoading ? (
+            <div className="space-y-3">
+              {[1,2,3].map(i => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-3 bg-white/10 rounded mb-1.5 w-full" />
+                  <div className="h-2 bg-white/5 rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : allNews.length > 0 ? (
+            <div className="space-y-3">
+              {allNews.slice(0, 6).map(news => (
+                <a
+                  key={news.link}
+                  href={news.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex gap-3 hover:bg-white/5 rounded-xl p-1.5 -mx-1.5 transition-all"
+                >
+                  {news.image && (
+                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                      <img src={news.image} alt="" className="w-full h-full object-cover opacity-80" loading="lazy" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-white/80 group-hover:text-[#4ECDC4] transition-colors line-clamp-2 mb-1">{news.title}</p>
+                    <div className="flex items-center gap-1 text-[11px] text-white/30">
+                      <span>{news.sourceEmoji} {news.source}</span>
+                      <span>•</span>
+                      <span>{formatNewsTime(news.pubDate)}</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-white/30 text-center py-4">{t('beskeder.no_news')}</p>
+          )}
+        </div>
+      </div>
+
+      {/* ── New Conversation Modal ── */}
+      {showNewConvo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onKeyDown={(e) => { if (e.key === 'Escape') { setShowNewConvo(false); setUserSearch(''); setUserResults([]); } }} tabIndex={-1} ref={(el) => el?.focus()}>
+          <div className="bg-[#0d1225] border border-white/10 rounded-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+              <h2 className="text-white font-bold">{t('beskeder.new_conversation')}</h2>
+              <button
+                onClick={() => { setShowNewConvo(false); setUserSearch(""); setUserResults([]); }}
+                className="p-1.5 text-white/40 hover:text-white rounded-lg hover:bg-white/5 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={14} />
+                <input
+                  type="text"
+                  placeholder={t('beskeder.search_user_placeholder')}
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  autoFocus
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/50"
+                />
+              </div>
+
+              {convoError && (
+                <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm text-center mb-2">
+                  {convoError}
+                </div>
+              )}
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {searchingUsers ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 size={18} className="animate-spin text-white/30" />
+                  </div>
+                ) : userSearch.trim() && userResults.length === 0 ? (
+                  <p className="text-center py-8 text-white/30 text-sm">{t('beskeder.no_users_found')}</p>
+                ) : (
+                  userResults.map(u => (
+                    <button
+                      key={u.user_id}
+                      onClick={() => startConversation(u.user_id)}
+                      disabled={startingConvo === u.user_id}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left ${startingConvo === u.user_id ? "opacity-50 cursor-wait" : ""}`}
+                    >
+                      {startingConvo === u.user_id ? (
+                        <Loader2 size={20} className="w-10 h-10 animate-spin text-[#4ECDC4]" />
+                      ) : (
+                        <img
+                          src={defaultAvatar(u.display_name)}
+                          alt={u.display_name ?? ""}
+                          className="w-10 h-10 rounded-xl object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                      <span className="text-white/80 text-sm font-medium">
+                        {startingConvo === u.user_id ? "Opretter samtale..." : (u.display_name ?? t('beskeder.unknown'))}
+                      </span>
+                    </button>
+                  ))
+                )}
+                {!userSearch.trim() && (
+                  <p className="text-center py-8 text-white/20 text-xs">
+                    {t('beskeder.type_name_to_search')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        @keyframes fade-in-out {
+          0%, 100% { opacity: 0; }
+          10%, 90% { opacity: 1; }
+        }
+        .animate-fade-in-out {
+          animation: fade-in-out 2s ease-in-out forwards;
+        }
+      `}</style>
     </div>
   );
 }
