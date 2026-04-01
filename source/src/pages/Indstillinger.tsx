@@ -321,16 +321,25 @@ export default function Indstillinger() {
       style={{ background: "#060a0f" }}
       data-testid="indstillinger-page"
     >
-      <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent)" }}>
-        <button onClick={() => setLocation("/min-side")} className="w-9 h-9 rounded-full glass-card flex items-center justify-center"><ArrowLeft size={18} className="text-white" /></button>
-        <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('settings.title')}</h1>
+      <div className="sticky top-0 z-30 pt-12 pb-3 px-5 flex items-center gap-3" style={{ background: "linear-gradient(to bottom, rgba(6,10,15,0.95) 70%, transparent)" }}>
+        <button onClick={() => setLocation("/min-side")} className="w-9 h-9 rounded-full glass-card flex items-center justify-center hover:bg-white/10 transition-colors"><ArrowLeft size={18} className="text-white/70" /></button>
+        <div>
+          <div className="eyebrow" style={{ fontSize: "9px", letterSpacing: "2px" }}>
+            <div className="eyebrow-line" style={{ width: "16px" }} />
+            B-Social
+          </div>
+          <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "20px", letterSpacing: "-0.4px" }} className="text-white leading-tight">{t('settings.title')}</h1>
+        </div>
       </div>
 
       <div className="px-5 mt-2 space-y-5">
         {/* Profile preview */}
-        <div className="glass-card-strong rounded-2xl p-4 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-[#4ECDC4] to-[#059669] flex items-center justify-center">
-            <span className="text-white text-lg font-bold">{displayName[0].toUpperCase()}</span>
+        <div className="glass-card rounded-2xl p-4 flex items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 teal-glow"
+            style={{ background: "linear-gradient(135deg, rgba(78,205,196,0.2), rgba(147,197,253,0.15))", border: "1px solid rgba(78,205,196,0.3)" }}
+          >
+            <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", color: "#4ECDC4", fontSize: "18px" }}>{displayName[0].toUpperCase()}</span>
           </div>
           <div className="flex-1">
             <h3 className="text-white font-semibold text-sm">{displayName}</h3>

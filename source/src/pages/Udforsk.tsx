@@ -393,15 +393,19 @@ export default function Udforsk() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] rounded-full pointer-events-none" style={{ background: "radial-gradient(ellipse at center, rgba(78,205,196,0.08) 0%, transparent 70%)" }} />
 
       {/* ── Header ── */}
-      <div className="sticky top-0 z-30 pt-12 pb-3 px-5" style={{ background: "linear-gradient(to bottom, #060a0f 80%, transparent)" }}>
-        <div className="mb-3">
-          <h1 className="text-white text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.5px" }}>{t('udforsk.title')}</h1>
-          <p className="text-white/50 text-sm">{t('udforsk.subtitle')}</p>
+      <div className="sticky top-0 z-30 pt-12 pb-3 px-5" style={{ background: "linear-gradient(to bottom, #060a0f 85%, transparent)" }}>
+        <div className="mb-3 fade-up">
+          <div className="eyebrow mb-2">
+            <div className="eyebrow-line" />
+            {t('nav.udforsk')}
+          </div>
+          <h1 className="text-white" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "26px", letterSpacing: "-0.5px" }}>{t('udforsk.title')}</h1>
+          <p className="text-white/45 text-sm mt-0.5">{t('udforsk.subtitle')}</p>
         </div>
 
         {/* Big search bar */}
-        <div className="relative">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+        <div className="relative fade-up delay-1">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" />
           <input
             ref={searchRef}
             type="search"
@@ -409,7 +413,8 @@ export default function Udforsk() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setSearchFocused(true)}
-            className="w-full pl-10 pr-10 py-3 rounded-2xl bg-white/10 border border-white/10 text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/50"
+            className="premium-input w-full pl-11 pr-10 text-white placeholder:text-white/35 text-sm focus:outline-none"
+            style={{ paddingLeft: "44px" }}
             data-testid="input-search"
           />
           {(search || searchFocused) && (

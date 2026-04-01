@@ -694,8 +694,8 @@ export default function Kort() {
               placeholder={t('map.search_places')}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
-              className="w-full pl-10 pr-8 py-2.5 rounded-xl text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/50"
-              style={{ background: "rgba(20, 26, 55, 0.9)", border: "1px solid rgba(255,255,255,0.1)" }}
+              className="premium-input w-full pl-10 pr-8 text-sm text-white placeholder:text-white/35 focus:outline-none"
+              style={{ paddingLeft: "40px", paddingTop: "10px", paddingBottom: "10px" }}
               data-testid="input-search-map"
             />
             {search && (

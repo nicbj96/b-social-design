@@ -807,25 +807,32 @@ export default function Beskeder() {
     <div className="flex h-full bg-[#060a0f] text-white overflow-hidden">
       {/* ── Conversation list (left panel) ── */}
       <div className={`w-full md:w-72 border-r border-white/10 flex flex-col flex-shrink-0 ${activeConvoId ? 'hidden md:flex' : 'flex'}`}>
-        <div className="px-6 pt-8 pb-4 border-b border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-serif" style={{ fontWeight: 400 }}>{t('beskeder.title')}</h1>
+        <div className="px-5 pt-8 pb-4 border-b border-white/8">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="eyebrow mb-1">
+                <div className="eyebrow-line" />
+                B-Social
+              </div>
+              <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "22px", letterSpacing: "-0.4px" }} className="text-white leading-tight">{t('beskeder.title')}</h1>
+            </div>
             <button
               onClick={() => setShowNewConvo(true)}
-              className="w-8 h-8 rounded-lg bg-[#4ECDC4]/15 text-[#4ECDC4] flex items-center justify-center hover:bg-[#4ECDC4]/25 transition-colors"
+              className="w-9 h-9 rounded-xl bg-[#4ECDC4]/15 text-[#4ECDC4] flex items-center justify-center hover:bg-[#4ECDC4]/25 transition-colors"
               title={t('beskeder.new_conversation')}
             >
               <Plus size={16} />
             </button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={14} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 z-10" size={14} />
             <input
               type="search"
               placeholder={t('beskeder.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/50"
+              className="premium-input w-full pl-10 text-sm text-white placeholder:text-white/30 focus:outline-none"
+              style={{ paddingLeft: "40px", paddingTop: "10px", paddingBottom: "10px" }}
             />
           </div>
         </div>

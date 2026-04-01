@@ -129,7 +129,8 @@ export default function FirmaEvents() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('firma.events_title')}</h1>
+            <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
+            <h1 className="text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }}>{t('firma.events_title')}</h1>
             <p className="text-muted-foreground text-sm mt-1">{t('firma.events_subtitle')}</p>
           </div>
           <div className="flex gap-2">
@@ -150,23 +151,23 @@ export default function FirmaEvents() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('firma.events_label_title')}</label>
-                <input type="text" placeholder={t('firma.events_placeholder_title')} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-primary" />
+                <input type="text" placeholder={t('firma.events_placeholder_title')} className="premium-input" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('firma.events_label_date')}</label>
-                <input type="date" className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-primary" />
+                <input type="date" className="premium-input" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('firma.events_label_location')}</label>
-                <input type="text" placeholder={t('firma.events_placeholder_address')} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-primary" />
+                <input type="text" placeholder={t('firma.events_placeholder_address')} className="premium-input" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('firma.events_label_tags')}</label>
-                <input type="text" placeholder={t('firma.events_placeholder_tags')} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-primary" />
+                <input type="text" placeholder={t('firma.events_placeholder_tags')} className="premium-input" />
               </div>
               <div className="md:col-span-2">
                 <label className="text-sm text-muted-foreground mb-1 block">{t('firma.events_label_description')}</label>
-                <textarea rows={3} placeholder={t('firma.events_placeholder_description')} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-primary resize-none" />
+                <textarea rows={3} placeholder={t('firma.events_placeholder_description')} className="premium-input resize-none" />
               </div>
             </div>
             <div className="flex gap-3">
@@ -181,7 +182,7 @@ export default function FirmaEvents() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-2.5 text-muted-foreground" />
-            <input type="text" placeholder={t('firma.events_search_placeholder')} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-primary" />
+            <input type="text" placeholder={t('firma.events_search_placeholder')} value={search} onChange={(e) => setSearch(e.target.value)} className="premium-input pl-9" />
           </div>
           <div className="flex gap-2">
             {(["alle", "aktiv", "draft", "promoted", "afsluttet"] as const).map((s) => (

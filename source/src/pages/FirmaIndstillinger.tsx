@@ -88,7 +88,10 @@ export default function FirmaIndstillinger() {
         <button onClick={() => setLocation("/firma")} className="w-9 h-9 rounded-full glass-card flex items-center justify-center">
           <ArrowLeft size={18} className="text-white" />
         </button>
-        <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('firma.settings_title')}</h1>
+        <div>
+          <div className="eyebrow mb-1" style={{ fontSize: "11px" }}><div className="eyebrow-line"/>B-Social Firma</div>
+          <h1 className="text-white text-xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.5px" }}>{t('firma.settings_title')}</h1>
+        </div>
       </div>
 
       <div className="px-5 mt-2 space-y-5">

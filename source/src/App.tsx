@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Switch, Route, Router, Redirect } from "wouter";
 import { useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
@@ -115,6 +115,104 @@ function RootRouter() {
   if (isOnboarding) return <Suspense fallback={<PageLoader />}><Onboarding /></Suspense>;
   return <MainRouter />;
 }
+/* ── Premium cursor (desktop pointer:fine only) ── */
+function PremiumCursor() {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const ringPos = useRef({ x: 0, y: 0 });
+  const mousePos = useRef({ x: 0, y: 0 });
+  const rafId = useRef<number>(0);
+
+  useEffect(() => {
+    // Only activate on pointer:fine devices (desktop)
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    document.body.classList.add("premium-cursor-active");
+
+    const onMove = (e: MouseEvent) => {
+      mousePos.current = { x: e.clientX, y: e.clientY };
+      if (cursorRef.current) {
+        cursorRef.current.style.left = e.clientX + "px";
+        cursorRef.current.style.top = e.clientY + "px";
+      }
+    };
+
+    const animate = () => {
+      ringPos.current.x += (mousePos.current.x - ringPos.current.x) * 0.12;
+      ringPos.current.y += (mousePos.current.y - ringPos.current.y) * 0.12;
+      if (ringRef.current) {
+        ringRef.current.style.left = ringPos.current.x + "px";
+        ringRef.current.style.top = ringPos.current.y + "px";
+      }
+      rafId.current = requestAnimationFrame(animate);
+    };
+
+    const onEnter = () => {
+      cursorRef.current?.classList.add("hovering");
+      ringRef.current?.classList.add("hovering");
+    };
+    const onLeave = () => {
+      cursorRef.current?.classList.remove("hovering");
+      ringRef.current?.classList.remove("hovering");
+    };
+
+    document.addEventListener("mousemove", onMove);
+    rafId.current = requestAnimationFrame(animate);
+
+    const attachHover = () => {
+      document.querySelectorAll("a, button, [role='button'], .chip, .event-card, .premium-chip, .premium-event-card").forEach(el => {
+        el.addEventListener("mouseenter", onEnter);
+        el.addEventListener("mouseleave", onLeave);
+      });
+    };
+    attachHover();
+    // Re-attach when DOM changes
+    const mo = new MutationObserver(attachHover);
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(rafId.current);
+      document.body.classList.remove("premium-cursor-active");
+      mo.disconnect();
+    };
+  }, []);
+
+  return (
+    <>
+      <div ref={cursorRef} className="b-cursor" aria-hidden="true" />
+      <div ref={ringRef} className="b-cursor-ring" aria-hidden="true" />
+    </>
+  );
+}
+
+/* ── Scroll-reveal observer (fade-up elements) ── */
+function ScrollReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target); // fire once
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    const attach = () => {
+      document.querySelectorAll(".fade-up:not(.visible)").forEach(el => observer.observe(el));
+    };
+    attach();
+    const mo = new MutationObserver(attach);
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => { observer.disconnect(); mo.disconnect(); };
+  }, []);
+
+  return null;
+}
+
 function App() {
   useReferralCapture();
   return (
@@ -131,6 +229,8 @@ function App() {
                 <AIChatWidget />
                 <EmailCaptureFooter />
                 <EmailCaptureExitIntent />
+                <PremiumCursor />
+                <ScrollReveal />
               </JoinProvider>
             </NotificationProvider>
           </TagProvider>

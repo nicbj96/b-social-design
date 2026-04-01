@@ -185,7 +185,8 @@ export default function FirmaTargeting() {
     <FirmaLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('firma.targeting_title')}</h1>
+          <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
+          <h1 className="text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }}>{t('firma.targeting_title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('firma.targeting_subtitle')}
             {totalUsers > 0 && <span className="ml-1">({totalUsers.toLocaleString()} {t('firma.targeting_users_in_database')})</span>}
@@ -208,7 +209,7 @@ export default function FirmaTargeting() {
                   placeholder={t('firma.targeting_search_tags')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-primary"
+                  className="premium-input pl-9"
                 />
               </div>
 
@@ -322,7 +323,7 @@ export default function FirmaTargeting() {
                       placeholder={t('firma.targeting_save_as_preset')}
                       value={presetName}
                       onChange={(e) => setPresetName(e.target.value)}
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs focus:outline-none focus:border-primary"
+                      className="premium-input flex-1 text-xs"
                     />
                     <button
                       onClick={savePreset}

@@ -353,19 +353,23 @@ export default function FirmaDashboard() {
     <FirmaLayout>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-up">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-serif text-white tracking-tight" style={{ fontWeight: 400 }}>{company.name}</h1>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#4ECDC4]/15 text-[#4ECDC4] border border-[#4ECDC4]/20">
-                {company.plan === "vaekst" ? "Vækst" : company.plan === "partner" ? "Partner" : "Starter"} · {company.plan === "vaekst" ? "5%" : company.plan === "partner" ? "3%" : "0%"} {t('firma.revenue_share')}
+            <div className="eyebrow mb-2">
+              <div className="eyebrow-line" />
+              {t('firma.welcome_back')}
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="section-h2">{company.name}</h1>
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide teal-glow-sm"
+                style={{ background: "rgba(78,205,196,0.12)", color: "#4ECDC4", border: "1px solid rgba(78,205,196,0.2)" }}>
+                {company.plan === "vaekst" ? "Vækst" : company.plan === "partner" ? "Partner" : "Starter"}
               </span>
             </div>
-            <p className="text-white/40">{t('firma.welcome_back')}</p>
           </div>
           <Link href="/firma/events">
-            <a className="bg-[#4ECDC4] hover:bg-[#3dbdb5] text-[#0a1929] px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-[#4ECDC4]/20 flex items-center gap-2 w-fit">
-              <Plus size={20} />
+            <a className="btn-premium" style={{ borderRadius: "12px", padding: "12px 24px" }}>
+              <Plus size={18} />
               {t('firma.create_event')}
             </a>
           </Link>
@@ -383,18 +387,20 @@ export default function FirmaDashboard() {
         )}
 
         {/* Stat cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {STAT_CARDS.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.label} className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 rounded-lg bg-white/5 text-white/60">
-                    <Icon size={20} />
+              <div key={stat.label} className="stat-card">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                    style={{ background: "rgba(78,205,196,0.08)", border: "1px solid rgba(78,205,196,0.12)" }}>
+                    <Icon size={17} className="text-[#4ECDC4]" />
                   </div>
+                  <ArrowUpRight size={14} className="text-white/15" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">{stat.value.toLocaleString("da-DK")}</div>
-                <div className="text-xs text-white/40 font-medium uppercase tracking-wider">{stat.label}</div>
+                <div className="stat-num">{stat.value.toLocaleString("da-DK")}</div>
+                <div className="stat-label mt-1">{stat.label}</div>
               </div>
             );
           })}

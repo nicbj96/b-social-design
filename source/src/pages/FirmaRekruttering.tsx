@@ -280,7 +280,8 @@ export default function FirmaRekruttering() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-serif flex items-center gap-2" style={{ fontWeight: 400 }}>
+            <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
+            <h1 className="text-2xl flex items-center gap-2" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }}>
               <Users size={24} className="text-primary" />
               {t('recruitment.title')}
             </h1>
@@ -297,21 +298,21 @@ export default function FirmaRekruttering() {
 
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="glass-card rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{positions.filter((p) => p.status === "open").length}</div>
-            <div className="text-xs text-muted-foreground mt-1">{t('recruitment.stats.openRoles')}</div>
+          <div className="stat-card text-center">
+            <div className="stat-num text-primary">{positions.filter((p) => p.status === "open").length}</div>
+            <div className="stat-label">{t('recruitment.stats.openRoles')}</div>
           </div>
-          <div className="glass-card rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">{positions.filter((p) => p.is_volunteer).length}</div>
-            <div className="text-xs text-muted-foreground mt-1">{t('recruitment.stats.volunteers')}</div>
+          <div className="stat-card text-center">
+            <div className="stat-num text-purple-400">{positions.filter((p) => p.is_volunteer).length}</div>
+            <div className="stat-label">{t('recruitment.stats.volunteers')}</div>
           </div>
-          <div className="glass-card rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">{positions.reduce((a, p) => a + p.applicants, 0)}</div>
-            <div className="text-xs text-muted-foreground mt-1">{t('recruitment.stats.applicants')}</div>
+          <div className="stat-card text-center">
+            <div className="stat-num text-blue-400">{positions.reduce((a, p) => a + p.applicants, 0)}</div>
+            <div className="stat-label">{t('recruitment.stats.applicants')}</div>
           </div>
-          <div className="glass-card rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-emerald-400">{allProfiles.length}</div>
-            <div className="text-xs text-muted-foreground mt-1">{t('recruitment.stats.userProfiles')}</div>
+          <div className="stat-card text-center">
+            <div className="stat-num text-emerald-400">{allProfiles.length}</div>
+            <div className="stat-label">{t('recruitment.stats.userProfiles')}</div>
           </div>
         </div>
 
@@ -350,7 +351,7 @@ export default function FirmaRekruttering() {
                       placeholder={t('recruitment.searchPlaceholder')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-primary/50"
+                      className="premium-input pl-9"
                     />
                   </div>
                   <div className="flex gap-1.5">

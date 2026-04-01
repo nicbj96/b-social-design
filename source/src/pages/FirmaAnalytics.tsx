@@ -248,7 +248,8 @@ export default function FirmaAnalytics() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('firma.analytics_title')}</h1>
+            <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
+            <h1 className="text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }}>{t('firma.analytics_title')}</h1>
             <p className="text-muted-foreground text-sm mt-1">{t('firma.analytics_subtitle')}</p>
           </div>
           <div className="flex gap-1 bg-white/5 rounded-lg p-1">
@@ -281,13 +282,13 @@ export default function FirmaAnalytics() {
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.label} className="glass-card rounded-xl p-4">
+              <div key={stat.label} className="stat-card">
                 <div className="flex items-center justify-between mb-2">
                   <Icon size={18} className="text-primary" />
                   {stat.note && <span className="text-[11px] text-white/30 font-medium">{stat.note}</span>}
                 </div>
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+                <p className="stat-num">{stat.value}</p>
+                <p className="stat-label">{stat.label}</p>
               </div>
             );
           })}

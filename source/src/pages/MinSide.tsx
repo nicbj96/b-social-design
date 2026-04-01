@@ -74,51 +74,70 @@ export default function TestMinSide() {
     : "2026";
 
   return (
-    <div className="min-h-screen bg-[#060a0f] text-white pb-20">
-      <div className="bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] p-6 pb-16">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('profile.my_page')}</h1>
-          <Link href="/indstillinger">
-            <button className="p-2 bg-white/20 rounded-xl hover:bg-white/30">
-              <Settings size={20} />
-            </button>
-          </Link>
+    <div className="min-h-screen bg-[#060a0f] text-white pb-24">
+      {/* Premium dark profile hero */}
+      <div className="relative overflow-hidden pb-20 pt-6">
+        {/* Ambient background */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 30% 0%, rgba(78,205,196,0.07) 0%, transparent 65%)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 60% 50% at 80% 100%, rgba(147,197,253,0.04) 0%, transparent 60%)" }} />
         </div>
-        <div className="flex items-center gap-4">
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt={displayName} className="w-20 h-20 rounded-full object-cover border-2 border-white/30" loading="lazy" />
-          ) : (
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-[#4ECDC4] text-3xl font-bold">
-              {displayInitial}
+        <div className="relative px-5">
+          <div className="flex items-center justify-between mb-8">
+            <div className="eyebrow">
+              <div className="eyebrow-line" />
+              {t('profile.my_page')}
             </div>
-          )}
-          <div>
-            <h2 className="text-2xl font-bold">{displayName}</h2>
-            <p className="text-white/80 flex items-center gap-1 text-sm">
-              <MapPin size={14} /> {displayCity}
-            </p>
-            <p className="text-white/60 text-xs mt-1">{t('profile.member_since')} {joinedDate}</p>
+            <Link href="/indstillinger">
+              <button className="w-9 h-9 rounded-full glass-card flex items-center justify-center hover:bg-white/10 transition-colors">
+                <Settings size={17} className="text-white/60" />
+              </button>
+            </Link>
+          </div>
+          <div className="flex items-end gap-5">
+            {/* Avatar */}
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={displayName}
+                className="w-20 h-20 rounded-2xl object-cover avatar-ring flex-shrink-0"
+                loading="lazy"
+              />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl font-bold teal-glow"
+                style={{ background: "linear-gradient(135deg, rgba(78,205,196,0.2), rgba(147,197,253,0.15))", border: "1px solid rgba(78,205,196,0.3)", fontFamily: "'Instrument Serif', Georgia, serif", color: "#4ECDC4" }}
+              >
+                {displayInitial}
+              </div>
+            )}
+            <div className="flex-1 min-w-0 pb-1">
+              <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "26px", letterSpacing: "-0.5px" }} className="text-white leading-tight truncate">
+                {displayName}
+              </h2>
+              <p className="text-white/45 flex items-center gap-1 text-sm mt-1">
+                <MapPin size={13} className="text-[#4ECDC4]" /> {displayCity}
+              </p>
+              <p className="text-white/25 text-xs mt-0.5">{t('profile.member_since')} {joinedDate}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-6 -mt-10">
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <Calendar size={20} className="mx-auto mb-2 text-[#4ECDC4]" />
-            <p className="text-2xl font-bold">{events.length}</p>
-            <p className="text-xs text-white/50">{t('profile.events_count')}</p>
-          </div>
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <Users size={20} className="mx-auto mb-2 text-[#4ECDC4]" />
-            <p className="text-2xl font-bold">{friendCount !== null ? friendCount : (profile?.connections ?? 0)}</p>
-            <p className="text-xs text-white/50">{t('profile.friends_count')}</p>
-          </div>
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <Award size={20} className="mx-auto mb-2 text-[#4ECDC4]" />
-            <p className="text-2xl font-bold">{selectedTags.length || uniqueCategories}</p>
-            <p className="text-xs text-white/50">{t('profile.tags_count')}</p>
-          </div>
+      <div className="px-5 -mt-10 space-y-4">
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3 mb-2">
+          {[
+            { icon: Calendar, value: events.length, label: t('profile.events_count') },
+            { icon: Users, value: friendCount !== null ? friendCount : (profile?.connections ?? 0), label: t('profile.friends_count') },
+            { icon: Award, value: selectedTags.length || uniqueCategories, label: t('profile.tags_count') },
+          ].map(({ icon: Icon, value, label }) => (
+            <div key={label} className="stat-card text-center">
+              <Icon size={16} className="mx-auto mb-2 text-[#4ECDC4] opacity-70" />
+              <div className="stat-num" style={{ fontSize: "26px" }}>{value}</div>
+              <div className="stat-label">{label}</div>
+            </div>
+          ))}
         </div>
 
         <div className="glass-card rounded-2xl p-4 mb-6">

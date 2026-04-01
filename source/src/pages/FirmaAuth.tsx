@@ -190,7 +190,8 @@ export default function FirmaAuth() {
           <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center mb-4">
             <Building2 size={28} className="text-[#4ECDC4]" />
           </div>
-          <h1 className="text-white text-2xl font-bold">{t('firma.become_firma')}</h1>
+          <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
+          <h1 className="text-white text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, letterSpacing: "-0.5px" }}>{t('firma.become_firma')}</h1>
           <p className="text-white/50 text-sm mt-1 text-center">
             {t('firma.start_free')}
           </p>
@@ -234,7 +235,7 @@ export default function FirmaAuth() {
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="F.eks. Aalborg Fitness"
                     required
-                    className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                    className="premium-input"
                   />
                 </div>
 
@@ -247,7 +248,7 @@ export default function FirmaAuth() {
                     placeholder="12345678"
                     required
                     maxLength={8}
-                    className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                    className="premium-input"
                   />
                 </div>
 
@@ -260,7 +261,7 @@ export default function FirmaAuth() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="kontakt@firma.dk"
                       required
-                      className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                      className="premium-input"
                     />
                   </div>
                   <div className="space-y-1">
@@ -270,7 +271,7 @@ export default function FirmaAuth() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+45 12 34 56 78"
-                      className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                      className="premium-input"
                     />
                   </div>
                 </div>

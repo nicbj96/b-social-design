@@ -75,69 +75,80 @@ export default function Auth() {
 
   return (
     <div
-      className="relative min-h-svh flex flex-col"
+      className="relative min-h-svh flex flex-col overflow-hidden"
       data-testid="auth-page"
-      style={{
-        background: "#060a0f",
-      }}
+      style={{ background: "#060a0f" }}
     >
-      {/* Subtle teal gradient glow at top */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(ellipse at center top, rgba(78,205,196,0.06) 0%, transparent 60%)",
-          pointerEvents: "none",
-        }}
-      />
+      {/* Ambient background layers */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        {/* Radial teal glow top-center */}
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 45% at 50% -5%, rgba(78,205,196,0.09) 0%, transparent 65%)" }} />
+        {/* Blue ambient bottom-right */}
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 50% 40% at 90% 100%, rgba(147,197,253,0.05) 0%, transparent 60%)" }} />
+        {/* Subtle grid texture */}
+        <div style={{
+          position: "absolute", inset: 0, opacity: 0.018,
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+      </div>
+
       {/* Back button */}
-      <div className="pt-12 px-5">
+      <div className="relative pt-12 px-5">
         <button
           onClick={() => window.history.back()}
-          className="w-9 h-9 rounded-full glass-card flex items-center justify-center"
+          className="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-white/10 transition-colors"
           data-testid="button-back"
         >
-          <ArrowLeft size={18} className="text-white" />
+          <ArrowLeft size={18} className="text-white/70" />
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center px-6 pb-16">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 rounded-2xl glass-card-strong flex items-center justify-center mb-4">
-            <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10" aria-label="B-Social logo">
-              <circle cx="20" cy="20" r="17" stroke="#4ECDC4" strokeWidth="1.5" opacity="0.6" />
-              <path d="M20 8 L22.5 18 L20 16 L17.5 18 Z" fill="#4ECDC4" />
-              <path d="M20 32 L17.5 22 L20 24 L22.5 22 Z" fill="rgba(255,255,255,0.4)" />
-              <circle cx="20" cy="20" r="2" fill="#4ECDC4" />
+      <div className="relative flex-1 flex flex-col justify-center px-6 pb-16 max-w-sm mx-auto w-full">
+        {/* Logo + heading */}
+        <div className="flex flex-col items-center mb-10 fade-up">
+          {/* Logo mark */}
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 teal-glow"
+            style={{ background: "linear-gradient(135deg, rgba(78,205,196,0.15), rgba(147,197,253,0.1))", border: "1px solid rgba(78,205,196,0.2)" }}
+          >
+            <svg viewBox="0 0 40 40" fill="none" className="w-9 h-9" aria-label="B-Social logo">
+              <circle cx="20" cy="20" r="16" stroke="#4ECDC4" strokeWidth="1.2" opacity="0.5" />
+              <path d="M20 7 L23 17 L20 15 L17 17 Z" fill="#4ECDC4" />
+              <path d="M20 33 L17 23 L20 25 L23 23 Z" fill="rgba(255,255,255,0.35)" />
+              <circle cx="20" cy="20" r="2.5" fill="#4ECDC4" />
             </svg>
           </div>
-          <h1 className="text-white text-2xl font-serif" style={{ fontWeight: 400 }}>
+          {/* Eyebrow */}
+          <div className="eyebrow mb-3">
+            <div className="eyebrow-line" />
+            B-Social
+            <div className="eyebrow-line" />
+          </div>
+          <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "28px", letterSpacing: "-0.5px" }} className="text-white">
             {mode === "login" ? t('auth.login') : t('auth.signup')}
           </h1>
-          <p className="text-white/50 text-sm mt-1">
-            {mode === "login"
-              ? t('auth.welcome_back')
-              : t('auth.join_bsocial')}
+          <p className="text-white/45 text-sm mt-2 text-center leading-relaxed">
+            {mode === "login" ? t('auth.welcome_back') : t('auth.join_bsocial')}
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 fade-up delay-1">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm text-center" data-testid="error-message">
+            <div className="p-3.5 rounded-2xl bg-red-500/15 border border-red-500/25 text-red-300 text-sm text-center" data-testid="error-message">
               {error}
             </div>
           )}
           {successMsg && (
-            <div className="p-3 rounded-xl bg-[#4ECDC4]/20 border border-[#4ECDC4]/30 text-[#4ECDC4] text-sm text-center" data-testid="success-message">
+            <div className="p-3.5 rounded-2xl bg-[#4ECDC4]/15 border border-[#4ECDC4]/25 text-[#4ECDC4] text-sm text-center" data-testid="success-message">
               {successMsg}
             </div>
           )}
 
           {mode === "signup" && (
-            <div className="space-y-1">
-              <label className="text-white/60 text-xs font-medium pl-1">{t('auth.name')}</label>
+            <div className="space-y-1.5">
+              <label className="text-white/50 text-xs font-medium pl-1 uppercase tracking-wider">{t('auth.name')}</label>
               <input
                 type="text"
                 value={name}
@@ -146,14 +157,14 @@ export default function Auth() {
                 required
                 onInvalid={(e) => { const t = e.target as HTMLInputElement; if (t.validity.valueMissing) t.setCustomValidity('Indtast venligst dit navn'); else t.setCustomValidity(''); }}
                 onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
-                className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                className="premium-input"
                 data-testid="input-name"
               />
             </div>
           )}
 
-          <div className="space-y-1">
-            <label className="text-white/60 text-xs font-medium pl-1">{t('auth.email')}</label>
+          <div className="space-y-1.5">
+            <label className="text-white/50 text-xs font-medium pl-1 uppercase tracking-wider">{t('auth.email')}</label>
             <input
               type="email"
               value={email}
@@ -162,13 +173,13 @@ export default function Auth() {
               required
               onInvalid={(e) => { const t = e.target as HTMLInputElement; if (t.validity.valueMissing) t.setCustomValidity('Udfyld venligst din e-mail'); else if (t.validity.typeMismatch) t.setCustomValidity('Indtast en gyldig e-mailadresse'); else t.setCustomValidity(''); }}
               onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
-              className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+              className="premium-input"
               data-testid="input-email"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-white/60 text-xs font-medium pl-1">{t('auth.password')}</label>
+          <div className="space-y-1.5">
+            <label className="text-white/50 text-xs font-medium pl-1 uppercase tracking-wider">{t('auth.password')}</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -179,54 +190,49 @@ export default function Auth() {
                 minLength={6}
                 onInvalid={(e) => { const t = e.target as HTMLInputElement; if (t.validity.valueMissing) t.setCustomValidity('Indtast venligst en adgangskode'); else if (t.validity.tooShort) t.setCustomValidity('Adgangskoden skal være mindst 6 tegn'); else t.setCustomValidity(''); }}
                 onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
-                className="w-full px-4 py-3.5 pr-12 rounded-2xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-1 focus:ring-[#4ECDC4]/60 focus:border-[#4ECDC4]/40 transition-all"
+                className="premium-input pr-12"
+                style={{ paddingRight: "48px" }}
                 data-testid="input-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/65 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 data-testid="button-toggle-password"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </div>
             {mode === "signup" && (
-              <p className="text-white/30 text-xs pl-1">{t('auth.min_password')}</p>
+              <p className="text-white/25 text-xs pl-1">{t('auth.min_password')}</p>
             )}
             {mode === "login" && (
               <button
                 type="button"
                 disabled={resetLoading || !email.trim()}
                 onClick={async () => {
-                  if (!email.trim()) {
-                    setSuccessMsg(t('auth.error_enter_email_for_reset'));
-                    return;
-                  }
-                  setResetLoading(true);
-                  setError(null);
-                  setSuccessMsg(null);
+                  if (!email.trim()) { setSuccessMsg(t('auth.error_enter_email_for_reset')); return; }
+                  setResetLoading(true); setError(null); setSuccessMsg(null);
                   const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: window.location.origin + window.location.pathname + "?returnTo=/auth",
                   });
                   setResetLoading(false);
-                  if (resetErr) {
-                    setError(resetErr.message);
-                  } else {
-                    setSuccessMsg(t('auth.reset_email_sent'));
-                  }
+                  if (resetErr) setError(resetErr.message);
+                  else setSuccessMsg(t('auth.reset_email_sent'));
                 }}
-                className="text-[#4ECDC4] text-xs font-medium pl-1 hover:underline mt-1 py-2 inline-block disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                className="text-[#4ECDC4] text-xs font-medium pl-1 hover:underline mt-1.5 py-1.5 inline-block disabled:opacity-35 disabled:cursor-not-allowed transition-opacity"
               >
                 {resetLoading ? t('auth.sending_reset') : t('auth.forgot')}
               </button>
             )}
           </div>
 
+          {/* Submit button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-2xl bg-[#4ECDC4] text-[#0a0f1a] font-semibold text-base hover:bg-[#3dbdb5] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-[#4ECDC4]/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2"
+            className="btn-premium w-full mt-2 py-4 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ borderRadius: "16px" }}
             data-testid="button-submit-auth"
           >
             {loading && <Loader2 size={18} className="animate-spin" />}
@@ -237,15 +243,11 @@ export default function Auth() {
         </form>
 
         {/* Toggle mode */}
-        <p className="text-center text-white/50 text-sm mt-5">
+        <p className="text-center text-white/45 text-sm mt-6 fade-up delay-2">
           {mode === "login" ? t('auth.no_account') + " " : t('auth.has_account') + " "}
           <span
             className="text-[#4ECDC4] font-semibold cursor-pointer hover:underline"
-            onClick={() => {
-              setMode(mode === "login" ? "signup" : "login");
-              setError(null);
-              setSuccessMsg(null);
-            }}
+            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(null); setSuccessMsg(null); }}
             data-testid="link-toggle-mode"
           >
             {mode === "login" ? t('auth.signup') : t('auth.login')}
@@ -253,10 +255,10 @@ export default function Auth() {
         </p>
 
         {/* Divider */}
-        <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-white/30 text-xs">{t('auth.or')}</span>
-          <div className="flex-1 h-px bg-white/10" />
+        <div className="flex items-center gap-3 my-6 fade-up delay-2">
+          <div className="flex-1 h-px bg-white/8" />
+          <span className="text-white/25 text-xs px-1">{t('auth.or')}</span>
+          <div className="flex-1 h-px bg-white/8" />
         </div>
 
         {/* Google OAuth */}
@@ -264,13 +266,12 @@ export default function Auth() {
           onClick={async () => {
             const { error } = await supabase.auth.signInWithOAuth({
               provider: "google",
-              options: {
-                redirectTo: window.location.origin + window.location.pathname + "?returnTo=/feed",
-              },
+              options: { redirectTo: window.location.origin + window.location.pathname + "?returnTo=/feed" },
             });
             if (error) setError(error.message);
           }}
-          className="w-full py-3.5 rounded-2xl glass-card text-white font-medium text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-3"
+          className="w-full py-3.5 rounded-2xl glass-card text-white/80 font-medium text-sm hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 fade-up delay-3"
+          style={{ border: "1px solid rgba(255,255,255,0.1)" }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -284,16 +285,16 @@ export default function Auth() {
         {/* Continue without login */}
         <button
           onClick={() => setLocation("/feed")}
-          className="w-full py-3.5 rounded-2xl glass-card text-white/60 font-medium text-sm hover:text-white hover:bg-white/10 transition-all"
+          className="w-full py-3.5 rounded-2xl text-white/40 font-medium text-sm hover:text-white/70 hover:bg-white/5 transition-all mt-2 fade-up delay-3"
           data-testid="button-continue-without-login"
         >
           {t('auth.guest')}
         </button>
 
-        <p className="text-center text-white/30 text-xs mt-6 leading-relaxed">
+        <p className="text-center text-white/25 text-xs mt-6 leading-relaxed fade-up delay-4">
           {t('auth.terms_agree')}{" "}
-          <span className="text-white/50 underline cursor-pointer">{t('auth.terms')}</span> og{" "}
-          <span className="text-white/50 underline cursor-pointer">{t('auth.privacy')}</span>
+          <span className="text-white/40 underline cursor-pointer">{t('auth.terms')}</span> og{" "}
+          <span className="text-white/40 underline cursor-pointer">{t('auth.privacy')}</span>
         </p>
       </div>
     </div>

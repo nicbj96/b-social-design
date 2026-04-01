@@ -400,26 +400,36 @@ export default function Onboarding() {
       style={{ background: "#060a0f" }}
       data-testid="onboarding-page"
     >
-      <div className="flex gap-2 px-8 pt-14 pb-2">
-        {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
-          <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-300 ${s <= step ? "bg-[#4ECDC4]" : "bg-white/15"}`} />
-        ))}
-      </div>
-      <div className="px-8 pb-1">
-        <span className="text-white/25 text-xs font-medium">{t('common.step_of', { step, total: totalSteps })}</span>
+      {/* Premium progress bar */}
+      <div className="px-6 pt-14 pb-2">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="eyebrow" style={{ marginBottom: 0 }}>
+            <div className="eyebrow-line" />
+            Onboarding
+          </div>
+          <span className="text-white/25 text-xs font-medium">{t('common.step_of', { step, total: totalSteps })}</span>
+        </div>
+        <div className="progress-bar-track">
+          <div className="progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
+        </div>
       </div>
 
       <div className="flex-1 px-6 pt-3 pb-8 flex flex-col overflow-hidden">
 
         {step === 1 && (
           <>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#4ECDC4]/15 flex items-center justify-center">
-                <MapPin size={20} className="text-[#4ECDC4]" />
+            <div className="mb-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center teal-glow-sm"
+                  style={{ background: "rgba(78,205,196,0.1)", border: "1px solid rgba(78,205,196,0.2)" }}>
+                  <MapPin size={18} className="text-[#4ECDC4]" />
+                </div>
               </div>
               <div>
-                <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('onboarding.where_experience')}</h1>
-                <p className="text-white/40 text-sm">{t('onboarding.select_cities')}</p>
+                <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }} className="text-white leading-tight">
+                  {t('onboarding.where_experience')}
+                </h1>
+                <p className="text-white/40 text-sm mt-1">{t('onboarding.select_cities')}</p>
               </div>
             </div>
 
@@ -505,14 +515,17 @@ export default function Onboarding() {
 
         {step === 2 && (
           <>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-[#4ECDC4]/15 flex items-center justify-center">
-                <Sparkles size={20} className="text-[#4ECDC4]" />
+            <div className="mb-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center teal-glow-sm"
+                  style={{ background: "rgba(78,205,196,0.1)", border: "1px solid rgba(78,205,196,0.2)" }}>
+                  <Sparkles size={18} className="text-[#4ECDC4]" />
+                </div>
               </div>
-              <div>
-                <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('onboarding.what_interests')}</h1>
-                <p className="text-white/40 text-sm">{t('onboarding.select_interests')}</p>
-              </div>
+              <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }} className="text-white leading-tight">
+                {t('onboarding.what_interests')}
+              </h1>
+              <p className="text-white/40 text-sm mt-1">{t('onboarding.select_interests')}</p>
             </div>
 
             <div className="relative mb-3">
@@ -584,14 +597,17 @@ export default function Onboarding() {
 
         {step === 3 && (
           <>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#4ECDC4]/15 flex items-center justify-center">
-                <Compass size={20} className="text-[#4ECDC4]" />
+            <div className="mb-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center teal-glow-sm"
+                  style={{ background: "rgba(78,205,196,0.1)", border: "1px solid rgba(78,205,196,0.2)" }}>
+                  <Compass size={18} className="text-[#4ECDC4]" />
+                </div>
               </div>
-              <div>
-                <h1 className="text-white text-xl font-serif" style={{ fontWeight: 400 }}>{t('onboarding.how_far')}</h1>
-                <p className="text-white/40 text-sm">{t('onboarding.set_radius')}</p>
-              </div>
+              <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }} className="text-white leading-tight">
+                {t('onboarding.how_far')}
+              </h1>
+              <p className="text-white/40 text-sm mt-1">{t('onboarding.set_radius')}</p>
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center">

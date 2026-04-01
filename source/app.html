@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="da" class="dark">
+  <head>
+    <meta name="author" content="B-Social">
+    <meta name='impact-site-verification' value='fd66c59f-5fb0-4cbc-b3bb-8f20cb2ac990'>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+
+    <!-- SEO -->
+    <title>B-Social – Oplev verden sammen</title>
+    <meta name="description" content="B-Social er appen til at finde og dele oplevelser i hele Danmark. Find events, steder, aktiviteter og mød nye mennesker." />
+    <meta name="keywords" content="B-Social, oplevelser, events, Danmark, Aalborg, aktiviteter, fællesskab, social app" />
+    <link rel="canonical" href="https://b-social.net/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="B-Social" />
+    <meta property="og:title" content="B-Social – Oplev verden sammen" />
+    <meta property="og:description" content="Find oplevelser, mød mennesker og del din verden med B-Social." />
+    <meta property="og:url" content="https://b-social.net/" />
+    <meta property="og:image" content="https://b-social.net/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="da_DK" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="B-Social – Oplev verden sammen" />
+    <meta name="twitter:description" content="Find oplevelser, mød mennesker og del din verden med B-Social." />
+    <meta name="twitter:image" content="https://b-social.net/og-image.png" />
+
+    <!-- Favicons & PWA -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="theme-color" content="#0D1117" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="B-Social" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "B-Social",
+      "url": "https://b-social.net",
+      "description": "B-Social er appen til at finde og dele oplevelser i hele Danmark.",
+      "applicationCategory": "SocialNetworkingApplication",
+      "operatingSystem": "Web",
+      "inLanguage": ["da", "en"],
+      "creator": {
+        "@type": "Organization",
+        "name": "B-Social",
+        "url": "https://b-social.net"
+      }
+    }
+    </script>
+
+    <!-- Google Analytics (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3CDPN9650F"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-3CDPN9650F');
+    </script>
+
+    <!-- Cookie Consent Banner (inline, lightweight) -->
+    <style>
+      #cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:100000;background:rgba(13,18,32,0.97);border-top:1px solid rgba(255,255,255,0.1);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:system-ui,sans-serif;font-size:13px;color:rgba(255,255,255,0.7);backdrop-filter:blur(12px);transform:translateY(calc(100% + 120px));transition:transform 0.3s ease;}
+      @media (max-width: 768px) { #cookie-banner { bottom: 64px !important; flex-wrap:wrap; justify-content:center; gap:8px; padding:14px 16px; } #cookie-banner span { text-align:center; width:100%; } #cookie-banner div { width:100%; display:flex; gap:8px; } #cookie-banner button { flex:1; } }
+      #cookie-banner.visible{transform:translateY(0);}
+      #cookie-banner button{padding:10px 18px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;min-height:44px;min-width:44px;}
+      #cookie-accept{background:#4ECDC4;color:#0a0f1a;}
+      #cookie-decline{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
+      body.cookie-banner-open [data-chat-widget],body.cookie-banner-open [data-email-footer]{display:none !important;}
+    </style>
+
+    <!-- External CSS -->
+    <!-- Leaflet CSS is imported directly in Kort.tsx via "leaflet/dist/leaflet.css" -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "B-Social",
+      "url": "https://b-social.net",
+      "logo": "https://b-social.net/og-image.png",
+      "description": "B-Social hjælper dig med at finde events, aktiviteter og oplevelser der matcher dine interesser. Mød nye mennesker og udforsk din by.",
+      "sameAs": []
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">B-Social – Oplev verden sammen – Find events, steder og oplevelser i Danmark og hele verden</h1>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Cookie Consent Logic -->
+    <div id="cookie-banner">
+      <span>Vi bruger cookies for at forbedre din oplevelse. <a href="/privatlivspolitik" style="color:#4ECDC4;text-decoration:underline;padding:8px 4px;display:inline-block;min-height:44px;line-height:28px;">Læs mere</a></span>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button id="cookie-decline">Afvis</button>
+        <button id="cookie-accept">Acceptér</button>
+      </div>
+    </div>
+    <script>
+      (function(){
+        var consent = localStorage.getItem('b-social-cookie-consent');
+        var banner = document.getElementById('cookie-banner');
+        if (!consent && banner) {
+          setTimeout(function(){ banner.classList.add('visible'); document.body.classList.add('cookie-banner-open'); }, 1000);
+          document.getElementById('cookie-accept').addEventListener('click', function(){
+            localStorage.setItem('b-social-cookie-consent', 'accepted');
+            banner.classList.remove('visible'); document.body.classList.remove('cookie-banner-open');
+          });
+          document.getElementById('cookie-decline').addEventListener('click', function(){
+            localStorage.setItem('b-social-cookie-consent', 'declined');
+            banner.classList.remove('visible'); document.body.classList.remove('cookie-banner-open');
+          });
+        }
+      })();
+    </script>
+
+    <!-- Self-destructing Service Worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('sw.js').then(function(reg) {
+            console.log('SW registered (self-destruct):', reg.scope);
+          }).catch(function(err) {
+            console.log('SW registration failed:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -205,7 +205,8 @@ export default function FirmaFakturering() {
     <FirmaLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-serif" style={{ fontWeight: 400 }}>{t('pricing.billing_title')}</h1>
+          <div className="eyebrow mb-2"><div className="eyebrow-line"/>B-Social Firma</div>
+          <h1 className="text-2xl" style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "24px", letterSpacing: "-0.5px" }}>{t('pricing.billing_title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('pricing.billing_desc')}
           </p>
@@ -243,17 +244,17 @@ export default function FirmaFakturering() {
 
         {/* Monthly revenue overview */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="glass-card rounded-xl p-4">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{t('pricing.your_revenue')}</p>
-            <p className="text-2xl font-bold">{monthlyRevenue.toLocaleString("da-DK")} kr</p>
+          <div className="stat-card">
+            <p className="stat-label uppercase">{t('pricing.your_revenue')}</p>
+            <p className="stat-num">{monthlyRevenue.toLocaleString("da-DK")} kr</p>
           </div>
-          <div className="glass-card rounded-xl p-4">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{t('pricing.bsocial_share', { pct: currentPlanDef.revenueShare })}</p>
-            <p className="text-2xl font-bold">{bsocialShare.toLocaleString("da-DK")} kr</p>
+          <div className="stat-card">
+            <p className="stat-label uppercase">{t('pricing.bsocial_share', { pct: currentPlanDef.revenueShare })}</p>
+            <p className="stat-num">{bsocialShare.toLocaleString("da-DK")} kr</p>
           </div>
-          <div className="glass-card rounded-xl p-4">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{t('pricing.your_profit')}</p>
-            <p className="text-2xl font-bold text-emerald-400">{(monthlyRevenue - bsocialShare).toLocaleString("da-DK")} kr</p>
+          <div className="stat-card">
+            <p className="stat-label uppercase">{t('pricing.your_profit')}</p>
+            <p className="stat-num text-emerald-400">{(monthlyRevenue - bsocialShare).toLocaleString("da-DK")} kr</p>
           </div>
         </div>
 
