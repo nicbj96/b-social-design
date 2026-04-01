@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Globe } from 'lucide-react';
 
 const STORAGE_KEY = 'b-social-language';
 
@@ -59,10 +60,10 @@ export function LanguageSwitcher({ variant = 'toggle', className = '' }: Languag
   if (variant === 'toggle') {
     return (
       <div
-        className={`inline-flex items-center rounded-2xl p-1 gap-1 ${className}`}
+        className={`inline-flex items-center rounded-2xl p-1.5 gap-1 ${className}`}
         style={{
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.10)',
+          background: 'rgba(255,255,255,0.08)',
+          border: '1.5px solid rgba(78, 205, 196, 0.25)',
         }}
         role="group"
         aria-label="Language switcher"
@@ -75,17 +76,17 @@ export function LanguageSwitcher({ variant = 'toggle', className = '' }: Languag
               onClick={() => changeLanguage(lang.code)}
               aria-pressed={isActive}
               aria-label={`Switch to ${lang.label}`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 select-none"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 select-none"
               style={{
                 background: isActive
-                  ? 'rgba(78, 205, 196, 0.20)'
+                  ? 'rgba(78, 205, 196, 0.25)'
                   : 'transparent',
-                color: isActive ? '#4ECDC4' : 'rgba(255,255,255,0.45)',
+                color: isActive ? '#FFF' : 'rgba(255,255,255,0.70)',
                 border: isActive
-                  ? '1px solid rgba(78,205,196,0.35)'
-                  : '1px solid transparent',
+                  ? '1.5px solid rgba(78,205,196,0.50)'
+                  : '1.5px solid transparent',
                 boxShadow: isActive
-                  ? '0 0 8px rgba(78,205,196,0.15)'
+                  ? '0 0 12px rgba(78,205,196,0.25)'
                   : 'none',
               }}
             >
@@ -108,14 +109,14 @@ export function LanguageSwitcher({ variant = 'toggle', className = '' }: Languag
         aria-haspopup="listbox"
         aria-expanded={dropdownOpen}
         aria-label="Select language"
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 select-none"
+        className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 select-none"
         style={{
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: 'rgba(255,255,255,0.70)',
+          background: 'rgba(78, 205, 196, 0.15)',
+          border: '1.5px solid rgba(78, 205, 196, 0.35)',
+          color: '#FFF',
         }}
       >
-        <span role="img" aria-hidden="true">{activeLang.flag}</span>
+        <Globe size={16} />
         <span>{activeLang.label}</span>
         {/* Chevron */}
         <svg
@@ -157,10 +158,10 @@ export function LanguageSwitcher({ variant = 'toggle', className = '' }: Languag
                 <li key={lang.code} role="option" aria-selected={isActive}>
                   <button
                     onClick={() => changeLanguage(lang.code)}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-left transition-colors duration-150"
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-left transition-colors duration-150"
                     style={{
-                      color: isActive ? '#4ECDC4' : 'rgba(255,255,255,0.65)',
-                      background: isActive ? 'rgba(78,205,196,0.10)' : 'transparent',
+                      color: isActive ? '#FFF' : 'rgba(255,255,255,0.75)',
+                      background: isActive ? 'rgba(78,205,196,0.20)' : 'transparent',
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {

@@ -9,6 +9,7 @@ import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlacesInViewport, fetchEvents, type Place, type Event as SupabaseEvent, type MapBounds } from "@/lib/supabase";
 import { useTranslation } from 'react-i18next';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Prevent Leaflet from injecting default marker image (red pin)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -17,7 +18,7 @@ L.Icon.Default.mergeOptions({ iconUrl: '', iconRetinaUrl: '', shadowUrl: '' });
 import { Search, X, Plus, Minus, Navigation, Star, ExternalLink, Users, MapPin as MapPinIcon } from "lucide-react";
 
 import { OPLEVELSER_NAER_DIG } from "@/data/feedData";
-import { searchTags } from "@/lib/tagTree";
+import { lazyLoadTagFunctions } from "@/lib/lazyDataLoader";
 import { useJoin } from "@/context/JoinContext";
 import { useTags } from "@/context/TagContext";
 import { Link } from "wouter";
@@ -662,9 +663,23 @@ export default function Kort() {
   const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
   const [flyTo, setFlyTo] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [showLayer, setShowLayer] = useState<"alle" | "steder" | "events" | "hoteller">("alle");
+  const [tagSearchCache, setTagSearchCache] = useState<{ [query: string]: any[] }>({});
   const [mapCountry, setMapCountry] = useState<string>('DK');
   const searchRef = useRef<HTMLInputElement>(null);
 
+
+  // Lazy load tag search function on demand
+  useEffect(() => {
+    if (search && !tagSearchCache[search.toLowerCase()]) {
+      lazyLoadTagFunctions().then(({ searchTags }) => {
+        const results = searchTags(search.toLowerCase());
+        setTagSearchCache(prev => ({
+          ...prev,
+          [search.toLowerCase()]: results
+        }));
+      });
+    }
+  }, [search, tagSearchCache]);
   // Dynamic user location from profile city
   const [USER_LAT, USER_LNG] = CITY_COORDS[city] || [DEFAULT_LAT, DEFAULT_LNG];
 
@@ -676,12 +691,15 @@ export default function Kort() {
   const cachedPlaceIdsRef = useRef<Set<string>>(new Set());
 
   // Fetch places within current viewport bounds with debounce
+  const isMobile = useIsMobile();
+
   const fetchViewportPlaces = async (bounds: MapBounds) => {
     try {
       setIsLoadingViewport(true);
       const newPlaces = await fetchPlacesInViewport(
         bounds,
-        mapCountry && mapCountry !== 'ALL' ? (mapCountry === 'DK' ? 'Denmark' : mapCountry) : undefined
+        mapCountry && mapCountry !== 'ALL' ? (mapCountry === 'DK' ? 'Denmark' : mapCountry) : undefined,
+        isMobile
       );
 
       // Merge with existing places, avoiding duplicates
@@ -726,7 +744,7 @@ export default function Kort() {
   const { data: supabaseEvents } = useQuery<SupabaseEvent[]>({
     queryKey: ["supabase-events-map"],
     queryFn: fetchEvents,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 min — events change often
   });
 
   // Convert events to pins
@@ -772,8 +790,8 @@ export default function Kort() {
         // Supabase events may have a country field via the event's country
         return true; // all pins are shown (hardcoded pins are all DK-based)
       }
-      // Tag-tree-aware search
-      const tagResults = searchTags(q);
+      // Tag-tree-aware search (lazy loaded on demand)
+      const tagResults = tagSearchCache[q] || [];
       const expandedTerms = [q, ...tagResults.map(item => item.tag.toLowerCase()), ...tagResults.map(item => item.label.toLowerCase())];
       const desc = p.descriptionKey && typeof p.descriptionKey === 'string' ? (typeof t(p.descriptionKey) === 'string' ? t(p.descriptionKey) as string : (p.description || '')) : (p.description || "");
       return expandedTerms.some(term =>
@@ -953,10 +971,13 @@ export default function Kort() {
         <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
         <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
 
-        {/* Clustered pins */}
+        {/* Clustered pins — mobile optimized */}
         <MarkerClusterGroup
           chunkedLoading
-          maxClusterRadius={50}
+          chunkInterval={100}
+          chunkDelay={50}
+          maxClusterRadius={isMobile ? 60 : 80}
+          disableClusteringAtZoom={isMobile ? 17 : 18}
           spiderfyOnMaxZoom
           showCoverageOnHover={false}
           iconCreateFunction={(cluster: any) => {

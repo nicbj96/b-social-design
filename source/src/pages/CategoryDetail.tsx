@@ -9,14 +9,10 @@ import { getCategoryEmoji, getEventImage, formatDanishDate } from "@/lib/eventHe
 
 import { useJoin } from "@/context/JoinContext";
 import { getCategoryByKey, ALL_CATEGORIES } from "@/data/categories";
-import {
-  getCategoryPlaces, getCategoryActivities,
-  getSubcategoryPlaces, getSubcategoryActivities,
-  SUBCATEGORY_INFO,
-  type CategoryPlace, type CategoryActivity,
-} from "@/data/categoryContent";
 import { fetchPlaces, fetchEvents as fetchSupabaseEvents, type Place } from "@/lib/supabase";
-import { TAG_TREE, searchTags, type TagNode } from "@/lib/tagTree";
+import type { TagNode } from "@/lib/tagTree";
+import { lazyLoadTagTree, lazyLoadTagFunctions, lazyLoadCategoryFunctions } from "@/lib/lazyDataLoader";
+import type { CategoryPlace, CategoryActivity } from "@/data/categoryContent";
 
 /* ═══════════════════════════════════════════════
    SMART SEARCH ENGINE
@@ -49,28 +45,30 @@ const CATEGORY_TAG_MAP: Record<string, string[]> = {
 };
 
 /** Get all tag-tree tags relevant to a category */
-function getCategoryRelatedTags(categoryKey: string): string[] {
+function getCategoryRelatedTags(categoryKey: string, tagTree: any): string[] {
   const base = CATEGORY_TAG_MAP[categoryKey] || [];
   const expanded: string[] = [...base];
+  if (!tagTree) return expanded;
   for (const tag of base) {
-    const parent = TAG_TREE.find(p => p.tag === tag);
+    const parent = tagTree.find((p: any) => p.tag === tag);
     if (parent?.children) {
-      expanded.push(...parent.children.map(c => c.tag));
+      expanded.push(...parent.children.map((c: any) => c.tag));
     }
   }
   return [...new Set(expanded)];
 }
 
 /** Smart search suggestions from tag tree within category context */
-function getSmartSuggestions(query: string, categoryKey: string): TagNode[] {
+function getSmartSuggestions(query: string, categoryKey: string, tagTree: any): TagNode[] {
   if (!query.trim()) return [];
   const q = query.toLowerCase().trim();
-  const relatedTags = getCategoryRelatedTags(categoryKey);
+  const relatedTags = getCategoryRelatedTags(categoryKey, tagTree);
   
   const results: TagNode[] = [];
   const seen = new Set<string>();
   
-  for (const parent of TAG_TREE) {
+  if (!tagTree || !Array.isArray(tagTree)) return [];
+  for (const parent of tagTree) {
     // Check parent match
     if (parent.tag.includes(q) || parent.label.toLowerCase().includes(q)) {
       // Only show if relevant to this category
@@ -347,6 +345,23 @@ function SuggestionChip({ node, onClick }: { node: TagNode; onClick: () => void 
    ═══════════════════════════════════════════════ */
 export default function CategoryDetail() {
   const { t } = useTranslation();
+
+  // Lazy load data
+  const [tagTree, setTagTree] = useState<any>(null);
+  const [categoryFunctions, setCategoryFunctions] = useState<any>(null);
+
+  useEffect(() => {
+    // Load both datasets on component mount
+    Promise.all([
+      lazyLoadTagTree(),
+      lazyLoadCategoryFunctions()
+    ]).then(([tree, funcs]) => {
+      setTagTree(tree);
+      setCategoryFunctions(funcs);
+    }).catch(err => console.error('Error loading data:', err));
+  }, []);
+
+  
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/kategori/:category");
   const category = params?.category || "";
@@ -373,25 +388,27 @@ export default function CategoryDetail() {
   const { joinEvent, leaveEvent, isJoined } = useJoin();
 
   /* ── Data sources ── */
-  const { data: allJsonEvents } = useQuery<Event[]>({ queryKey: ["events"], queryFn: () => Promise.resolve(getEvents()) });
-  const { data: supabasePlaces } = useQuery<Place[]>({ queryKey: ["supabase-places-500"], queryFn: () => fetchPlaces({ limit: 500 }), staleTime: 5 * 60 * 1000 });
-  const { data: supabaseEvents } = useQuery({ queryKey: ["supabase-events"], queryFn: fetchSupabaseEvents, staleTime: 5 * 60 * 1000 });
+  const { data: allJsonEvents } = useQuery<Event[]>({ queryKey: ["events"], queryFn: () => Promise.resolve(getEvents()), staleTime: 2 * 60 * 1000 });
+  const { data: supabasePlaces } = useQuery<Place[]>({ queryKey: ["supabase-places-500"], queryFn: () => fetchPlaces({ limit: 500 }), staleTime: 30 * 60 * 1000 });
+  const { data: supabaseEvents } = useQuery({ queryKey: ["supabase-events"], queryFn: fetchSupabaseEvents, staleTime: 2 * 60 * 1000 });
 
   /* ── Smart suggestions from tag tree ── */
   const suggestions = useMemo(() => {
-    return getSmartSuggestions(searchQuery, category);
-  }, [searchQuery, category]);
+    return getSmartSuggestions(searchQuery, category, tagTree);
+  }, [searchQuery, category, tagTree]);
 
   /* ── Rich content from categoryContent.ts ── */
   const places = useMemo(() => {
-    if (activeSub) return getSubcategoryPlaces(category, activeSub);
-    return getCategoryPlaces(category);
-  }, [category, activeSub]);
+    if (!categoryFunctions) return [];
+    if (activeSub) return categoryFunctions.getSubcategoryPlaces(category, activeSub);
+    return categoryFunctions.getCategoryPlaces(category);
+  }, [category, activeSub, categoryFunctions]);
 
   const activities = useMemo(() => {
-    if (activeSub) return getSubcategoryActivities(category, activeSub);
-    return getCategoryActivities(category);
-  }, [category, activeSub]);
+    if (!categoryFunctions) return [];
+    if (activeSub) return categoryFunctions.getSubcategoryActivities(category, activeSub);
+    return categoryFunctions.getCategoryActivities(category);
+  }, [category, activeSub, categoryFunctions]);
 
   /* ── Matching events from events.json ── */
   const matchingEvents = useMemo(() => {
@@ -430,7 +447,7 @@ export default function CategoryDetail() {
   const matchingSupabasePlaces = useMemo(() => {
     if (!supabasePlaces) return [];
     const q = searchQuery.toLowerCase().trim();
-    const relatedTags = getCategoryRelatedTags(category);
+    const relatedTags = getCategoryRelatedTags(category, tagTree);
     
     return supabasePlaces.filter(p => {
       const cats = (p.main_categories || []).map(c => c.toLowerCase());
@@ -483,8 +500,8 @@ export default function CategoryDetail() {
   const subCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const sub of subcats) {
-      const p = getSubcategoryPlaces(category, sub.key).length;
-      const a = getSubcategoryActivities(category, sub.key).length;
+      const p = categoryFunctions?.getSubcategoryPlaces(category, sub.key)?.length || 0;
+      const a = categoryFunctions?.getSubcategoryActivities(category, sub.key)?.length || 0;
       counts[sub.key] = p + a;
     }
     return counts;

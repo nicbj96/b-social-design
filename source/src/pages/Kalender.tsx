@@ -46,7 +46,7 @@ export default function Kalender() {
   const { data: supabaseEvents, isLoading } = useQuery<SupabaseEvent[]>({
     queryKey: ["supabase-events"],
     queryFn: fetchEvents,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 min — events change often
   });
 
   // Build combined event dates from Supabase + static

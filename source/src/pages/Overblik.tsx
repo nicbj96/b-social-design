@@ -19,13 +19,13 @@ export default function Overblik() {
   const { data: places } = useQuery<Place[]>({
     queryKey: ["supabase-places-overview"],
     queryFn: () => fetchPlaces({ limit: 500 }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 min — places don't change often
   });
 
   const { data: events } = useQuery<SupabaseEvent[]>({
     queryKey: ["supabase-events"],
     queryFn: fetchEvents,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 min — events change often
   });
 
   // Build category stats from Supabase places

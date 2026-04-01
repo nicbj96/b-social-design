@@ -28,6 +28,7 @@ export default function TestMinSide() {
   const { data: events = [] } = useQuery({
     queryKey: ["/api/events"],
     queryFn: getEvents,
+    staleTime: 5 * 60 * 1000, // 5 min — global default fine for profile page
   });
 
   // Show upcoming events as suggestions (filter out past events)

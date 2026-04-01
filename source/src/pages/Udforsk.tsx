@@ -201,7 +201,7 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   const { data: places, isLoading } = useQuery<Place[]>({
     queryKey: ["supabase-places-50"],
     queryFn: () => fetchPlacesWithLimit(50),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 min — places don't change often
   });
 
   const filteredPlaces = useMemo(() => {
@@ -328,6 +328,7 @@ export default function Udforsk() {
   const { data: events } = useQuery<Event[]>({
     queryKey: ["events"],
     queryFn: () => Promise.resolve(getEvents()),
+    staleTime: 2 * 60 * 1000, // 2 min — events change often
   });
 
   const allEvents = events || [];

@@ -35,6 +35,7 @@ export default function Feed() {
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["/api/events"],
     queryFn: getEvents,
+    staleTime: 5 * 60 * 1000, // 5 min — news feed is fine with global default
   });
 
   const [allNews, setAllNews] = useState<NewsItem[]>([]);

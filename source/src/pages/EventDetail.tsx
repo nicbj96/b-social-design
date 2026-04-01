@@ -59,6 +59,7 @@ export default function EventDetail() {
   const { data: event, isLoading } = useQuery<Event | null>({
     queryKey: ["event", id],
     queryFn: () => Promise.resolve(id ? getEventById(id) : null),
+    staleTime: 5 * 60 * 1000, // 5 min — global default is reasonable for single event detail
   });
 
   const handleJoin = () => {

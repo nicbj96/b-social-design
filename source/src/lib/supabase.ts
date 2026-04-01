@@ -207,8 +207,11 @@ export type MapBounds = {
   west: number;
 };
 
-/** Fetch places within viewport bounds (lightweight columns, limit 500) */
-export async function fetchPlacesInViewport(bounds: MapBounds, country?: string): Promise<Place[]> {
+/** Fetch places within viewport bounds (lightweight columns, limit 500 desktop / 200 mobile) */
+export async function fetchPlacesInViewport(bounds: MapBounds, country?: string, isMobile?: boolean): Promise<Place[]> {
+  // Reduce marker limit on mobile to improve clustering performance
+  const limit = isMobile ? 200 : 500;
+
   let query = supabase
     .from("places")
     .select("id,name,latitude,longitude,city,country,main_categories,tags,rating_avg")
@@ -219,7 +222,7 @@ export async function fetchPlacesInViewport(bounds: MapBounds, country?: string)
     .gte("longitude", bounds.west)
     .lte("longitude", bounds.east)
     .order("rating_avg", { ascending: false, nullsFirst: false })
-    .limit(500);
+    .limit(limit);
 
   if (country && country !== 'ALL') {
     query = query.eq("country", country);

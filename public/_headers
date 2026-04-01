@@ -1,7 +1,7 @@
 /* HTML pages – no cache, must always revalidate */
 /*.html
   Cache-Control: no-cache, must-revalidate
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://rbengtfrthqdfbcdcugp.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:; media-src 'self' https:; connect-src 'self' https://rbengtfrthqdfbcdcugp.supabase.co wss://rbengtfrthqdfbcdcugp.supabase.co https://*.tile.openstreetmap.org https://unpkg.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://rbengtfrthqdfbcdcugp.supabase.co 'sha256-4V7Ac70oD/Q6cDsrW+Qh2Za9r4W0KcZdluO3vpMwvzs='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:; media-src 'self' https:; connect-src 'self' https://rbengtfrthqdfbcdcugp.supabase.co wss://rbengtfrthqdfbcdcugp.supabase.co https://*.tile.openstreetmap.org https://unpkg.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   X-XSS-Protection: 1; mode=block
@@ -10,7 +10,7 @@
 
 /
   Cache-Control: no-cache, must-revalidate
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://rbengtfrthqdfbcdcugp.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:; media-src 'self' https:; connect-src 'self' https://rbengtfrthqdfbcdcugp.supabase.co wss://rbengtfrthqdfbcdcugp.supabase.co https://*.tile.openstreetmap.org https://unpkg.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://rbengtfrthqdfbcdcugp.supabase.co 'sha256-4V7Ac70oD/Q6cDsrW+Qh2Za9r4W0KcZdluO3vpMwvzs='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:; media-src 'self' https:; connect-src 'self' https://rbengtfrthqdfbcdcugp.supabase.co wss://rbengtfrthqdfbcdcugp.supabase.co https://*.tile.openstreetmap.org https://unpkg.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   X-XSS-Protection: 1; mode=block
