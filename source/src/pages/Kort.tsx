@@ -461,19 +461,28 @@ function MapRecenter({ center, zoom }: { center: [number, number]; zoom: number 
   return null;
 }
 
-/** Fix Leaflet tile rendering — invalidateSize on mount + resize */
+/** Fix Leaflet tile rendering — invalidateSize on mount + resize + visibility */
 function MapResizeFix() {
   const map = useMap();
   useEffect(() => {
-    // Immediate + delayed invalidateSize to handle async layout
-    map.invalidateSize();
-    const t1 = setTimeout(() => map.invalidateSize(), 100);
-    const t2 = setTimeout(() => map.invalidateSize(), 500);
+    // Aggressive invalidateSize chain to handle async layout & SPA transitions
+    const timers = [0, 50, 150, 300, 600, 1000, 2000].map(ms =>
+      setTimeout(() => map.invalidateSize({ animate: false }), ms)
+    );
     // ResizeObserver for sidebar/layout changes
     const container = map.getContainer();
-    const ro = new ResizeObserver(() => { map.invalidateSize(); });
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(() => map.invalidateSize({ animate: false }));
+    });
     ro.observe(container);
-    return () => { clearTimeout(t1); clearTimeout(t2); ro.disconnect(); };
+    // Also handle tab visibility changes
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        setTimeout(() => map.invalidateSize({ animate: false }), 100);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { timers.forEach(clearTimeout); ro.disconnect(); document.removeEventListener('visibilitychange', onVisible); };
   }, [map]);
   return null;
 }
@@ -971,10 +980,9 @@ export default function Kort() {
       <MapContainer
         center={[USER_LAT, USER_LNG]}
         zoom={12}
-        className="w-full h-full"
         zoomControl={false}
         attributionControl={false}
-        style={{ background: "#0D1220" }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#0D1220" }}
       >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
