@@ -275,6 +275,28 @@ export default function Feed() {
         </button>
       </div>
 
+      {/* ── MOBILE TAG STRIP (hidden on desktop) ── */}
+      <div className="fd-mobile-tags">
+        {trendingTags.slice(0, 8).map(({ tag }, i) => {
+          const node = getTagNode(tag);
+          const isActive = selectedTags.includes(tag);
+          const color = tagColors[i % tagColors.length];
+          return (
+            <button
+              key={tag}
+              onClick={() => {
+                if (isActive) setSelectedTags(selectedTags.filter(t => t !== tag));
+                else setSelectedTags([...selectedTags, tag]);
+              }}
+              className={`fd-mobile-tag ${isActive ? "active" : ""}`}
+              style={!isActive ? { color, borderColor: `${color}44` } : undefined}
+            >
+              #{node?.label || tag}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── MAIN GRID ── */}
       <div className="fd-grid">
         <div className="fd-main">
@@ -320,14 +342,17 @@ export default function Feed() {
 
         {/* ── SIDEBAR ── */}
         <aside className="fd-sidebar">
-          {/* Trending Tags — colorful */}
+          {/* Trending Tags — tag cloud */}
           <div className="fd-sidebar-card fd-fade-up fd-d2">
             <h3 className="fd-sidebar-card-title">Trending Tags</h3>
-            <div className="fd-trending-tags">
+            <div className="fd-tag-cloud">
               {trendingTags.map(({ tag, count }, i) => {
                 const node = getTagNode(tag);
                 const isActive = selectedTags.includes(tag);
                 const color = tagColors[i % tagColors.length];
+                const maxCount = trendingTags[0]?.count || 1;
+                const ratio = count / maxCount;
+                const fontSize = 13 + ratio * 16;
                 return (
                   <button
                     key={tag}
@@ -335,11 +360,10 @@ export default function Feed() {
                       if (isActive) setSelectedTags(selectedTags.filter(t => t !== tag));
                       else setSelectedTags([...selectedTags, tag]);
                     }}
-                    className={`fd-trending-tag ${isActive ? "active" : ""}`}
-                    style={!isActive ? { color, borderColor: `${color}33` } : undefined}
+                    className={`fd-cloud-tag ${isActive ? "active" : ""}`}
+                    style={{ color: isActive ? undefined : color, fontSize: `${fontSize}px` }}
                   >
                     #{node?.label || tag}
-                    <span className="fd-trending-count">{count}</span>
                   </button>
                 );
               })}
@@ -671,22 +695,37 @@ ${pageBase("fd")}
 .fd-news-ext { color: var(--pg-white-muted); flex-shrink: 0; margin-top: 4px; }
 .fd-news-item:hover .fd-news-ext { color: var(--pg-white-dim); }
 
-/* ── Trending tags — colorful ── */
-.fd-trending-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.fd-trending-tag {
-  font-size: 13px; padding: 7px 14px; border-radius: 100px;
+/* ── Tag cloud (varied sizes, no borders) ── */
+.fd-tag-cloud { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.fd-cloud-tag {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--sans); font-weight: 600;
+  transition: opacity 0.2s, transform 0.2s;
+  padding: 2px 0; line-height: 1.2;
+}
+.fd-cloud-tag:hover { opacity: 0.7; transform: scale(1.05); }
+.fd-cloud-tag.active {
+  color: var(--teal) !important;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* ── Mobile tag strip (hidden on desktop) ── */
+.fd-mobile-tags {
+  display: none; overflow-x: auto; gap: 8px; padding: 0 0 16px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.fd-mobile-tags::-webkit-scrollbar { display: none; }
+.fd-mobile-tag {
+  flex-shrink: 0; padding: 6px 14px; border-radius: 100px;
   background: transparent; border: 1px solid var(--glass-border);
-  cursor: pointer; transition: all 0.25s; font-family: var(--sans);
-  font-weight: 500;
+  font-size: 12px; font-weight: 500; font-family: var(--sans);
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
 }
-.fd-trending-tag:hover { background: rgba(255,255,255,0.05); }
-.fd-trending-tag.active {
+.fd-mobile-tag:hover { background: rgba(255,255,255,0.05); }
+.fd-mobile-tag.active {
   background: var(--teal); color: var(--bg) !important;
-  border-color: var(--teal) !important;
-  font-weight: 600; box-shadow: 0 4px 16px rgba(78,205,196,0.25);
+  border-color: var(--teal) !important; font-weight: 600;
 }
-.fd-trending-count { margin-left: 4px; opacity: 0.5; font-size: 10px; }
-.fd-trending-tag.active .fd-trending-count { opacity: 0.6; }
 
 /* ── Live Activity ── */
 .fd-activity-list { display: flex; flex-direction: column; gap: 4px; }
@@ -715,5 +754,7 @@ ${pageBase("fd")}
   .fd-cover-title { font-size: 26px; }
   .fd-masonry { column-count: 1; }
   .fd-masonry-card:nth-child(n) .fd-masonry-img { height: 220px; }
+  .fd-sidebar { display: none; }
+  .fd-mobile-tags { display: flex; }
 }
 `;
