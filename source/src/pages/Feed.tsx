@@ -165,9 +165,9 @@ export default function Feed() {
   const tagColors = ['#4ecdc4','#2dd4a8','#06b6d4','#22c55e','#14b8a6','#0ea5e9','#10b981'];
 
   const masonryEvents = useMemo(() => {
-    const sections = isAnonymous && tagSections.length === 0 ? filteredDemoSections : filteredTagSections;
-    if (sections.length === 0 && !isAnonymous) return [];
-    const src = sections.length > 0 ? sections : demoSections;
+    // Show tag-filtered events if user has tags, otherwise show all events (demo sections)
+    const hasUserTags = selectedTags.length > 0 && filteredTagSections.length > 0;
+    const src = hasUserTags ? filteredTagSections : (activeSearch ? filteredDemoSections : demoSections);
     const maxLen = Math.max(...src.map(s => s.events.length), 0);
     const result: typeof events = [];
     for (let i = 0; i < maxLen; i++) {
@@ -176,7 +176,7 @@ export default function Feed() {
       }
     }
     return result;
-  }, [isAnonymous, tagSections, filteredDemoSections, filteredTagSections, demoSections, events]);
+  }, [selectedTags, filteredTagSections, filteredDemoSections, demoSections, activeSearch]);
 
   if (isLoading) {
     return (
@@ -279,26 +279,22 @@ export default function Feed() {
       <div className="fd-grid">
         <div className="fd-main">
           {masonryEvents.length === 0 ? (
-            !isAnonymous && tagSections.length === 0 ? (
-              <div className="fd-empty fd-fade-up">
-                <div className="fd-empty-icon"><Compass size={28} /></div>
-                <h2 className="fd-empty-h2">{t('feed.get_started')}</h2>
-                <p className="fd-empty-p">
-                  {selectedTags.length === 0 ? t('feed.select_interests') : t('feed.no_events_for_tags')}
-                </p>
-                <div className="fd-empty-actions">
-                  <button onClick={() => setTagEditorOpen(true)} className="fd-btn">
-                    {selectedTags.length === 0 ? t('feed.select_interests_btn') : t('feed.edit_tags')}
-                  </button>
-                  <Link href="/udforsk" className="fd-btn-ghost">{t('feed.explore_all_events')}</Link>
-                </div>
-              </div>
-            ) : activeSearch ? (
+            activeSearch ? (
               <div className="fd-empty-search">
                 <Search size={32} />
                 <p>Ingen events fundet for "{activeSearch}"</p>
               </div>
-            ) : null
+            ) : (
+              <div className="fd-empty fd-fade-up">
+                <div className="fd-empty-icon"><Compass size={28} /></div>
+                <h2 className="fd-empty-h2">{t('feed.get_started')}</h2>
+                <p className="fd-empty-p">{t('feed.select_interests')}</p>
+                <div className="fd-empty-actions">
+                  <button onClick={() => setTagEditorOpen(true)} className="fd-btn">{t('feed.select_interests_btn')}</button>
+                  <Link href="/udforsk" className="fd-btn-ghost">{t('feed.explore_all_events')}</Link>
+                </div>
+              </div>
+            )
           ) : (
             <div className="fd-masonry">
               {masonryEvents.map((event) => (
