@@ -546,18 +546,18 @@ ${pageBase("fd")}
 .fd-grid {
   display: grid; grid-template-columns: 1fr; gap: 32px;
 }
-@media (min-width: 1024px) {
-  .fd-grid { grid-template-columns: 1fr 320px; }
+@media (min-width: 1200px) {
+  .fd-grid { grid-template-columns: 1fr 300px; }
 }
 
 /* ═══ MASONRY — CSS columns for Pinterest layout ═══ */
 .fd-masonry {
-  column-count: 3; column-gap: 16px;
+  column-count: 2; column-gap: 16px;
 }
 .fd-masonry > * {
   break-inside: avoid; margin-bottom: 16px;
 }
-@media (max-width: 1200px) { .fd-masonry { column-count: 2; } }
+@media (min-width: 1400px) { .fd-masonry { column-count: 3; } }
 @media (max-width: 600px)  { .fd-masonry { column-count: 1; } }
 
 /* ── Masonry card — image with overlay text ── */
