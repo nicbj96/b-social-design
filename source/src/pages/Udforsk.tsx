@@ -314,21 +314,38 @@ export default function Udforsk() {
     <div ref={containerRef} className="ud-root" data-testid="udforsk-page">
       <style>{udforskCSS}</style>
 
-      {/* Accent glow */}
-      <div className="ud-glow" />
+      {/* ── COVER HERO ── */}
+      <div className="ud-cover">
+        <img src="/udforsk-hero.png" alt="" />
+        <div className="ud-cover-overlay" />
+      </div>
 
-      {/* ── Sticky header ── */}
-      <div className="ud-sticky-header">
-        <div className="ud-header ud-fade-up">
-          <div className="ud-eyebrow">
-            <div className="ud-eyebrow-line" />
-            {t('nav.udforsk')}
-          </div>
-          <h1 className="ud-h1">{t('udforsk.title')}</h1>
-          <p className="ud-sub">{t('udforsk.subtitle')}</p>
+      {/* ── IDENTITY ── */}
+      <div className="ud-identity ud-fade-up">
+        <div className="ud-avatar">🧭</div>
+        <h1 className="ud-identity-title">Udforsk <em>Danmark</em></h1>
+        <p className="ud-identity-sub">{t('udforsk.subtitle')}</p>
+      </div>
+
+      {/* ── STATS ── */}
+      <div className="ud-stats ud-fade-up ud-d1">
+        <div className="ud-stat-card">
+          <div className="ud-stat-val">97K+</div>
+          <div className="ud-stat-lbl">Steder</div>
         </div>
+        <div className="ud-stat-card">
+          <div className="ud-stat-val">{allEvents.length}</div>
+          <div className="ud-stat-lbl">Events</div>
+        </div>
+        <div className="ud-stat-card">
+          <div className="ud-stat-val">{Object.keys(REGIONS).length - 1}</div>
+          <div className="ud-stat-lbl">Lande</div>
+        </div>
+      </div>
 
-        <div className="ud-search-bar ud-fade-up ud-d1">
+      {/* ── SEARCH ── */}
+      <div className="ud-search-wrap-outer ud-fade-up ud-d2">
+        <div className="ud-search-bar">
           <Search size={16} className="ud-search-icon" />
           <input
             ref={searchRef}
@@ -576,27 +593,12 @@ ${pageBase("ud")}
 
 .ud-root { position: relative; padding-bottom: 96px; }
 
-/* ── Glow ── */
-.ud-glow {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 400px; height: 300px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(78,205,196,0.07) 0%, transparent 70%);
-}
+/* ── Content area (below cover+identity+stats) ── */
+.ud-content { padding: 0 20px; }
+.ud-search-results, .ud-search-overlay { padding-bottom: 16px; }
 
-/* ── Sticky header ── */
-.ud-sticky-header {
-  position: sticky; top: 0; z-index: 30;
-  padding: 48px 20px 14px;
-  background: linear-gradient(to bottom, #060a0f 80%, transparent);
-}
-.ud-header { margin-bottom: 14px; }
-.ud-h1 {
-  font-family: var(--serif); font-size: 28px; font-weight: 400;
-  letter-spacing: -0.5px; color: var(--pg-white);
-}
-.ud-sub { font-size: 13px; color: var(--pg-white-muted); margin-top: 4px; }
-
-/* ── Search ── */
+/* ── Search wrapper ── */
+.ud-search-wrap-outer { padding: 0 20px 20px; }
 .ud-search-bar { position: relative; }
 .ud-search-icon {
   position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
@@ -618,7 +620,7 @@ ${pageBase("ud")}
 .ud-search-clear:hover { color: var(--pg-white); }
 
 /* ── Search overlay / results ── */
-.ud-search-overlay, .ud-search-results { padding: 0 20px 16px; }
+.ud-search-overlay, .ud-search-results { padding: 0 20px 16px; margin-top: 0; }
 .ud-tag-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
 .ud-result-group { margin-bottom: 20px; }
 .ud-result-list { display: flex; flex-direction: column; gap: 8px; }

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Bell, Shield, Globe, LogOut, ChevronRight, Mail, Trash2, Pencil } from "lucide-react";
-import { useLocation } from "wouter";
+import { Bell, Shield, Globe, LogOut, ChevronRight, Mail, Trash2, Pencil } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -11,30 +10,8 @@ import { pageBase } from "@/lib/pageCSSBase";
 /* ── Scoped CSS ── */
 const indstillingerCSS = `${pageBase("is")}
 
-/* ── Header bar ── */
-.is-header {
-  position: sticky; top: 0; z-index: 30;
-  padding: 48px 20px 12px;
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.95) 70%, transparent);
-}
-.is-back {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background 0.25s;
-  color: rgba(255,255,255,0.7);
-}
-.is-back:hover { background: var(--glass-bg-hover); }
-.is-header-text h1 {
-  font-family: var(--serif); font-weight: 400; font-size: 20px;
-  letter-spacing: -0.4px; color: var(--pg-white); line-height: 1.1;
-  margin: 0;
-}
-
 /* ── Content area ── */
-.is-content { padding: 8px 20px 0; display: flex; flex-direction: column; gap: 20px; }
+.is-content { padding: 0 20px 0; display: flex; flex-direction: column; gap: 20px; }
 
 /* ── Profile card ── */
 .is-profile-card {
@@ -509,7 +486,6 @@ function DeleteAccountSection() {
 /* ── Main page ── */
 export default function Indstillinger() {
   const { t } = useTranslation();
-  const [, setLocation] = useLocation();
   const { signOut, user, profile } = useAuth();
   const [notifikationer, setNotifikationer] = useState(true);
   const [privatProfil, setPrivatProfil] = useState(false);
@@ -526,18 +502,17 @@ export default function Indstillinger() {
         className="is-root"
         data-testid="indstillinger-page"
       >
-        {/* ── Header ── */}
-        <div className="is-header">
-          <button onClick={() => setLocation("/min-side")} className="is-back">
-            <ArrowLeft size={18} />
-          </button>
-          <div className="is-header-text">
-            <div className="is-eyebrow">
-              <span className="is-eyebrow-line" />
-              B-Social
-            </div>
-            <h1>{t('settings.title')}</h1>
-          </div>
+        {/* ── Cover ── */}
+        <div className="is-cover">
+          <img src="/social-hero.png" alt="" />
+          <div className="is-cover-overlay" />
+        </div>
+
+        {/* ── Identity ── */}
+        <div className="is-identity is-fade-up">
+          <div className="is-avatar"><span>⚙️</span></div>
+          <h1 className="is-identity-title"><em>Indstillinger</em></h1>
+          <p className="is-identity-sub">{displayName}</p>
         </div>
 
         <div className="is-content">

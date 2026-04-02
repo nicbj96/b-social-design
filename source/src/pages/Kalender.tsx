@@ -43,31 +43,10 @@ function getFirstDayOfMonth(year: number, month: number) {
 const kalenderCSS = `
 ${pageBase("kl")}
 
-.kl-root {
-  background-image: linear-gradient(to bottom, rgba(6,10,15,0.85), rgba(6,10,15,0.95)),
-    url('/kalender-hero.png');
-  background-size: cover; background-position: center; background-attachment: fixed;
-}
+.kl-root { padding-bottom: 40px; }
 
-/* ── Sticky header ── */
-.kl-header {
-  position: sticky; top: 0; z-index: 30;
-  padding: 48px 20px 12px;
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent);
-}
-.kl-back-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.3s; color: var(--pg-white);
-}
-.kl-back-btn:hover { background: rgba(255,255,255,0.12); }
-.kl-page-title {
-  font-family: var(--serif); font-size: 22px; font-weight: 400;
-  color: var(--pg-white);
-}
+/* ── Content area ── */
+.kl-content { padding: 0 20px; }
 
 /* ── Calendar grid card ── */
 .kl-calendar-card {
@@ -212,21 +191,45 @@ export default function Kalender() {
     .sort(([a], [b]) => a.localeCompare(b))
     .flatMap(([date, events]) => events.map(e => ({ ...e, date })));
 
+  const totalEvents = Object.values(EVENT_DATES).flat().length;
+  const registeredEvents = Object.values(EVENT_DATES).flat().filter(e => e.type === 'tilmeldt').length;
+  const waitingEvents = Object.values(EVENT_DATES).flat().filter(e => e.type === 'venter').length;
+
   return (
     <>
       <style>{kalenderCSS}</style>
       <div className="kl-root" ref={containerRef} data-testid="kalender-page">
 
-        {/* ── Header ── */}
-        <div className="kl-header">
-          <button className="kl-back-btn" onClick={() => setLocation("/min-side")}>
-            <ArrowLeft size={18} />
-          </button>
-          <h1 className="kl-page-title">{t('calendar.title')}</h1>
-          {isLoading && <Loader2 size={14} className="animate-spin" style={{ color: 'var(--teal)' }} />}
+        {/* ── COVER HERO ── */}
+        <div className="kl-cover">
+          <img src="/kalender-hero.png" alt="" />
+          <div className="kl-cover-overlay" />
         </div>
 
-        <div style={{ padding: '0 20px', marginTop: 8 }}>
+        {/* ── IDENTITY ── */}
+        <div className="kl-identity kl-fade-up">
+          <div className="kl-avatar">📅</div>
+          <h1 className="kl-identity-title">Min <em>Kalender</em></h1>
+          <p className="kl-identity-sub">{t(MONTH_NAME_KEYS[month])} {year}</p>
+        </div>
+
+        {/* ── STATS ── */}
+        <div className="kl-stats kl-fade-up kl-d1">
+          <div className="kl-stat-card">
+            <div className="kl-stat-val">{totalEvents}</div>
+            <div className="kl-stat-lbl">Denne måned</div>
+          </div>
+          <div className="kl-stat-card">
+            <div className="kl-stat-val">{registeredEvents}</div>
+            <div className="kl-stat-lbl">Tilmeldt</div>
+          </div>
+          <div className="kl-stat-card">
+            <div className="kl-stat-val">{waitingEvents}{isLoading && <Loader2 size={12} className="animate-spin" style={{display:'inline',marginLeft:4}} />}</div>
+            <div className="kl-stat-lbl">Venter</div>
+          </div>
+        </div>
+
+        <div className="kl-content">
 
           {/* ── Calendar ── */}
           <div className="kl-calendar-card kl-fade-up">

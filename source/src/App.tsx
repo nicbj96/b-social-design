@@ -41,6 +41,12 @@ const InviterVenner = lazy(() => import("@/pages/InviterVenner"));
 const Notifikationer = lazy(() => import("@/pages/Notifikationer"));
 const WhitelabelLanding = lazy(() => import("@/pages/WhitelabelLanding"));
 const Landing = lazy(() => import("@/pages/Landing"));
+const Kalender = lazy(() => import("@/pages/Kalender"));
+const StedDetail = lazy(() => import("@/pages/StedDetail"));
+const CategoryDetail = lazy(() => import("@/pages/CategoryDetail"));
+const Historik = lazy(() => import("@/pages/Historik"));
+const Overblik = lazy(() => import("@/pages/Overblik"));
+const Noter = lazy(() => import("@/pages/Noter"));
 // Firma pages
 const FirmaAuth = lazy(() => import("@/pages/FirmaAuth"));
 const FirmaDashboard = lazy(() => import("@/pages/FirmaDashboard"));
@@ -65,6 +71,12 @@ function MainRouter() {
           <Route path="/profil/:id" component={PublicProfile} />
           <Route path="/indstillinger" component={Indstillinger} />
           <Route path="/notifikationer" component={Notifikationer} />
+          <Route path="/kalender" component={Kalender} />
+          <Route path="/sted/:id" component={StedDetail} />
+          <Route path="/kategori/:category" component={CategoryDetail} />
+          <Route path="/historik" component={Historik} />
+          <Route path="/overblik" component={Overblik} />
+          <Route path="/noter" component={Noter} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>

@@ -1,5 +1,4 @@
-import { ArrowLeft, MapPin } from "lucide-react";
-import { useLocation } from "wouter";
+import { MapPin } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
@@ -59,79 +58,11 @@ const TYPE_BADGE: Record<string, { color: string; bgAlpha: string; labelKey: str
 const historikCSS = `
 ${pageBase("hi")}
 
-/* ── Hero background ── */
-.hi-hero-bg {
-  position: fixed; inset: 0; z-index: 0;
-  background: url('/historik-hero.png') center/cover no-repeat;
-}
-.hi-hero-overlay {
-  position: fixed; inset: 0; z-index: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(6,10,15,0.55) 0%,
-    rgba(6,10,15,0.85) 40%,
-    rgba(6,10,15,0.97) 100%
-  );
-}
-
-/* ── Sticky header ── */
-.hi-header {
-  position: sticky; top: 0; z-index: 30;
-  padding: 48px 20px 12px;
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent);
-}
-.hi-back {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.3s; color: var(--pg-white);
-}
-.hi-back:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-}
-.hi-title {
-  font-family: var(--serif);
-  font-size: 22px; font-weight: 400;
-  color: var(--pg-white);
-}
-
 /* ── Content wrapper ── */
 .hi-content {
   position: relative; z-index: 1;
-  padding: 8px 20px 96px;
+  padding: 0 20px 96px;
   display: flex; flex-direction: column; gap: 28px;
-}
-
-/* ── Summary stats row ── */
-.hi-summary {
-  display: flex; gap: 0;
-  border-radius: 16px; overflow: hidden;
-}
-.hi-stat-cell {
-  flex: 1;
-  padding: 18px 12px;
-  text-align: center;
-  position: relative;
-}
-.hi-stat-cell + .hi-stat-cell::before {
-  content: '';
-  position: absolute; left: 0; top: 20%; height: 60%;
-  width: 1px; background: rgba(255,255,255,0.08);
-}
-.hi-stat-num {
-  font-family: var(--serif);
-  font-size: 26px; font-weight: 400;
-  color: var(--pg-white); line-height: 1;
-}
-.hi-stat-label {
-  font-size: 11px; color: var(--pg-white-muted);
-  text-transform: uppercase; letter-spacing: 1.5px;
-  margin-top: 6px;
 }
 
 /* ── Timeline ── */
@@ -233,7 +164,6 @@ ${pageBase("hi")}
 
 export default function Historik() {
   const { t } = useTranslation();
-  const [, setLocation] = useLocation();
   const containerRef = useFadeUp("hi");
 
   const totalEvents = HISTORY.reduce((sum, g) => sum + g.events.length, 0);
@@ -247,35 +177,36 @@ export default function Historik() {
         className="hi-root"
         data-testid="historik-page"
       >
-        {/* Hero background */}
-        <div className="hi-hero-bg" />
-        <div className="hi-hero-overlay" />
+        {/* Cover */}
+        <div className="hi-cover">
+          <img src="/historik-hero.png" alt="" />
+          <div className="hi-cover-overlay" />
+        </div>
 
-        {/* Sticky header */}
-        <div className="hi-header">
-          <button className="hi-back" onClick={() => setLocation("/min-side")}>
-            <ArrowLeft size={18} />
-          </button>
-          <h1 className="hi-title">{t('history.title')}</h1>
+        {/* Identity */}
+        <div className="hi-identity hi-fade-up">
+          <div className="hi-avatar">📖</div>
+          <h1 className="hi-identity-title">Min <em>Historik</em></h1>
+          <p className="hi-identity-sub">{totalEvents} oplevelser med {totalPeople} mennesker</p>
+        </div>
+
+        {/* Stats */}
+        <div className="hi-stats hi-fade-up hi-d1">
+          <div className="hi-stat-card">
+            <div className="hi-stat-val">{totalEvents}</div>
+            <div className="hi-stat-lbl">{t('history.experiences')}</div>
+          </div>
+          <div className="hi-stat-card">
+            <div className="hi-stat-val">{totalPeople}</div>
+            <div className="hi-stat-lbl">{t('history.people_met')}</div>
+          </div>
+          <div className="hi-stat-card">
+            <div className="hi-stat-val">{HISTORY.length}</div>
+            <div className="hi-stat-lbl">{t('history.active_months')}</div>
+          </div>
         </div>
 
         <div className="hi-content">
-          {/* Summary stats */}
-          <div className="hi-glass-strong hi-summary hi-fade-up">
-            <div className="hi-stat-cell">
-              <p className="hi-stat-num">{totalEvents}</p>
-              <p className="hi-stat-label">{t('history.experiences')}</p>
-            </div>
-            <div className="hi-stat-cell">
-              <p className="hi-stat-num">{totalPeople}</p>
-              <p className="hi-stat-label">{t('history.people_met')}</p>
-            </div>
-            <div className="hi-stat-cell">
-              <p className="hi-stat-num">{HISTORY.length}</p>
-              <p className="hi-stat-label">{t('history.active_months')}</p>
-            </div>
-          </div>
-
           {/* Timeline */}
           {HISTORY.map((group, gi) => (
             <div key={group.period} className={`hi-timeline-group hi-fade-up hi-d${Math.min(gi + 1, 4)}`}>

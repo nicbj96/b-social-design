@@ -179,41 +179,69 @@ export default function Feed() {
     <div ref={containerRef} className="fd-root">
       <style>{feedCSS}</style>
 
-      {/* ── HEADER ── */}
-      <header className="fd-header fd-fade-up">
-        <div className="fd-header-left">
-          <h1 className="fd-greeting">{greeting}</h1>
-          <p className="fd-subtitle">{subtitle}</p>
+      {/* ── COVER HERO ── */}
+      <div className="fd-cover">
+        <img src="/feed-hero.png" alt="" />
+        <div className="fd-cover-overlay" />
+      </div>
+
+      {/* ── IDENTITY ── */}
+      <div className="fd-identity">
+        <div className="fd-avatar">
+          {profile?.name ? profile.name.charAt(0).toUpperCase() : '🏠'}
         </div>
-        <div className="fd-header-actions">
-          <button onClick={() => setTagEditorOpen(true)} className="fd-icon-btn" title="Rediger tags">
-            <SlidersHorizontal size={18} />
-          </button>
-          <div className="fd-search-wrap">
-            <Search size={15} className="fd-search-icon" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") setActiveSearch(searchQuery.trim());
-                if (e.key === "Escape") { setSearchQuery(""); setActiveSearch(""); }
-              }}
-              placeholder="Søg events, steder..."
-              className="fd-search-input"
-            />
-            {searchQuery && (
-              <button onClick={() => { setSearchQuery(""); setActiveSearch(""); }} className="fd-search-clear">
-                <X size={13} />
-              </button>
-            )}
-          </div>
-          <Link href="/notifikationer" className="fd-icon-btn fd-bell-btn">
-            <Bell size={18} />
-            {unreadCount > 0 && <span className="fd-bell-dot" />}
-          </Link>
+        <h1 className="fd-identity-title">{greeting}</h1>
+        <p className="fd-identity-sub">{subtitle}</p>
+      </div>
+
+      {/* ── STATS ── */}
+      <div className="fd-stats">
+        <div className="fd-stat-card">
+          <div className="fd-stat-val">{events.length > 999 ? (events.length / 1000).toFixed(1) + 'K' : events.length}</div>
+          <div className="fd-stat-lbl">Events</div>
         </div>
-      </header>
+        <div className="fd-stat-card">
+          <div className="fd-stat-val">{trendingTags.length}</div>
+          <div className="fd-stat-lbl">Trending</div>
+        </div>
+        <div className="fd-stat-card">
+          <div className="fd-stat-val">{selectedTags.length || '—'}</div>
+          <div className="fd-stat-lbl">Mine tags</div>
+        </div>
+      </div>
+
+      {/* ── CONTENT ── */}
+      <div className="fd-content">
+
+      {/* ── ACTION BAR ── */}
+      <div className="fd-action-bar fd-fade-up">
+        <button onClick={() => setTagEditorOpen(true)} className="fd-icon-btn" title="Rediger tags">
+          <SlidersHorizontal size={18} />
+        </button>
+        <div className="fd-search-wrap fd-search-expand">
+          <Search size={15} className="fd-search-icon" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") setActiveSearch(searchQuery.trim());
+              if (e.key === "Escape") { setSearchQuery(""); setActiveSearch(""); }
+            }}
+            placeholder="Søg events, steder..."
+            className="fd-search-input"
+          />
+          {searchQuery && (
+            <button onClick={() => { setSearchQuery(""); setActiveSearch(""); }} className="fd-search-clear">
+              <X size={13} />
+            </button>
+          )}
+        </div>
+        <Link href="/notifikationer" className="fd-icon-btn fd-bell-btn">
+          <Bell size={18} />
+          {unreadCount > 0 && <span className="fd-bell-dot" />}
+        </Link>
+      </div>
 
       {/* ── SEARCH RESULTS BANNER ── */}
       {activeSearch && (
@@ -438,6 +466,8 @@ export default function Feed() {
         </aside>
       </div>
 
+      </div>{/* end fd-content */}
+
       <FeedTagEditor open={tagEditorOpen} onClose={() => setTagEditorOpen(false)} />
     </div>
   );
@@ -461,22 +491,16 @@ ${pageBase("fd")}
 }
 @keyframes fd-pulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
 
-/* ── Header ── */
-.fd-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 28px 0 20px; gap: 16px;
+/* ── Content wrapper ── */
+.fd-content { padding: 0 20px; }
+
+/* ── Action bar (search + filter) ── */
+.fd-action-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 20px 0 16px;
 }
-.fd-header-left { flex: 1; min-width: 0; }
-.fd-greeting {
-  font-family: var(--serif); font-size: clamp(24px, 3vw, 36px);
-  font-weight: 400; letter-spacing: -0.5px; line-height: 1.1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.fd-subtitle {
-  font-size: 13px; color: var(--pg-white-muted); margin-top: 6px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.fd-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.fd-search-expand { display: block; flex: 1; }
+.fd-search-expand .fd-search-input { width: 100%; }
 .fd-icon-btn {
   width: 44px; height: 44px; border-radius: 12px;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
@@ -789,8 +813,6 @@ ${pageBase("fd")}
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .fd-header { padding: 20px 0 16px; }
-  .fd-greeting { font-size: 22px; }
   .fd-hero-content { padding: 120px 20px 28px; }
   .fd-hero-h2 { font-size: 26px; }
   .fd-hero-stats { gap: 6px; }

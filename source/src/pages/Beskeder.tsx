@@ -131,33 +131,38 @@ ${pageBase("bk")}
   .bk-sidebar-hidden-mobile { display: flex; }
 }
 
-.bk-sidebar-header {
-  padding: 32px 20px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+/* ── Sidebar cover hero ── */
+.bk-sidebar-cover {
+  position: relative; height: 110px; overflow: hidden; flex-shrink: 0;
 }
-.bk-sidebar-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+.bk-sidebar-cover img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center;
+}
+.bk-sidebar-cover-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(6,10,15,0.15) 0%, rgba(6,10,15,0.92) 100%);
+}
+.bk-sidebar-cover-content {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 0 16px 12px;
+  display: flex; align-items: flex-end; justify-content: space-between;
 }
 .bk-sidebar-title {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: 22px;
-  letter-spacing: -0.4px;
-  color: var(--pg-white);
-  line-height: 1.1;
+  font-family: var(--serif); font-weight: 400; font-size: 22px;
+  letter-spacing: -0.4px; color: var(--pg-white); line-height: 1.1;
+}
+.bk-sidebar-subtitle {
+  font-size: 12px; color: var(--teal); font-weight: 500;
+  margin-top: 2px; letter-spacing: 0.3px;
+}
+.bk-sidebar-search {
+  padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .bk-new-btn {
-  width: 36px; height: 36px;
-  border-radius: 12px;
-  background: rgba(78,205,196,0.15);
-  color: var(--teal);
-  border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: background 0.25s;
+  width: 36px; height: 36px; border-radius: 12px;
+  background: rgba(78,205,196,0.15); color: var(--teal);
+  border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.25s; flex-shrink: 0;
 }
 .bk-new-btn:hover { background: rgba(78,205,196,0.25); }
 
@@ -1662,14 +1667,13 @@ export default function Beskeder() {
 
         {/* ── Conversation list (left panel) ── */}
         <div className={`bk-sidebar ${activeConvoId ? 'bk-sidebar-hidden-mobile' : ''}`}>
-          <div className="bk-sidebar-header">
-            <div className="bk-sidebar-header-row">
+          <div className="bk-sidebar-cover">
+            <img src="/beskeder-hero.png" alt="" />
+            <div className="bk-sidebar-cover-overlay" />
+            <div className="bk-sidebar-cover-content">
               <div>
-                <div className="bk-eyebrow" style={{ marginBottom: 4 }}>
-                  <div className="bk-eyebrow-line" />
-                  B-Social
-                </div>
                 <h1 className="bk-sidebar-title">{t('beskeder.title')}</h1>
+                <p className="bk-sidebar-subtitle">{conversations.length} samtaler</p>
               </div>
               <button
                 onClick={() => setShowNewConvo(true)}
@@ -1679,6 +1683,8 @@ export default function Beskeder() {
                 <Plus size={16} />
               </button>
             </div>
+          </div>
+          <div className="bk-sidebar-search">
             <div className="bk-search-wrap">
               <Search className="bk-search-icon" size={14} />
               <input

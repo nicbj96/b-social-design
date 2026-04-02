@@ -15,73 +15,27 @@ import { pageBase } from "@/lib/pageCSSBase";
 const notifikationerCSS = `
 ${pageBase("nf")}
 
-/* ── Header ── */
-.nf-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 32px 24px 20px;
-}
-.nf-title {
-  font-family: var(--serif);
-  font-size: 28px;
-  font-weight: 400;
-  color: var(--pg-white);
-  line-height: 1.1;
-}
-.nf-title-accent {
-  color: var(--teal);
-  font-style: italic;
-}
-.nf-unread-count {
-  font-size: 12px;
-  color: var(--pg-white-muted);
-  margin-top: 4px;
-}
-.nf-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* ── Action bar ── */
+.nf-action-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0 16px 12px; gap: 8px;
 }
 .nf-icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--pg-white-dim);
-  cursor: pointer;
-  transition: all 0.25s;
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--pg-white-dim); cursor: pointer; transition: all 0.25s;
   backdrop-filter: blur(12px);
 }
-.nf-icon-btn:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  color: var(--teal);
-}
+.nf-icon-btn:hover { background: var(--glass-bg-hover); border-color: var(--glass-border-hover); color: var(--teal); }
 .nf-mark-all-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 12px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--pg-white-dim);
-  font-size: 12px;
-  font-family: var(--sans);
-  cursor: pointer;
-  transition: all 0.25s;
-  backdrop-filter: blur(12px);
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 12px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--pg-white-dim); font-size: 12px; font-family: var(--sans);
+  cursor: pointer; transition: all 0.25s; backdrop-filter: blur(12px);
 }
-.nf-mark-all-btn:hover {
-  background: var(--teal-dim);
-  border-color: rgba(78,205,196,0.25);
-  color: var(--teal);
-}
+.nf-mark-all-btn:hover { background: var(--teal-dim); border-color: rgba(78,205,196,0.25); color: var(--teal); }
 
 /* ── Content area ── */
 .nf-content {
@@ -402,13 +356,6 @@ ${pageBase("nf")}
   flex-direction: column;
 }
 
-/* ── Header teal line ── */
-.nf-header-line {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--teal), transparent);
-  opacity: 0.4;
-  margin: 0 24px;
-}
 `;
 
 /* ── Icon + color per notification type ── */
@@ -677,34 +624,51 @@ export default function Notifikationer() {
     <div className="nf-root" ref={containerRef}>
       <style>{notifikationerCSS}</style>
 
-      {/* Header */}
-      <div className="nf-header nf-fade-up">
-        <div>
-          <h1 className="nf-title">
-            {t('notifications.title')}<span className="nf-title-accent">.</span>
-          </h1>
-          {unreadCount > 0 && (
-            <p className="nf-unread-count">{unreadCount} {t('notifications.unread')}</p>
-          )}
+      {/* Cover */}
+      <div className="nf-cover">
+        <img src="/notifikationer-hero.png" alt="" />
+        <div className="nf-cover-overlay" />
+      </div>
+
+      {/* Identity */}
+      <div className="nf-identity nf-fade-up">
+        <div className="nf-avatar">🔔</div>
+        <h1 className="nf-identity-title">Notifika<em>tioner</em></h1>
+        <p className="nf-identity-sub">{unreadCount > 0 ? `${unreadCount} ulæste beskeder` : 'Alt er opdateret'}</p>
+      </div>
+
+      {/* Stats */}
+      <div className="nf-stats nf-fade-up nf-d1">
+        <div className="nf-stat-card">
+          <div className="nf-stat-val">{notifications.length}</div>
+          <div className="nf-stat-lbl">I alt</div>
         </div>
-        <div className="nf-header-actions">
-          <button
-            onClick={() => setShowUserSearch(true)}
-            className="nf-icon-btn"
-            title={t('notifications.search_users') || 'Sog brugere'}
-          >
-            <Search size={18} />
-          </button>
-          {unreadCount > 0 && (
-            <button onClick={markAllAsRead} className="nf-mark-all-btn">
-              <CheckCheck size={14} />
-              {t('notifications.mark_all_read')}
-            </button>
-          )}
+        <div className="nf-stat-card">
+          <div className="nf-stat-val">{unreadCount}</div>
+          <div className="nf-stat-lbl">Ulæste</div>
+        </div>
+        <div className="nf-stat-card">
+          <div className="nf-stat-val">{friendRequests.length}</div>
+          <div className="nf-stat-lbl">Venneanm.</div>
         </div>
       </div>
 
-      <div className="nf-header-line nf-fade-up nf-d1" />
+      {/* Action bar */}
+      <div className="nf-action-bar">
+        <button
+          onClick={() => setShowUserSearch(true)}
+          className="nf-icon-btn"
+          title={t('notifications.search_users') || 'Søg brugere'}
+        >
+          <Search size={18} />
+        </button>
+        {unreadCount > 0 && (
+          <button onClick={markAllAsRead} className="nf-mark-all-btn">
+            <CheckCheck size={14} />
+            {t('notifications.mark_all_read')}
+          </button>
+        )}
+      </div>
 
       {/* Content */}
       <div className="nf-content">

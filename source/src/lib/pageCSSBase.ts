@@ -154,5 +154,80 @@ export function pageBase(p: string): string {
 @media (max-width: 768px) {
   .${p}-root { padding-bottom: 96px; }
 }
+
+/* ══════════════════════════════════════════
+   COVER HERO PATTERN (profile-style)
+   ══════════════════════════════════════════ */
+
+/* Full-width atmospheric photo at top */
+.${p}-cover {
+  position: relative; width: 100%; height: 220px; overflow: hidden; flex-shrink: 0;
+}
+.${p}-cover img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  display: block;
+}
+.${p}-cover-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(6,10,15,0.25) 0%, rgba(6,10,15,0.92) 100%);
+}
+
+/* Identity block — overlaps cover bottom */
+.${p}-identity {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; margin-top: -44px; padding: 0 20px 20px; position: relative; z-index: 2;
+}
+.${p}-avatar {
+  width: 88px; height: 88px; border-radius: 50%;
+  border: 3px solid rgba(78,205,196,0.45);
+  box-shadow: 0 0 32px rgba(78,205,196,0.22), 0 8px 24px rgba(0,0,0,0.6);
+  background: rgba(6,10,15,0.85); overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-size: 32px;
+  flex-shrink: 0;
+}
+.${p}-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.${p}-identity-title {
+  font-family: var(--serif); font-size: 28px; font-weight: 400;
+  color: var(--pg-white); margin-top: 12px; line-height: 1.1; letter-spacing: -0.5px;
+}
+.${p}-identity-title em { font-style: italic; color: var(--teal); }
+.${p}-identity-sub {
+  font-size: 13px; color: var(--teal); margin-top: 4px; font-weight: 500; letter-spacing: 0.5px;
+}
+
+/* Three-up glass stat cards */
+.${p}-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; padding: 0 20px 24px;
+}
+.${p}-stat-card {
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 16px; text-align: center;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.${p}-stat-val {
+  font-family: var(--serif); font-size: 26px; color: var(--pg-white); line-height: 1;
+}
+.${p}-stat-lbl {
+  font-size: 11px; color: var(--pg-white-muted); text-transform: uppercase;
+  letter-spacing: 1.5px; margin-top: 4px;
+}
+
+/* Two-column content layout */
+.${p}-cols {
+  padding: 0 20px 40px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+@media (min-width: 769px) {
+  .${p}-cols { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+}
+.${p}-col-main { min-width: 0; }
+.${p}-col-side { min-width: 0; }
+
+/* Section heading inside columns */
+.${p}-section-title {
+  font-size: 13px; font-weight: 600; color: var(--pg-white);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
+}
 `;
 }

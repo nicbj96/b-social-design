@@ -1,5 +1,4 @@
-import { ArrowLeft, TrendingUp, Award, Flame, Target, MapPin, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { TrendingUp, Award, Flame, Target, MapPin, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces, fetchEvents, type Place, type Event as SupabaseEvent } from "@/lib/supabase";
@@ -17,52 +16,11 @@ const maxCount = Math.max(...MONTHLY_DATA.map(d => d.count));
 const overblikCSS = `
 ${pageBase("ov")}
 
-/* ── Hero background ── */
-.ov-hero-bg {
-  position: fixed; inset: 0; z-index: 0;
-  background: url('/dashboard-hero.png') center/cover no-repeat;
-  pointer-events: none;
-}
-.ov-hero-bg::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(180deg,
-    rgba(6,10,15,0.55) 0%,
-    rgba(6,10,15,0.8) 40%,
-    rgba(6,10,15,0.95) 70%,
-    rgba(6,10,15,1) 100%);
-}
-
-/* ── Sticky header ── */
-.ov-header {
-  position: sticky; top: 0; z-index: 30;
-  padding: 48px 20px 12px;
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.95) 60%, transparent);
-}
-.ov-back {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.08);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.3s; color: var(--pg-white);
-}
-.ov-back:hover {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(78,205,196,0.3);
-}
-.ov-title {
-  font-family: var(--serif);
-  font-size: 22px; font-weight: 400;
-  color: var(--pg-white);
-}
-
 /* ── Body wrapper ── */
 .ov-body {
   position: relative; z-index: 1;
   padding: 0 20px 96px;
   display: flex; flex-direction: column; gap: 20px;
-  margin-top: 8px;
 }
 
 /* ── Stat grid ── */
@@ -239,7 +197,6 @@ const catFillClass: Record<string, string> = {
 
 export default function Overblik() {
   const { t } = useTranslation();
-  const [, setLocation] = useLocation();
   const containerRef = useFadeUp("ov");
 
   const { data: places } = useQuery<Place[]>({
@@ -304,15 +261,33 @@ export default function Overblik() {
         ref={containerRef}
         data-testid="overblik-page"
       >
-        {/* Background image + overlay */}
-        <div className="ov-hero-bg" />
+        {/* Cover */}
+        <div className="ov-cover">
+          <img src="/dashboard-hero.png" alt="" />
+          <div className="ov-cover-overlay" />
+        </div>
 
-        {/* Sticky header */}
-        <div className="ov-header">
-          <button onClick={() => setLocation("/min-side")} className="ov-back">
-            <ArrowLeft size={18} />
-          </button>
-          <h1 className="ov-title">{t('overview.title')}</h1>
+        {/* Identity */}
+        <div className="ov-identity ov-fade-up">
+          <div className="ov-avatar">📊</div>
+          <h1 className="ov-identity-title"><em>Overblik</em></h1>
+          <p className="ov-identity-sub">{eventsCount} events · {placesCount} steder</p>
+        </div>
+
+        {/* Stats */}
+        <div className="ov-stats ov-fade-up ov-d1">
+          <div className="ov-stat-card">
+            <div className="ov-stat-val">{eventsCount > 0 ? eventsCount : 29}</div>
+            <div className="ov-stat-lbl">{t('overview.events_in_db')}</div>
+          </div>
+          <div className="ov-stat-card">
+            <div className="ov-stat-val">{placesCount}</div>
+            <div className="ov-stat-lbl">{t('overview.places_in_db')}</div>
+          </div>
+          <div className="ov-stat-card">
+            <div className="ov-stat-val">12</div>
+            <div className="ov-stat-lbl">{t('overview.active_streak')}</div>
+          </div>
         </div>
 
         <div className="ov-body">
