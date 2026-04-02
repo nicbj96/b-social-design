@@ -302,7 +302,7 @@ export default function Feed() {
           ) : (
             <div className="fd-masonry">
               {masonryEvents.map((event) => (
-                <Link key={event.id} href={`/event/${event.id}`} className="fd-masonry-card fd-fade-up">
+                <Link key={event.id} href={`/event/${event.id}`} className="fd-masonry-card">
                   <img src={getEventImage(event)} alt={event.title} className="fd-masonry-img" loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
                   <div className="fd-masonry-overlay" />
