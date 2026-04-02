@@ -112,7 +112,40 @@ ${pageBase("bk")}
   overflow: hidden;
 }
 
-/* ── Conversation list (left panel) ── */
+/* ── Nav strip (far left — Social Inbox tabs) ── */
+.bk-nav {
+  display: none; flex-direction: column; align-items: center;
+  width: 68px; flex-shrink: 0; padding: 16px 0;
+  background: rgba(255,255,255,0.015);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  gap: 4px;
+}
+@media (min-width: 768px) { .bk-nav { display: flex; } }
+.bk-nav-btn {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; border: none; cursor: pointer; transition: all 0.25s;
+  background: transparent; color: var(--pg-white-muted); position: relative;
+}
+.bk-nav-btn span {
+  font-size: 9px; font-weight: 500; letter-spacing: 0.3px;
+  font-family: var(--sans);
+}
+.bk-nav-btn:hover { background: rgba(255,255,255,0.06); color: var(--pg-white-dim); }
+.bk-nav-btn.active {
+  background: rgba(78,205,196,0.12); color: var(--teal);
+}
+.bk-nav-btn.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 24px; border-radius: 0 3px 3px 0;
+  background: var(--teal);
+}
+.bk-nav-dot {
+  position: absolute; top: 6px; right: 6px; width: 7px; height: 7px;
+  background: #ef4444; border-radius: 50%;
+}
+
+/* ── Conversation list (middle panel) ── */
 .bk-sidebar {
   width: 100%;
   display: flex;
@@ -122,7 +155,7 @@ ${pageBase("bk")}
   background: rgba(255,255,255,0.02);
 }
 @media (min-width: 768px) {
-  .bk-sidebar { width: 288px; }
+  .bk-sidebar { width: 320px; }
 }
 .bk-sidebar-hidden-mobile {
   display: none;
@@ -1665,7 +1698,28 @@ export default function Beskeder() {
       <style>{beskederCSS}</style>
       <div className="bk-layout bk-fade-up">
 
-        {/* ── Conversation list (left panel) ── */}
+        {/* ── Nav strip (Social Inbox tabs) ── */}
+        <div className="bk-nav">
+          <button className="bk-nav-btn active" title="Direkte">
+            <MessageCircle size={18} />
+            <span>Direkte</span>
+            {conversations.some(c => c.unread) && <span className="bk-nav-dot" />}
+          </button>
+          <button className="bk-nav-btn" title="Grupper">
+            <Users size={18} />
+            <span>Grupper</span>
+          </button>
+          <button className="bk-nav-btn" title="Events">
+            <Newspaper size={18} />
+            <span>Events</span>
+          </button>
+          <button className="bk-nav-btn" title="Arkiv" style={{ marginTop: 'auto' }}>
+            <ArrowLeft size={18} style={{ transform: 'rotate(-90deg)' }} />
+            <span>Arkiv</span>
+          </button>
+        </div>
+
+        {/* ── Conversation list (middle panel) ── */}
         <div className={`bk-sidebar ${activeConvoId ? 'bk-sidebar-hidden-mobile' : ''}`}>
           <div className="bk-sidebar-cover">
             <img src="/beskeder-hero.png" alt="" />

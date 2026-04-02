@@ -121,6 +121,20 @@ const minSideCSS = `${pageBase("ms")}
 .ms-action-icon { color: var(--teal); margin-bottom: 10px; }
 .ms-action-title { font-size: 14px; font-weight: 600; color: var(--pg-white); }
 .ms-action-desc { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+
+/* ── Badges ── */
+.ms-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+.ms-badge {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; transition: all 0.3s;
+}
+.ms-badge:hover {
+  transform: translateY(-2px);
+  border-color: rgba(78,205,196,0.3);
+  box-shadow: 0 4px 16px rgba(78,205,196,0.12);
+}
 `;
 
 export default function TestMinSide() {
@@ -211,7 +225,7 @@ export default function TestMinSide() {
             )}
           </div>
           <h1 className="ms-identity-title">{displayName}</h1>
-          <p className="ms-identity-sub"><MapPin size={12} style={{display:'inline', verticalAlign:'middle', marginRight:4}} />{displayCity}</p>
+          <p className="ms-identity-sub">{displayCity} · Medlem siden {joinedDate}</p>
         </div>
 
         {/* ── STATS ── */}
@@ -285,6 +299,18 @@ export default function TestMinSide() {
                     Ingen tags valgt endnu — tryk for at vælge interesser
                   </button>
                 )}
+              </div>
+            </div>
+
+            <div className="ms-section">
+              <div className="ms-section-header">
+                <h3 className="ms-section-title"><Award size={14} /> Badges</h3>
+              </div>
+              <div className="ms-badges">
+                <div className="ms-badge" title="Early Adopter">⭐</div>
+                <div className="ms-badge" title="Social Butterfly">{friendCount !== null && friendCount >= 5 ? '🦋' : '🔒'}</div>
+                <div className="ms-badge" title="Eventgænger">{events.length >= 10 ? '🎪' : '🔒'}</div>
+                <div className="ms-badge" title="Udforsk Danmark">{uniqueCategories >= 3 ? '🧭' : '🔒'}</div>
               </div>
             </div>
 

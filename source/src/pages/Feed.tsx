@@ -332,8 +332,8 @@ export default function Feed() {
                     </Link>
                   </div>
                   <div className="fd-events-row">
-                    {section.events.map(event => (
-                      <Link key={event.id} href={`/event/${event.id}`} className="fd-event-card">
+                    {section.events.map((event, idx) => (
+                      <Link key={event.id} href={`/event/${event.id}`} className={`fd-event-card${idx === 0 ? ' fd-featured' : ''}`}>
                         <div className="fd-event-card-img-wrap">
                           <img src={getEventImage(event)} alt={event.title} className="fd-event-card-img" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
                           <div className="fd-event-card-gradient" />
@@ -341,6 +341,8 @@ export default function Feed() {
                         <div className="fd-event-card-body">
                           <p className="fd-event-card-date">{formatDanishDate(event.date)}</p>
                           <h3 className="fd-event-card-name">{event.title}</h3>
+                          {idx === 0 && event.description && <p className="fd-event-card-desc">{event.description}</p>}
+                          {event.location && <p className="fd-event-card-location">📍 {event.location}</p>}
                           <div className="fd-event-card-tags">
                             {event.interest_tags && event.interest_tags.slice(0, 2).map((tag: string) => (
                               <span key={tag} className="fd-event-tag">#{tag}</span>
@@ -386,8 +388,8 @@ export default function Feed() {
                   </Link>
                 </div>
                 <div className="fd-events-row">
-                  {section.events.map(event => (
-                    <Link key={event.id} href={`/event/${event.id}`} className="fd-event-card">
+                  {section.events.map((event, idx) => (
+                    <Link key={event.id} href={`/event/${event.id}`} className={`fd-event-card${idx === 0 ? ' fd-featured' : ''}`}>
                       <div className="fd-event-card-img-wrap">
                         <img src={getEventImage(event)} alt={event.title} className="fd-event-card-img" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
                         <div className="fd-event-card-gradient" />
@@ -395,6 +397,8 @@ export default function Feed() {
                       <div className="fd-event-card-body">
                         <p className="fd-event-card-date">{formatDanishDate(event.date)}</p>
                         <h3 className="fd-event-card-name">{event.title}</h3>
+                        {idx === 0 && event.description && <p className="fd-event-card-desc">{event.description}</p>}
+                        {event.location && <p className="fd-event-card-location">📍 {event.location}</p>}
                         <div className="fd-event-card-tags">
                           {event.interest_tags && event.interest_tags.slice(0, 2).map((tag: string) => (
                             <span key={tag} className="fd-event-tag">#{tag}</span>
@@ -475,9 +479,21 @@ export default function Feed() {
 
 /* ──────────────────────────────────────────────
    Scoped CSS — all classes prefixed with fd-
+   IMMERSIVE MAGAZINE LAYOUT (Option B)
    ────────────────────────────────────────────── */
 const feedCSS = `
 ${pageBase("fd")}
+
+/* ── Override cover to be taller (immersive) ── */
+.fd-cover { height: 300px; }
+.fd-cover-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(6,10,15,0.15) 0%,
+    rgba(6,10,15,0.5) 50%,
+    rgba(6,10,15,0.95) 100%
+  ) !important;
+}
 
 /* ── Loading ── */
 .fd-loading {
@@ -653,18 +669,19 @@ ${pageBase("fd")}
   display: grid; grid-template-columns: 1fr; gap: 32px;
 }
 @media (min-width: 1024px) {
-  .fd-grid { grid-template-columns: 1fr 320px; }
+  .fd-grid { grid-template-columns: 1fr 340px; }
 }
 
 /* ── Event sections ── */
-.fd-section { margin-bottom: 40px; }
+.fd-section { margin-bottom: 48px; }
 .fd-section-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 20px; padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .fd-section-title {
-  font-family: var(--serif); font-size: 22px; font-weight: 400;
-  letter-spacing: -0.3px;
+  font-family: var(--serif); font-size: 26px; font-weight: 400;
+  letter-spacing: -0.5px;
 }
 .fd-section-link {
   display: flex; align-items: center; gap: 4px;
@@ -674,14 +691,44 @@ ${pageBase("fd")}
 }
 .fd-section-link:hover { background: var(--teal-dim); }
 
-/* ── Event cards ── */
+/* ═══ MASONRY EVENT GRID (immersive) ═══ */
 .fd-events-row {
-  display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px;
-  scrollbar-width: none;
+  display: grid; gap: 16px; padding-bottom: 0;
+  grid-template-columns: 1fr 1fr;
 }
-.fd-events-row::-webkit-scrollbar { display: none; }
+/* Featured card spans full width */
+.fd-event-card.fd-featured {
+  grid-column: 1 / -1;
+  display: grid; grid-template-columns: 1fr 1fr;
+  flex: unset;
+}
+.fd-event-card.fd-featured .fd-event-card-img-wrap {
+  border-radius: 16px 0 0 16px; overflow: hidden;
+}
+.fd-event-card.fd-featured .fd-event-card-img {
+  height: 100%; min-height: 220px;
+}
+.fd-event-card.fd-featured .fd-event-card-body {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 28px 32px;
+}
+.fd-event-card.fd-featured .fd-event-card-date {
+  font-size: 12px; margin-bottom: 10px;
+}
+.fd-event-card.fd-featured .fd-event-card-name {
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+  -webkit-line-clamp: 3; line-height: 1.2; letter-spacing: -0.3px;
+}
+.fd-event-card.fd-featured .fd-event-card-desc {
+  font-size: 13px; color: var(--pg-white-muted); line-height: 1.5;
+  margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.fd-event-card.fd-featured .fd-event-card-tags { margin-top: 16px; }
+
+/* Regular masonry cards */
 .fd-event-card {
-  flex: 0 0 210px; border-radius: 16px; overflow: hidden;
+  flex: unset; border-radius: 16px; overflow: hidden;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
   cursor: pointer; text-decoration: none; color: var(--pg-white);
   transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
@@ -689,32 +736,37 @@ ${pageBase("fd")}
 .fd-event-card:hover {
   transform: translateY(-6px);
   border-color: rgba(78,205,196,0.25);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
 }
 .fd-event-card-img-wrap { position: relative; overflow: hidden; }
 .fd-event-card-img {
-  width: 100%; height: 140px; object-fit: cover;
+  width: 100%; height: 180px; object-fit: cover;
   transition: transform 0.6s ease;
 }
 .fd-event-card:hover .fd-event-card-img { transform: scale(1.08); }
 .fd-event-card-gradient {
-  position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50px;
   background: linear-gradient(to top, rgba(6,10,15,0.8), transparent);
 }
-.fd-event-card-body { padding: 14px 16px 16px; }
+.fd-event-card-body { padding: 16px 18px 18px; }
 .fd-event-card-date {
   font-size: 11px; color: var(--teal); text-transform: uppercase;
   letter-spacing: 1px; font-weight: 500; margin-bottom: 6px;
 }
 .fd-event-card-name {
-  font-size: 14px; font-weight: 600; line-height: 1.3;
+  font-size: 15px; font-weight: 600; line-height: 1.3;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.fd-event-card-desc { display: none; }
 .fd-event-card-tags { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
 .fd-event-tag {
   font-size: 11px; padding: 3px 9px; border-radius: 100px;
   background: rgba(255,255,255,0.06); color: var(--pg-white-muted);
+}
+.fd-event-card-location {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--pg-white-muted); margin-top: 8px;
 }
 
 /* ── Empty states ── */
@@ -753,7 +805,7 @@ ${pageBase("fd")}
 /* ── Sidebar ── */
 .fd-sidebar { display: flex; flex-direction: column; gap: 20px; }
 .fd-sidebar-card {
-  padding: 20px; border-radius: 18px;
+  padding: 22px; border-radius: 18px;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
   backdrop-filter: blur(20px);
 }
@@ -813,10 +865,14 @@ ${pageBase("fd")}
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
+  .fd-cover { height: 220px; }
   .fd-hero-content { padding: 120px 20px 28px; }
   .fd-hero-h2 { font-size: 26px; }
   .fd-hero-stats { gap: 6px; }
-  .fd-event-card { flex: 0 0 175px; }
-  .fd-event-card-img { height: 110px; }
+  .fd-events-row { grid-template-columns: 1fr; }
+  .fd-event-card.fd-featured { grid-template-columns: 1fr; }
+  .fd-event-card.fd-featured .fd-event-card-img { min-height: 160px; height: 160px; }
+  .fd-event-card.fd-featured .fd-event-card-img-wrap { border-radius: 16px 16px 0 0; }
+  .fd-event-card-img { height: 150px; }
 }
 `;

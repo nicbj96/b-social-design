@@ -497,8 +497,10 @@ const kortCSS = `${pageBase("kt")}
   position: relative;
   width: 100%;
   height: 100svh;
-  padding-bottom: 72px;
+  padding-bottom: 0;
   font-family: var(--sans);
+  overflow: hidden;
+  background: var(--bg, #060a0f);
 }
 
 /* ══════════ SEARCH BAR OVERLAY ══════════ */
@@ -1114,7 +1116,402 @@ const kortCSS = `${pageBase("kt")}
   50% { box-shadow: 0 0 22px rgba(249,115,22,0.9), 0 2px 8px rgba(0,0,0,0.4); }
   100% { box-shadow: 0 0 14px rgba(249,115,22,0.6), 0 2px 8px rgba(0,0,0,0.4); }
 }
+
+/* ══════════ SPLIT-VIEW LAYOUT ══════════ */
+.kt-split {
+  display: flex;
+  height: calc(100vh - 60px);
+  width: 100%;
+  position: relative;
+}
+.kt-map-pane {
+  flex: 0 0 60%;
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
+.kt-list-pane {
+  flex: 0 0 40%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg, rgba(255,255,255,0.04));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  overflow: hidden;
+}
+
+/* ── List pane header ── */
+.kt-lp-header {
+  padding: 20px 20px 0;
+  flex-shrink: 0;
+}
+.kt-lp-search-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+.kt-lp-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.3);
+  pointer-events: none;
+}
+.kt-lp-search {
+  width: 100%;
+  padding: 12px 40px 12px 42px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  color: var(--pg-white);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.25s;
+}
+.kt-lp-search:focus {
+  border-color: rgba(78,205,196,0.4);
+}
+.kt-lp-search::placeholder { color: rgba(255,255,255,0.3); }
+.kt-lp-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; padding: 4px;
+  color: rgba(255,255,255,0.35);
+  cursor: pointer;
+}
+.kt-lp-search-clear:hover { color: var(--pg-white); }
+
+/* ── Filter toggle buttons ── */
+.kt-lp-filters {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.kt-lp-filters::-webkit-scrollbar { display: none; }
+
+.kt-lp-filter-btn {
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.5);
+  flex-shrink: 0;
+}
+.kt-lp-filter-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.75);
+}
+.kt-lp-filter-btn.active {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+  box-shadow: 0 2px 12px var(--teal-glow);
+}
+.kt-lp-filter-btn.active-event {
+  background: #f97316;
+  color: #fff;
+  border-color: #f97316;
+  box-shadow: 0 2px 12px rgba(249,115,22,0.3);
+}
+
+.kt-lp-count {
+  padding: 0 20px 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  font-family: var(--sans);
+  flex-shrink: 0;
+}
+
+/* ── Scrollable venue list ── */
+.kt-lp-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.kt-lp-list::-webkit-scrollbar { width: 6px; }
+.kt-lp-list::-webkit-scrollbar-track { background: transparent; }
+.kt-lp-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+.kt-lp-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+}
+.kt-lp-item:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.06);
+}
+.kt-lp-item.active {
+  background: rgba(78,205,196,0.08);
+  border-color: rgba(78,205,196,0.18);
+}
+
+/* Thumbnail */
+.kt-lp-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
+}
+.kt-lp-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kt-lp-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: rgba(255,255,255,0.04);
+}
+
+/* Item info */
+.kt-lp-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+.kt-lp-name {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--pg-white);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kt-lp-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.kt-lp-dist {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: rgba(78,205,196,0.12);
+  color: var(--teal);
+  font-weight: 600;
+  font-family: var(--sans);
+  font-size: 10px;
+}
+.kt-lp-cat {
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--sans);
+  color: #fff;
+}
+.kt-lp-city {
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  font-family: var(--sans);
+}
+.kt-lp-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: rgba(255,255,255,0.45);
+  font-size: 11px;
+}
+.kt-lp-rating svg { color: #fbbf24; fill: #fbbf24; }
+.kt-lp-event-date {
+  color: #f97316;
+  font-weight: 500;
+  font-size: 11px;
+  font-family: var(--sans);
+}
+
+/* ── Empty state ── */
+.kt-lp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: rgba(255,255,255,0.25);
+  font-size: 14px;
+  font-family: var(--sans);
+  text-align: center;
+  gap: 8px;
+}
+.kt-lp-empty-icon { font-size: 32px; opacity: 0.4; }
+
+/* ── Mobile toggle for split view ── */
+.kt-mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  padding: 10px 24px;
+  border-radius: 100px;
+  background: rgba(6,10,15,0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(78,205,196,0.3);
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  transition: all 0.25s;
+}
+.kt-mobile-toggle:hover {
+  background: rgba(78,205,196,0.12);
+  border-color: var(--teal);
+}
+
+/* ── Mobile: stack vertically ── */
+@media (max-width: 768px) {
+  .kt-split {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 60px);
+  }
+  .kt-map-pane {
+    flex: none;
+    height: 55vh;
+    width: 100%;
+  }
+  .kt-map-pane.kt-hidden { display: none; }
+  .kt-list-pane {
+    flex: 1;
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+    max-height: 45vh;
+  }
+  .kt-list-pane.kt-hidden { display: none; }
+  .kt-mobile-toggle { display: block; }
+
+  /* Adjust search overlay for split view mobile */
+  .kt-search-overlay {
+    padding-top: max(env(safe-area-inset-top, 8px), 12px);
+  }
+}
+
+/* ── Desktop: hide mobile toggle ── */
+@media (min-width: 769px) {
+  .kt-mobile-toggle { display: none; }
+
+  /* Move search overlay into map pane context */
+  .kt-map-pane .kt-search-overlay {
+    padding-top: max(env(safe-area-inset-top, 12px), 12px);
+  }
+
+  /* Adjust detail sheet to be within map pane */
+  .kt-map-pane .kt-detail {
+    left: 12px;
+    right: 12px;
+    bottom: 20px;
+    max-width: 400px;
+  }
+
+  /* Adjust zoom/recenter buttons for map pane */
+  .kt-map-pane .kt-zoom-group {
+    bottom: 24px;
+    right: 12px;
+  }
+  .kt-map-pane .kt-recenter-btn {
+    bottom: 24px;
+    left: 12px;
+  }
+}
 `;
+
+/* ── List panel filter categories ── */
+const LIST_FILTERS = [
+  { key: "alle", label: "Alle", emoji: "📍" },
+  { key: "steder", label: "Steder", emoji: "🏛️" },
+  { key: "events", label: "Events", emoji: "🎉" },
+  { key: "mad", label: "Mad", emoji: "🍽️" },
+  { key: "kultur", label: "Kultur", emoji: "🎭" },
+  { key: "natur", label: "Natur", emoji: "🌿" },
+  { key: "aktiv", label: "Aktiv", emoji: "⚽" },
+] as const;
+
+/* ── List panel item component ── */
+function ListPanelItem({
+  pin, isActive, userLat, userLng, onClick
+}: {
+  pin: MapPin; isActive: boolean; userLat: number; userLng: number; onClick: () => void;
+}) {
+  const meta = CATEGORY_META[pin.category] || CATEGORY_META["natur"];
+  const dist = distanceKm(userLat, userLng, pin.lat, pin.lng);
+  const distText = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
+  const headerImg = pin.image || PIN_HEADER_IMAGES[pin.category] || null;
+
+  return (
+    <div className={`kt-lp-item ${isActive ? "active" : ""}`} onClick={onClick}>
+      <div className="kt-lp-thumb">
+        {headerImg ? (
+          <img src={headerImg} alt={pin.name} loading="lazy" />
+        ) : (
+          <div className="kt-lp-thumb-placeholder">{meta.emoji}</div>
+        )}
+      </div>
+      <div className="kt-lp-info">
+        <div className="kt-lp-name">{pin.name}</div>
+        <div className="kt-lp-meta">
+          <span className="kt-lp-dist">
+            <MapPinIcon size={9} />{distText}
+          </span>
+          <span className="kt-lp-cat" style={{ background: pin.isSupabaseEvent ? "#f97316" : meta.hex }}>
+            {pin.isSupabaseEvent ? "Event" : (meta.labelKey.split('.').pop() || pin.category)}
+          </span>
+          {pin.city && <span className="kt-lp-city">{pin.city}</span>}
+        </div>
+        <div className="kt-lp-meta">
+          {pin.rating > 0 && (
+            <span className="kt-lp-rating">
+              <Star size={10} />{pin.rating.toFixed(1)}
+            </span>
+          )}
+          {pin.isSupabaseEvent && pin.date && (
+            <span className="kt-lp-event-date">
+              {new Date(pin.date).toLocaleDateString("da-DK", { day: "numeric", month: "short" })}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ═══════════════════ KORT PAGE ═══════════════════ */
 export default function Kort() {
@@ -1127,7 +1524,10 @@ export default function Kort() {
   const [showLayer, setShowLayer] = useState<"alle" | "steder" | "events" | "hoteller">("alle");
   const [tagSearchCache, setTagSearchCache] = useState<{ [query: string]: any[] }>({});
   const [mapCountry, setMapCountry] = useState<string>('DK');
+  const [mobileView, setMobileView] = useState<"map" | "list">("map");
+  const [listFilter, setListFilter] = useState<string>("alle");
   const searchRef = useRef<HTMLInputElement>(null);
+  const listSearchRef = useRef<HTMLInputElement>(null);
 
 
   // Lazy load tag search function on demand
@@ -1268,6 +1668,34 @@ export default function Kort() {
   // Note: country filtering on map pins will be extended once MapPin gains a `country` field.
   // For now, selecting a country chips flies the map to that country's center viewport.
 
+  // List panel: further filter by list panel category and sort by distance
+  const listPanelPins = useMemo(() => {
+    let pins = filteredPins;
+    if (listFilter === "events") {
+      pins = pins.filter(p => p.isSupabaseEvent);
+    } else if (listFilter === "steder") {
+      pins = pins.filter(p => !p.isSupabaseEvent);
+    } else if (listFilter !== "alle") {
+      // Category-specific filter (mad, kultur, natur, aktiv)
+      const catKey = listFilter.toLowerCase();
+      pins = pins.filter(p => {
+        const pCat = p.category.toLowerCase();
+        // Include sub-categories
+        if (catKey === "mad") return pCat === "mad" || pCat === "mad_hangout";
+        if (catKey === "kultur") return pCat === "kultur" || pCat === "kreativt" || pCat === "musik";
+        if (catKey === "natur") return pCat === "natur" || pCat === "vandring" || pCat === "outdoor" || pCat === "dyrespot" || pCat === "shelter" || pCat === "fiskeri" || pCat === "badning";
+        if (catKey === "aktiv") return pCat === "aktiv" || pCat === "aktiv_sport" || pCat === "sport" || pCat === "mtb" || pCat === "loeb" || pCat === "fitness";
+        return pCat.includes(catKey);
+      });
+    }
+    // Sort by distance from user
+    return [...pins].sort((a, b) => {
+      const distA = distanceKm(USER_LAT, USER_LNG, a.lat, a.lng);
+      const distB = distanceKm(USER_LAT, USER_LNG, b.lat, b.lng);
+      return distA - distB;
+    }).slice(0, 100); // Cap at 100 for performance
+  }, [filteredPins, listFilter, USER_LAT, USER_LNG]);
+
 
   // Pre-create emoji icons for each category
   const categoryIcons = useMemo(() => {
@@ -1310,168 +1738,249 @@ export default function Kort() {
     <>
       <style>{kortCSS}</style>
       <div className="kt-wrapper" data-testid="kort-page">
-        {/* ── Search bar + Gratis / Premium ── */}
-        <div className="kt-search-overlay">
-          <div className="kt-search-row">
-            <div className="kt-search-wrap">
-              <Search size={15} className="kt-search-icon" />
-              <input
-                ref={searchRef}
-                type="search"
-                placeholder={t('map.search_places')}
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
-                className="kt-search-input"
-                data-testid="input-search-map"
-              />
-              {search && (
-                <button onClick={() => { setSearch(""); searchRef.current?.blur(); }} className="kt-search-clear">
-                  <X size={14} />
+        <div className="kt-split">
+
+          {/* ════════ LEFT: MAP PANE (60%) ════════ */}
+          <div className={`kt-map-pane ${isMobile && mobileView === "list" ? "kt-hidden" : ""}`}>
+            {/* ── Search bar + Gratis / Premium ── */}
+            <div className="kt-search-overlay">
+              <div className="kt-search-row">
+                <div className="kt-search-wrap">
+                  <Search size={15} className="kt-search-icon" />
+                  <input
+                    ref={searchRef}
+                    type="search"
+                    placeholder={t('map.search_places')}
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
+                    className="kt-search-input"
+                    data-testid="input-search-map"
+                  />
+                  {search && (
+                    <button onClick={() => { setSearch(""); searchRef.current?.blur(); }} className="kt-search-clear">
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setPriceFilter(priceFilter === "gratis" ? "alle" : "gratis"); setSelectedPin(null); }}
+                  className={`kt-price-btn ${priceFilter === "gratis" ? "active-gratis" : ""}`}
+                  data-testid="filter-gratis"
+                >
+                  {t('map.free')}
                 </button>
+                <button
+                  onClick={() => { setPriceFilter(priceFilter === "premium" ? "alle" : "premium"); setSelectedPin(null); }}
+                  className={`kt-price-btn ${priceFilter === "premium" ? "active-premium" : ""}`}
+                  data-testid="filter-premium"
+                >
+                  {t('map.premium')}
+                </button>
+              </div>
+
+              {/* Layer toggle + pin count */}
+              <div className="kt-layer-row">
+                <div className="kt-layer-group">
+                  {(["alle", "steder", "events"] as const).map(layer => (
+                    <button
+                      key={layer}
+                      onClick={() => { setShowLayer(layer); setSelectedPin(null); }}
+                      className={`kt-layer-btn ${
+                        showLayer === layer
+                          ? layer === "events" ? "active-event" : "active"
+                          : ""
+                      }`}
+                      data-testid={`filter-layer-${layer}`}
+                    >
+                      {layer === "alle" ? `📍 ${typeof t('map.all') === 'string' ? t('map.all') : 'Alle'}` : layer === "steder" ? `🏛️ ${typeof t('map.places') === 'string' ? t('map.places') : 'Steder'}` : `🎉 ${typeof t('map.events') === 'string' ? t('map.events') : 'Events'}`}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => { setShowLayer(showLayer === "hoteller" ? "alle" : "hoteller"); setSelectedPin(null); }}
+                    className={`kt-layer-btn ${
+                      showLayer === "hoteller" ? "active-hotel" : "hotel-inactive"
+                    }`}
+                  >
+                    🏨 Hoteller
+                  </button>
+                </div>
+                <span className="kt-pin-count">
+                  {filteredPins.length} {showLayer === "events" ? t('map.events') : showLayer === "steder" ? t('map.places') : t('map.places')}
+                  {showLayer === "alle" && eventPins.length > 0 && ` (${eventPins.length} ${t('map.events')})`}
+                </span>
+              </div>
+
+              {/* Country / Region chip bar */}
+              <div className="kt-country-row">
+                {MAP_COUNTRY_CHIPS.map((code) => {
+                  const region = MAP_REGIONS[code];
+                  if (!region) return null;
+                  const isActive = mapCountry === code;
+                  return (
+                    <button
+                      key={code}
+                      onClick={() => handleCountrySelect(code)}
+                      className={`kt-country-chip ${isActive ? "active" : ""}`}
+                      data-testid={`map-country-${code}`}
+                    >
+                      <span>{region.flag}</span>
+                      {region.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── Leaflet Map ── */}
+            <MapContainer
+              center={[USER_LAT, USER_LNG]}
+              zoom={12}
+              zoomControl={false}
+              attributionControl={false}
+              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#060a0f" }}
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+              />
+              <MapResizeFix />
+
+              {/* Map event listener for viewport-based loading */}
+              <MapEventListener onBoundsChange={handleMapBoundsChange} />
+
+              {/* User location pulse */}
+              <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
+              <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
+
+              {/* Clustered pins — mobile optimized */}
+              <MarkerClusterGroup
+                chunkedLoading
+                chunkInterval={100}
+                chunkDelay={50}
+                maxClusterRadius={isMobile ? 60 : 80}
+                disableClusteringAtZoom={isMobile ? 17 : 18}
+                spiderfyOnMaxZoom
+                showCoverageOnHover={false}
+                iconCreateFunction={(cluster: any) => {
+                  const count = cluster.getChildCount();
+                  const size = count > 50 ? 48 : count > 20 ? 42 : 36;
+                  return L.divIcon({
+                    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(16,185,129,0.85);border:2.5px solid rgba(255,255,255,0.8);box-shadow:0 2px 12px rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:${size > 42 ? 14 : 12}px;font-weight:700;color:white;">${count}</div>`,
+                    className: "b-pin",
+                    iconSize: L.point(size, size),
+                  });
+                }}
+              >
+                {filteredPins.map((pin) => (
+                  <Marker
+                    key={pin.id}
+                    position={[pin.lat, pin.lng]}
+                    icon={pin.isSupabaseEvent ? supabaseEventIcon : (categoryIcons[pin.category] || createEmojiIcon("📍", "#4ECDC4", 34))}
+                    eventHandlers={{ click: () => handlePinClick(pin) }}
+                  />
+                ))}
+              </MarkerClusterGroup>
+
+              <ZoomControls />
+              {flyTo && <MapRecenter center={flyTo.center} zoom={flyTo.zoom} />}
+            </MapContainer>
+
+            {/* ── Recenter button ── */}
+            <button
+              onClick={handleRecenter}
+              className="kt-recenter-btn"
+              data-testid="button-near-me"
+            >
+              <Navigation size={18} />
+            </button>
+
+            {/* ── Loading Indicator for Viewport Loading ── */}
+            {isLoadingViewport && (
+              <div className="kt-loading" data-testid="loading-viewport">
+                <div className="kt-loading-dot" />
+                <span className="kt-loading-text">Loading places...</span>
+              </div>
+            )}
+
+            {/* ── Pin Detail ── */}
+            {selectedPin && <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />}
+          </div>
+
+          {/* ════════ RIGHT: LIST PANE (40%) ════════ */}
+          <div className={`kt-list-pane ${isMobile && mobileView === "map" ? "kt-hidden" : ""}`}>
+            {/* List header with search + filters */}
+            <div className="kt-lp-header">
+              <div className="kt-lp-search-wrap">
+                <Search size={15} className="kt-lp-search-icon" />
+                <input
+                  ref={listSearchRef}
+                  type="search"
+                  placeholder="Sog steder og events..."
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
+                  className="kt-lp-search"
+                />
+                {search && (
+                  <button onClick={() => { setSearch(""); listSearchRef.current?.blur(); }} className="kt-lp-search-clear">
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Filter toggle buttons */}
+              <div className="kt-lp-filters">
+                {LIST_FILTERS.map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setListFilter(f.key)}
+                    className={`kt-lp-filter-btn ${
+                      listFilter === f.key
+                        ? f.key === "events" ? "active-event" : "active"
+                        : ""
+                    }`}
+                  >
+                    {f.emoji} {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Result count */}
+            <div className="kt-lp-count">
+              {listPanelPins.length} resultater {listFilter !== "alle" ? `i ${LIST_FILTERS.find(f => f.key === listFilter)?.label || listFilter}` : ""}
+            </div>
+
+            {/* Scrollable venue/event list */}
+            <div className="kt-lp-list">
+              {listPanelPins.length === 0 ? (
+                <div className="kt-lp-empty">
+                  <div className="kt-lp-empty-icon">🔍</div>
+                  <div>Ingen resultater fundet</div>
+                </div>
+              ) : (
+                listPanelPins.map(pin => (
+                  <ListPanelItem
+                    key={pin.id}
+                    pin={pin}
+                    isActive={selectedPin?.id === pin.id}
+                    userLat={USER_LAT}
+                    userLng={USER_LNG}
+                    onClick={() => handlePinClick(pin)}
+                  />
+                ))
               )}
             </div>
-            <button
-              onClick={() => { setPriceFilter(priceFilter === "gratis" ? "alle" : "gratis"); setSelectedPin(null); }}
-              className={`kt-price-btn ${priceFilter === "gratis" ? "active-gratis" : ""}`}
-              data-testid="filter-gratis"
-            >
-              {t('map.free')}
-            </button>
-            <button
-              onClick={() => { setPriceFilter(priceFilter === "premium" ? "alle" : "premium"); setSelectedPin(null); }}
-              className={`kt-price-btn ${priceFilter === "premium" ? "active-premium" : ""}`}
-              data-testid="filter-premium"
-            >
-              {t('map.premium')}
-            </button>
           </div>
 
-          {/* Layer toggle + pin count */}
-          <div className="kt-layer-row">
-            <div className="kt-layer-group">
-              {(["alle", "steder", "events"] as const).map(layer => (
-                <button
-                  key={layer}
-                  onClick={() => { setShowLayer(layer); setSelectedPin(null); }}
-                  className={`kt-layer-btn ${
-                    showLayer === layer
-                      ? layer === "events" ? "active-event" : "active"
-                      : ""
-                  }`}
-                  data-testid={`filter-layer-${layer}`}
-                >
-                  {layer === "alle" ? `📍 ${typeof t('map.all') === 'string' ? t('map.all') : 'Alle'}` : layer === "steder" ? `🏛️ ${typeof t('map.places') === 'string' ? t('map.places') : 'Steder'}` : `🎉 ${typeof t('map.events') === 'string' ? t('map.events') : 'Events'}`}
-                </button>
-              ))}
-              <button
-                onClick={() => { setShowLayer(showLayer === "hoteller" ? "alle" : "hoteller"); setSelectedPin(null); }}
-                className={`kt-layer-btn ${
-                  showLayer === "hoteller" ? "active-hotel" : "hotel-inactive"
-                }`}
-              >
-                🏨 Hoteller
-              </button>
-            </div>
-            <span className="kt-pin-count">
-              {filteredPins.length} {showLayer === "events" ? t('map.events') : showLayer === "steder" ? t('map.places') : t('map.places')}
-              {showLayer === "alle" && eventPins.length > 0 && ` (${eventPins.length} ${t('map.events')})`}
-            </span>
-          </div>
+        </div>{/* end kt-split */}
 
-          {/* Country / Region chip bar */}
-          <div className="kt-country-row">
-            {MAP_COUNTRY_CHIPS.map((code) => {
-              const region = MAP_REGIONS[code];
-              if (!region) return null;
-              const isActive = mapCountry === code;
-              return (
-                <button
-                  key={code}
-                  onClick={() => handleCountrySelect(code)}
-                  className={`kt-country-chip ${isActive ? "active" : ""}`}
-                  data-testid={`map-country-${code}`}
-                >
-                  <span>{region.flag}</span>
-                  {region.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Leaflet Map ── */}
-        <MapContainer
-          center={[USER_LAT, USER_LNG]}
-          zoom={12}
-          zoomControl={false}
-          attributionControl={false}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#060a0f" }}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-          />
-          <MapResizeFix />
-
-          {/* Map event listener for viewport-based loading */}
-          <MapEventListener onBoundsChange={handleMapBoundsChange} />
-
-          {/* User location pulse */}
-          <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
-          <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
-
-          {/* Clustered pins — mobile optimized */}
-          <MarkerClusterGroup
-            chunkedLoading
-            chunkInterval={100}
-            chunkDelay={50}
-            maxClusterRadius={isMobile ? 60 : 80}
-            disableClusteringAtZoom={isMobile ? 17 : 18}
-            spiderfyOnMaxZoom
-            showCoverageOnHover={false}
-            iconCreateFunction={(cluster: any) => {
-              const count = cluster.getChildCount();
-              const size = count > 50 ? 48 : count > 20 ? 42 : 36;
-              return L.divIcon({
-                html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(16,185,129,0.85);border:2.5px solid rgba(255,255,255,0.8);box-shadow:0 2px 12px rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:${size > 42 ? 14 : 12}px;font-weight:700;color:white;">${count}</div>`,
-                className: "b-pin",
-                iconSize: L.point(size, size),
-              });
-            }}
-          >
-            {filteredPins.map((pin) => (
-              <Marker
-                key={pin.id}
-                position={[pin.lat, pin.lng]}
-                icon={pin.isSupabaseEvent ? supabaseEventIcon : (categoryIcons[pin.category] || createEmojiIcon("📍", "#4ECDC4", 34))}
-                eventHandlers={{ click: () => handlePinClick(pin) }}
-              />
-            ))}
-          </MarkerClusterGroup>
-
-          <ZoomControls />
-          {flyTo && <MapRecenter center={flyTo.center} zoom={flyTo.zoom} />}
-        </MapContainer>
-
-        {/* ── Recenter button ── */}
+        {/* ── Mobile toggle button ── */}
         <button
-          onClick={handleRecenter}
-          className="kt-recenter-btn"
-          data-testid="button-near-me"
+          className="kt-mobile-toggle"
+          onClick={() => setMobileView(mobileView === "map" ? "list" : "map")}
         >
-          <Navigation size={18} />
+          {mobileView === "map" ? "📋 Vis liste" : "🗺️ Vis kort"}
         </button>
-
-        {/* ── Loading Indicator for Viewport Loading ── */}
-        {isLoadingViewport && (
-          <div className="kt-loading" data-testid="loading-viewport">
-            <div className="kt-loading-dot" />
-            <span className="kt-loading-text">Loading places...</span>
-          </div>
-        )}
-
-        {/* ── Pin Detail ── */}
-        {selectedPin && <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />}
       </div>
     </>
   );

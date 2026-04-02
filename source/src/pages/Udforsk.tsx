@@ -310,41 +310,27 @@ export default function Udforsk() {
     searchRef.current?.blur();
   }
 
+  const featuredEvent = popular[0] || null;
+  const feedEvents = comingSoon.length > 0 ? comingSoon : filtered.slice(0, 6);
+
   return (
     <div ref={containerRef} className="ud-root" data-testid="udforsk-page">
       <style>{udforskCSS}</style>
 
-      {/* ── COVER HERO ── */}
-      <div className="ud-cover">
-        <img src="/udforsk-hero.png" alt="" />
-        <div className="ud-cover-overlay" />
+      {/* ── COVER STRIP ── */}
+      <div className="ud-cover-strip">
+        <img src="https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=1400&auto=format&fit=crop" alt="Copenhagen skyline" className="ud-cover-strip-img" />
+        <div className="ud-cover-strip-gradient" />
       </div>
 
-      {/* ── IDENTITY ── */}
-      <div className="ud-identity ud-fade-up">
-        <div className="ud-avatar">🧭</div>
-        <h1 className="ud-identity-title">Udforsk <em>Danmark</em></h1>
-        <p className="ud-identity-sub">{t('udforsk.subtitle')}</p>
-      </div>
-
-      {/* ── STATS ── */}
-      <div className="ud-stats ud-fade-up ud-d1">
-        <div className="ud-stat-card">
-          <div className="ud-stat-val">97K+</div>
-          <div className="ud-stat-lbl">Steder</div>
-        </div>
-        <div className="ud-stat-card">
-          <div className="ud-stat-val">{allEvents.length}</div>
-          <div className="ud-stat-lbl">Events</div>
-        </div>
-        <div className="ud-stat-card">
-          <div className="ud-stat-val">{Object.keys(REGIONS).length - 1}</div>
-          <div className="ud-stat-lbl">Lande</div>
-        </div>
+      {/* ── IDENTITY BLOCK ── */}
+      <div className="ud-identity-block ud-fade-up">
+        <h1 className="ud-identity-serif">Udforsk</h1>
+        <p className="ud-identity-teal">Hvad sker der i Danmark?</p>
       </div>
 
       {/* ── SEARCH ── */}
-      <div className="ud-search-wrap-outer ud-fade-up ud-d2">
+      <div className="ud-search-wrap-outer ud-fade-up ud-d1">
         <div className="ud-search-bar">
           <Search size={16} className="ud-search-icon" />
           <input
@@ -473,107 +459,180 @@ export default function Udforsk() {
         </div>
       )}
 
-      {/* ═══ MAIN CONTENT ═══ */}
+      {/* ═══ MAIN CONTENT — TWO-COLUMN SOCIAL DISCOVERY ═══ */}
       {!search && !searchFocused && (
-        <div className="ud-content">
+        <div className="ud-discovery">
 
           {activeCategory && (
-            <div className="ud-active-cat ud-fade-up">
+            <div className="ud-active-cat ud-fade-up" style={{ gridColumn: '1 / -1' }}>
               <span>{getCategoryEmoji(activeCategory)} {t('events.showing', {category: activeCategory})}</span>
               <button onClick={() => setActiveCategory(null)}>{t('events.show_all')}</button>
             </div>
           )}
 
-          {/* Country chips */}
-          <section className="ud-fade-up">
-            <div className="ud-section-head">
-              <span>🌎</span>
-              <h2>{t('udforsk.country_filter_label')}</h2>
-            </div>
-            <div className="ud-chip-scroll">
-              {COUNTRY_CHIP_ORDER.map((code) => {
-                const region = REGIONS[code];
-                if (!region) return null;
-                return (
-                  <button key={code} onClick={() => setActiveCountry(code)}
-                    className={`ud-chip ${activeCountry === code ? "active" : ""}`}
-                    data-testid={`country-chip-${code}`}>
-                    <span>{region.flag}</span> {region.label}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+          {/* ──── LEFT COLUMN (65%) ──── */}
+          <div className="ud-left-col">
 
-          {/* Categories */}
-          <section className="ud-fade-up ud-d1">
-            <div className="ud-section-head">
-              <span>🗂️</span>
-              <h2>{t('udforsk.categories')}</h2>
-            </div>
-            <div className="ud-cat-wrap">
-              {ALL_CATEGORIES.map((cat) => (
-                <button key={cat.key} onClick={() => pickTag(cat.key)}
-                  className={`ud-cat-chip ${activeCategory === cat.key ? "active" : ""}`}
-                  data-testid={`cat-chip-${cat.key}`}>
-                  <span className="ud-cat-chip-emoji">{cat.emoji}</span>
-                  <span className="ud-cat-chip-label">{cat.label}</span>
-                </button>
-              ))}
-              <Link href="/kort" className="ud-cat-chip hotel">
-                <span className="ud-cat-chip-emoji">🏨</span>
-                <span className="ud-cat-chip-label">Hoteller & overnatning</span>
-              </Link>
-            </div>
-          </section>
-
-          {/* Database places */}
-          <div className="ud-fade-up ud-d2">
-            <SupabasePlacesSection activeCountry={activeCountry} />
-          </div>
-
-          {/* Trending */}
-          <section className="ud-fade-up ud-d2">
-            <div className="ud-section-head">
-              <TrendingUp size={14} className="ud-teal-icon" />
-              <h2>{t('udforsk.trending_nearby')}</h2>
-            </div>
-            <div className="ud-trend-list">
-              {trendingSocial.map((s) => <TrendingCard key={s.id} activity={s} />)}
-            </div>
-          </section>
-
-          {/* Popular */}
-          {popular.length > 0 && (
-            <section className="ud-fade-up ud-d3">
-              <div className="ud-section-head">
-                <div className="ud-section-head-left">
-                  <span>🔥</span>
-                  <h2>{t('events.popular_experiences')}</h2>
+            {/* Featured event card */}
+            {featuredEvent && (
+              <Link href={`/event/${featuredEvent.id}`} className="ud-featured-card ud-fade-up">
+                <div className="ud-featured-img-wrap">
+                  <img src={getEventImage(featuredEvent)} alt={featuredEvent.title} className="ud-featured-img" loading="lazy" />
+                  <div className="ud-featured-img-gradient" />
                 </div>
-                <span className="ud-section-link">{t('events.see_all')} <ChevronRight size={12} /></span>
+                <div className="ud-featured-body">
+                  <span className="ud-featured-badge">
+                    <Star size={10} /> Fremhaevet
+                  </span>
+                  <h2 className="ud-featured-title">{featuredEvent.title}</h2>
+                  <p className="ud-featured-meta">
+                    {formatDanishDate(featuredEvent.date)}
+                    {featuredEvent.location && <> &middot; <MapPin size={10} /> {featuredEvent.location.split(",")[0]}</>}
+                  </p>
+                  <p className="ud-featured-desc">
+                    {featuredEvent.description?.slice(0, 120)}{featuredEvent.description && featuredEvent.description.length > 120 ? "..." : ""}
+                  </p>
+                  <span className="ud-featured-cta">Se event <ChevronRight size={14} /></span>
+                </div>
+              </Link>
+            )}
+
+            {/* Populaert lige nu — circular avatar scroll */}
+            <section className="ud-fade-up ud-d1">
+              <div className="ud-section-head">
+                <span>🔥</span>
+                <h2>Populaert lige nu</h2>
               </div>
-              <div className="ud-pop-row">
-                {popular.map(e => <PopularCard key={e.id} event={e} />)}
+              <div className="ud-avatar-scroll">
+                {popular.slice(0, 10).map((e) => (
+                  <Link key={e.id} href={`/event/${e.id}`} className="ud-avatar-item">
+                    <div className="ud-avatar-circle">
+                      <img src={getEventImage(e)} alt={e.title} loading="lazy" />
+                    </div>
+                    <span className="ud-avatar-label">{e.title.length > 12 ? e.title.slice(0, 12) + "..." : e.title}</span>
+                  </Link>
+                ))}
               </div>
             </section>
-          )}
 
-          {/* Coming soon */}
-          {comingSoon.length > 0 && (
-            <section className="ud-fade-up ud-d3">
+            {/* Country chips */}
+            <section className="ud-fade-up ud-d1">
+              <div className="ud-section-head">
+                <span>🌎</span>
+                <h2>{t('udforsk.country_filter_label')}</h2>
+              </div>
+              <div className="ud-chip-scroll">
+                {COUNTRY_CHIP_ORDER.map((code) => {
+                  const region = REGIONS[code];
+                  if (!region) return null;
+                  return (
+                    <button key={code} onClick={() => setActiveCountry(code)}
+                      className={`ud-chip ${activeCountry === code ? "active" : ""}`}
+                      data-testid={`country-chip-${code}`}>
+                      <span>{region.flag}</span> {region.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Database places */}
+            <div className="ud-fade-up ud-d2">
+              <SupabasePlacesSection activeCountry={activeCountry} />
+            </div>
+
+            {/* Event feed */}
+            <section className="ud-fade-up ud-d2">
               <div className="ud-section-head">
                 <span>📅</span>
                 <h2>{t('events.coming_soon')}</h2>
               </div>
-              <div className="ud-cal-list">
-                {comingSoon.map(e => <CalendarListCard key={e.id} event={e} />)}
+              <div className="ud-feed-list">
+                {feedEvents.map(e => <CalendarListCard key={e.id} event={e} />)}
               </div>
             </section>
-          )}
+
+            {/* Trending social */}
+            <section className="ud-fade-up ud-d3">
+              <div className="ud-section-head">
+                <TrendingUp size={14} className="ud-teal-icon" />
+                <h2>{t('udforsk.trending_nearby')}</h2>
+              </div>
+              <div className="ud-trend-list">
+                {trendingSocial.map((s) => <TrendingCard key={s.id} activity={s} />)}
+              </div>
+            </section>
+          </div>
+
+          {/* ──── RIGHT COLUMN (35%) ──── */}
+          <aside className="ud-right-col">
+
+            {/* Trending kategorier */}
+            <div className="ud-sidebar-card ud-fade-up ud-d1">
+              <h3 className="ud-sidebar-title">Trending kategorier</h3>
+              <div className="ud-trending-tags">
+                {ALL_CATEGORIES.slice(0, 10).map((cat) => (
+                  <button key={cat.key} onClick={() => pickTag(cat.key)}
+                    className={`ud-tag-chip ${activeCategory === cat.key ? "active" : ""}`}
+                    data-testid={`cat-chip-${cat.key}`}>
+                    <span>{cat.emoji}</span> {cat.label}
+                  </button>
+                ))}
+                <Link href="/kort" className="ud-tag-chip ud-tag-hotel">
+                  <span>🏨</span> Hoteller
+                </Link>
+              </div>
+            </div>
+
+            {/* Venner deltager */}
+            <div className="ud-sidebar-card ud-fade-up ud-d2">
+              <h3 className="ud-sidebar-title">
+                <Heart size={13} className="ud-teal-icon" /> Venner deltager
+              </h3>
+              <div className="ud-friends-list">
+                {BRUGERE.slice(0, 5).map((b) => (
+                  <div key={b.name} className="ud-friend-row">
+                    <img src={b.avatar} alt={b.name} className="ud-friend-avatar" loading="lazy" />
+                    <div className="ud-friend-info">
+                      <span className="ud-friend-name">{b.name}</span>
+                      <span className="ud-friend-action">deltager i et event</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Redaktoerens valg */}
+            <div className="ud-sidebar-card ud-fade-up ud-d3">
+              <h3 className="ud-sidebar-title">
+                <Star size={13} className="ud-teal-icon" /> Redaktoerens valg
+              </h3>
+              <div className="ud-editor-picks">
+                {popular.slice(1, 4).map((e) => (
+                  <Link key={e.id} href={`/event/${e.id}`} className="ud-editor-pick">
+                    <div className="ud-editor-pick-img-wrap">
+                      <img src={getEventImage(e)} alt={e.title} loading="lazy" />
+                    </div>
+                    <div className="ud-editor-pick-body">
+                      <span className="ud-editor-pick-cat">{getCategoryEmoji(e.category || "")} {e.category}</span>
+                      <h4 className="ud-editor-pick-name">{e.title}</h4>
+                      <span className="ud-editor-pick-date">{formatDanishDate(e.date)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats compact */}
+            <div className="ud-sidebar-card ud-sidebar-stats ud-fade-up ud-d3">
+              <div className="ud-mini-stat"><span className="ud-mini-stat-val">97K+</span><span className="ud-mini-stat-lbl">Steder</span></div>
+              <div className="ud-mini-stat"><span className="ud-mini-stat-val">{allEvents.length}</span><span className="ud-mini-stat-lbl">Events</span></div>
+              <div className="ud-mini-stat"><span className="ud-mini-stat-val">{Object.keys(REGIONS).length - 1}</span><span className="ud-mini-stat-lbl">Lande</span></div>
+            </div>
+          </aside>
 
           {activeCategory && filtered.length === 0 && (
-            <div className="ud-empty-state">
+            <div className="ud-empty-state" style={{ gridColumn: '1 / -1' }}>
               <span>🔍</span>
               <p>{t('events.no_experiences_found')}</p>
               <button onClick={() => setActiveCategory(null)} className="ud-btn-sm">{t('events.show_all_categories')}</button>
@@ -593,13 +652,44 @@ ${pageBase("ud")}
 
 .ud-root { position: relative; padding-bottom: 96px; }
 
-/* ── Content area (below cover+identity+stats) ── */
-.ud-content { padding: 0 20px; }
-.ud-search-results, .ud-search-overlay { padding-bottom: 16px; }
+/* ═══════════════════════════════════════════
+   COVER STRIP
+   ═══════════════════════════════════════════ */
+.ud-cover-strip {
+  position: relative; width: 100%; height: 150px; overflow: hidden;
+}
+.ud-cover-strip-img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center 40%;
+  filter: brightness(0.7);
+}
+.ud-cover-strip-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(6,10,15,0.3) 0%, rgba(6,10,15,0.95) 100%);
+}
 
-/* ── Search wrapper ── */
-.ud-search-wrap-outer { padding: 0 20px 20px; }
-.ud-search-bar { position: relative; }
+/* ═══════════════════════════════════════════
+   IDENTITY BLOCK
+   ═══════════════════════════════════════════ */
+.ud-identity-block {
+  text-align: center; padding: 24px 20px 8px; margin-top: -40px;
+  position: relative; z-index: 2;
+}
+.ud-identity-serif {
+  font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  font-size: 42px; font-weight: 400; color: var(--pg-white);
+  letter-spacing: -0.5px; line-height: 1.1; margin: 0;
+}
+.ud-identity-teal {
+  font-size: 14px; color: var(--teal); font-weight: 500;
+  margin: 6px 0 0; letter-spacing: 0.3px;
+  font-family: var(--sans);
+}
+
+/* ═══════════════════════════════════════════
+   SEARCH
+   ═══════════════════════════════════════════ */
+.ud-search-wrap-outer { padding: 16px 20px 20px; }
+.ud-search-bar { position: relative; max-width: 640px; margin: 0 auto; }
 .ud-search-icon {
   position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
   color: var(--pg-white-muted); pointer-events: none; z-index: 1;
@@ -620,7 +710,8 @@ ${pageBase("ud")}
 .ud-search-clear:hover { color: var(--pg-white); }
 
 /* ── Search overlay / results ── */
-.ud-search-overlay, .ud-search-results { padding: 0 20px 16px; margin-top: 0; }
+.ud-search-overlay, .ud-search-results { padding: 0 20px 16px; margin-top: 0; max-width: 700px; margin-left: auto; margin-right: auto; }
+.ud-search-results { padding-bottom: 16px; }
 .ud-tag-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
 .ud-result-group { margin-bottom: 20px; }
 .ud-result-list { display: flex; flex-direction: column; gap: 8px; }
@@ -651,8 +742,19 @@ ${pageBase("ud")}
 .ud-no-results span { font-size: 32px; display: block; margin-bottom: 10px; }
 .ud-no-results p { font-size: 14px; color: var(--pg-white-dim); }
 
-/* ── Content ── */
-.ud-content { display: flex; flex-direction: column; gap: 28px; padding: 0 20px; }
+/* ═══════════════════════════════════════════
+   TWO-COLUMN DISCOVERY LAYOUT
+   ═══════════════════════════════════════════ */
+.ud-discovery {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  padding: 0 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.ud-left-col { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.ud-right-col { display: flex; flex-direction: column; gap: 20px; }
 
 /* ── Active category ── */
 .ud-active-cat {
@@ -666,7 +768,181 @@ ${pageBase("ud")}
   background: none; border: none; cursor: pointer; font-family: var(--sans);
 }
 
-/* ── Section heads ── */
+/* ═══════════════════════════════════════════
+   FEATURED EVENT CARD
+   ═══════════════════════════════════════════ */
+.ud-featured-card {
+  display: flex; border-radius: 20px; overflow: hidden;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  text-decoration: none; color: var(--pg-white); cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
+  min-height: 220px;
+}
+.ud-featured-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(78,205,196,0.25);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.ud-featured-img-wrap {
+  position: relative; width: 45%; flex-shrink: 0; overflow: hidden;
+}
+.ud-featured-img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.ud-featured-card:hover .ud-featured-img { transform: scale(1.06); }
+.ud-featured-img-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, transparent 60%, rgba(6,10,15,0.6) 100%);
+}
+.ud-featured-body {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 24px 28px; flex: 1; min-width: 0;
+}
+.ud-featured-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; color: var(--teal);
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+}
+.ud-featured-title {
+  font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ud-featured-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--pg-white-muted); margin: 0 0 10px;
+}
+.ud-featured-meta svg { flex-shrink: 0; }
+.ud-featured-desc {
+  font-size: 13px; color: var(--pg-white-dim); line-height: 1.5;
+  margin: 0 0 14px;
+}
+.ud-featured-cta {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; font-weight: 600; color: var(--teal);
+  transition: gap 0.2s;
+}
+.ud-featured-card:hover .ud-featured-cta { gap: 8px; }
+
+/* ═══════════════════════════════════════════
+   POPULAR — CIRCULAR AVATAR SCROLL
+   ═══════════════════════════════════════════ */
+.ud-avatar-scroll {
+  display: flex; gap: 16px; overflow-x: auto; padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.ud-avatar-scroll::-webkit-scrollbar { display: none; }
+.ud-avatar-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  flex-shrink: 0; text-decoration: none; color: var(--pg-white);
+  cursor: pointer; width: 72px;
+}
+.ud-avatar-circle {
+  width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
+  border: 2px solid transparent;
+  background: linear-gradient(var(--bg), var(--bg)) padding-box,
+              linear-gradient(135deg, var(--teal), rgba(78,205,196,0.3)) border-box;
+  transition: all 0.3s ease;
+}
+.ud-avatar-item:hover .ud-avatar-circle {
+  border-color: transparent;
+  background: linear-gradient(var(--bg), var(--bg)) padding-box,
+              linear-gradient(135deg, var(--teal), #a78bfa) border-box;
+  transform: scale(1.08);
+}
+.ud-avatar-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.ud-avatar-label {
+  font-size: 10px; color: var(--pg-white-muted); text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 72px;
+}
+
+/* ═══════════════════════════════════════════
+   FEED LIST
+   ═══════════════════════════════════════════ */
+.ud-feed-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════ */
+.ud-sidebar-card {
+  padding: 20px; border-radius: 18px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+}
+.ud-sidebar-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--pg-white);
+  margin: 0 0 14px;
+}
+
+/* Trending tags */
+.ud-trending-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.ud-tag-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 100px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--pg-white-dim); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+  font-family: var(--sans);
+}
+.ud-tag-chip:hover {
+  background: rgba(78,205,196,0.1); border-color: rgba(78,205,196,0.2);
+  color: var(--pg-white);
+}
+.ud-tag-chip.active {
+  background: var(--teal); border-color: var(--teal); color: var(--bg);
+}
+.ud-tag-chip span { font-size: 13px; }
+.ud-tag-hotel {
+  background: rgba(0,53,128,0.25); border-color: rgba(0,53,128,0.4); color: #7db4ff;
+}
+.ud-tag-hotel:hover { background: rgba(0,53,128,0.4); color: #b3d4ff; }
+
+/* Friends list */
+.ud-friends-list { display: flex; flex-direction: column; gap: 12px; }
+.ud-friend-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.ud-friend-avatar {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+  border: 2px solid rgba(78,205,196,0.2); flex-shrink: 0;
+}
+.ud-friend-info { display: flex; flex-direction: column; min-width: 0; }
+.ud-friend-name { font-size: 13px; font-weight: 600; color: var(--pg-white); }
+.ud-friend-action { font-size: 11px; color: var(--pg-white-muted); }
+
+/* Editor picks */
+.ud-editor-picks { display: flex; flex-direction: column; gap: 12px; }
+.ud-editor-pick {
+  display: flex; gap: 12px; text-decoration: none; color: var(--pg-white);
+  cursor: pointer; padding: 8px; border-radius: 12px;
+  transition: background 0.2s;
+}
+.ud-editor-pick:hover { background: rgba(255,255,255,0.04); }
+.ud-editor-pick-img-wrap {
+  width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
+  flex-shrink: 0;
+}
+.ud-editor-pick-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.ud-editor-pick-body { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.ud-editor-pick-cat { font-size: 10px; color: var(--pg-white-muted); margin-bottom: 2px; }
+.ud-editor-pick-name {
+  font-size: 13px; font-weight: 600; margin: 0; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ud-editor-pick-date { font-size: 11px; color: var(--pg-white-muted); margin-top: 2px; }
+
+/* Sidebar stats */
+.ud-sidebar-stats {
+  display: flex; justify-content: space-around; text-align: center;
+}
+.ud-mini-stat { display: flex; flex-direction: column; gap: 2px; }
+.ud-mini-stat-val { font-size: 18px; font-weight: 700; color: var(--teal); }
+.ud-mini-stat-lbl { font-size: 11px; color: var(--pg-white-muted); }
+
+/* ═══════════════════════════════════════════
+   SECTION HEADS (shared)
+   ═══════════════════════════════════════════ */
 .ud-section-head {
   display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
 }
@@ -685,7 +961,9 @@ ${pageBase("ud")}
 .ud-section-link:hover { color: var(--pg-white-dim); }
 .ud-teal-icon { color: var(--teal); }
 
-/* ── Chips ── */
+/* ═══════════════════════════════════════════
+   CHIPS
+   ═══════════════════════════════════════════ */
 .ud-chip-scroll {
   display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
   scrollbar-width: none;
@@ -696,31 +974,9 @@ ${pageBase("ud")}
   color: var(--pg-white);
 }
 
-/* ── Category chips ── */
-.ud-cat-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-.ud-cat-chip {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 16px; border-radius: 14px;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  cursor: pointer; transition: all 0.25s; text-decoration: none;
-  min-height: 44px; font-family: var(--sans);
-  color: var(--pg-white);
-}
-.ud-cat-chip:hover { background: var(--glass-bg-hover); }
-.ud-cat-chip.active {
-  background: var(--teal); border-color: var(--teal);
-  box-shadow: 0 4px 16px rgba(78,205,196,0.25);
-}
-.ud-cat-chip.active .ud-cat-chip-label { color: var(--bg); }
-.ud-cat-chip.hotel {
-  background: #003580; border-color: #003580;
-}
-.ud-cat-chip.hotel:hover { background: #00264D; }
-.ud-cat-chip.hotel .ud-cat-chip-label { color: white; }
-.ud-cat-chip-emoji { font-size: 16px; }
-.ud-cat-chip-label { font-size: 12px; font-weight: 500; color: var(--pg-white-dim); }
-
-/* ── Places section ── */
+/* ═══════════════════════════════════════════
+   PLACES SECTION
+   ═══════════════════════════════════════════ */
 .ud-places-section { }
 .ud-places-loading {
   display: flex; align-items: center; gap: 8px;
@@ -759,7 +1015,9 @@ ${pageBase("ud")}
 .ud-place-card-city { color: var(--pg-white-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ud-empty-places { padding: 16px 0; text-align: center; font-size: 12px; color: var(--pg-white-muted); }
 
-/* ── Trending cards ── */
+/* ═══════════════════════════════════════════
+   TRENDING CARDS
+   ═══════════════════════════════════════════ */
 .ud-trend-list { display: flex; flex-direction: column; gap: 8px; }
 .ud-trend-card {
   display: flex; align-items: center; gap: 14px;
@@ -787,7 +1045,9 @@ ${pageBase("ud")}
   font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
 
-/* ── Popular row ── */
+/* ═══════════════════════════════════════════
+   POPULAR ROW (kept for PopularCard sub-component)
+   ═══════════════════════════════════════════ */
 .ud-pop-row {
   display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none;
 }
@@ -823,7 +1083,9 @@ ${pageBase("ud")}
 }
 .ud-pop-card-cat { font-size: 11px; color: var(--pg-white-muted); margin-top: 4px; }
 
-/* ── Calendar list cards ── */
+/* ═══════════════════════════════════════════
+   CALENDAR LIST CARDS
+   ═══════════════════════════════════════════ */
 .ud-cal-list { display: flex; flex-direction: column; gap: 8px; }
 .ud-cal-card {
   display: flex; gap: 12px; padding-right: 14px;
@@ -854,14 +1116,36 @@ ${pageBase("ud")}
 }
 .ud-cal-card-loc { display: flex; align-items: center; gap: 3px; }
 
-/* ── Empty ── */
+/* ═══════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════ */
 .ud-empty-state {
   text-align: center; padding: 60px 20px;
 }
 .ud-empty-state span { font-size: 40px; display: block; margin-bottom: 12px; }
 .ud-empty-state p { font-size: 14px; color: var(--pg-white-dim); margin-bottom: 16px; }
 
-@media (max-width: 768px) {
-  .ud-sticky-header { padding: 40px 16px 12px; }
+/* ═══════════════════════════════════════════
+   RESPONSIVE — COLLAPSE TO SINGLE COLUMN
+   ═══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .ud-discovery {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+  }
+  .ud-right-col { order: -1; }
+  .ud-featured-card { flex-direction: column; min-height: auto; }
+  .ud-featured-img-wrap { width: 100%; height: 180px; }
+  .ud-featured-img-gradient {
+    background: linear-gradient(to top, rgba(6,10,15,0.7) 0%, transparent 60%);
+  }
+  .ud-featured-body { padding: 18px 20px; }
+  .ud-featured-title { font-size: 18px; }
+}
+@media (max-width: 480px) {
+  .ud-identity-serif { font-size: 34px; }
+  .ud-cover-strip { height: 120px; }
+  .ud-identity-block { margin-top: -30px; padding: 18px 16px 4px; }
+  .ud-places-grid { grid-template-columns: 1fr; }
 }
 `;
