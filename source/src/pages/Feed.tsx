@@ -4,11 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { getEvents } from "@/lib/data";
 import { getEventImage, formatDanishDate } from "@/lib/eventHelpers";
-import { Search, ChevronRight, Bell, Loader2, ExternalLink, SlidersHorizontal, Compass, X } from "lucide-react";
+import { Search, Bell, Loader2, ExternalLink, SlidersHorizontal, Compass, X } from "lucide-react";
 import { fetchNews, formatNewsTime, type NewsItem } from "@/lib/newsEngine";
-import { buildTagFeed, scoreEvent, getTrendingTags, getTagNode, type TagSection } from "@/lib/tagEngine";
+import { buildTagFeed, scoreEvent, getTrendingTags, getTagNode } from "@/lib/tagEngine";
 import { useAuth } from "@/context/AuthContext";
-import { EmailCaptureInline } from "@/components/EmailCapture";
 import { useTags } from "@/context/TagContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { FeedTagEditor } from "@/components/FeedTagEditor";
@@ -163,6 +162,22 @@ export default function Feed() {
     ? t('feed.demo_subtitle')
     : t('feed.subtitle');
 
+  const tagColors = ['#4ecdc4','#2dd4a8','#06b6d4','#22c55e','#14b8a6','#0ea5e9','#10b981'];
+
+  const masonryEvents = useMemo(() => {
+    const sections = isAnonymous && tagSections.length === 0 ? filteredDemoSections : filteredTagSections;
+    if (sections.length === 0 && !isAnonymous) return [];
+    const src = sections.length > 0 ? sections : demoSections;
+    const maxLen = Math.max(...src.map(s => s.events.length), 0);
+    const result: typeof events = [];
+    for (let i = 0; i < maxLen; i++) {
+      for (const s of src) {
+        if (i < s.events.length) result.push(s.events[i]);
+      }
+    }
+    return result;
+  }, [isAnonymous, tagSections, filteredDemoSections, filteredTagSections, demoSections, events]);
+
   if (isLoading) {
     return (
       <div className="fd-root">
@@ -179,34 +194,13 @@ export default function Feed() {
     <div ref={containerRef} className="fd-root">
       <style>{feedCSS}</style>
 
-      {/* ── COVER HERO ── */}
+      {/* ── IMMERSIVE HERO — greeting overlaid on photo ── */}
       <div className="fd-cover">
         <img src="/feed-hero.png" alt="" />
         <div className="fd-cover-overlay" />
-      </div>
-
-      {/* ── IDENTITY ── */}
-      <div className="fd-identity">
-        <div className="fd-avatar">
-          {profile?.name ? profile.name.charAt(0).toUpperCase() : '🏠'}
-        </div>
-        <h1 className="fd-identity-title">{greeting}</h1>
-        <p className="fd-identity-sub">{subtitle}</p>
-      </div>
-
-      {/* ── STATS ── */}
-      <div className="fd-stats">
-        <div className="fd-stat-card">
-          <div className="fd-stat-val">{events.length > 999 ? (events.length / 1000).toFixed(1) + 'K' : events.length}</div>
-          <div className="fd-stat-lbl">Events</div>
-        </div>
-        <div className="fd-stat-card">
-          <div className="fd-stat-val">{trendingTags.length}</div>
-          <div className="fd-stat-lbl">Trending</div>
-        </div>
-        <div className="fd-stat-card">
-          <div className="fd-stat-val">{selectedTags.length || '—'}</div>
-          <div className="fd-stat-lbl">Mine tags</div>
+        <div className="fd-cover-greeting">
+          <h1 className="fd-cover-title">{greeting}</h1>
+          <p className="fd-cover-sub">{subtitle}</p>
         </div>
       </div>
 
@@ -273,149 +267,113 @@ export default function Feed() {
         </div>
       )}
 
-      {/* ── TAG EDITOR TRIGGER ── */}
-      <div className="fd-tag-trigger fd-fade-up fd-d2">
-        <button onClick={() => setTagEditorOpen(true)} className="fd-tag-trigger-btn">
-          <div className="fd-tag-trigger-icon"><SlidersHorizontal size={14} /></div>
-          <span>{selectedTags.length > 0 ? t('feed.edit_tags') : t('feed.select_interests_btn')}</span>
+      {/* ── EVENTS HEADER ── */}
+      <div className="fd-events-header fd-fade-up">
+        <h2 className="fd-events-count">{masonryEvents.length} Events</h2>
+        <button onClick={() => setTagEditorOpen(true)} className="fd-chip active">
+          {selectedTags.length > 0 ? t('feed.edit_tags') : t('feed.select_interests_btn')}
         </button>
       </div>
-
-      {/* ── HERO (anonymous) ── */}
-      {isAnonymous && tagSections.length === 0 && (
-        <section className="fd-hero fd-fade-up fd-d1">
-          <img src="/concert.jpg" alt="" className="fd-hero-bg" />
-          <div className="fd-hero-overlay" />
-          <div className="fd-hero-content">
-            <div className="fd-hero-live">
-              <span className="fd-live-dot"><span className="fd-live-ping" /><span className="fd-live-core" /></span>
-              Live i dag
-            </div>
-            <h2 className="fd-hero-h2">Find din næste<br /><em>store oplevelse</em></h2>
-            <p className="fd-hero-p">Events, steder og aktiviteter overalt i verden — alt samlet ét sted. Fra Nyhavn til nordlyset.</p>
-            <div className="fd-hero-stats">
-              {[["95K+","Steder"],["6.4K","Events"],["117","Lande"]].map(([num, label]) => (
-                <div key={label} className="fd-hero-stat">
-                  <p className="fd-hero-stat-num">{num}</p>
-                  <p className="fd-hero-stat-label">{label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="fd-hero-actions">
-              <Link href="/auth" className="fd-btn">Kom i gang gratis →</Link>
-              <Link href="/udforsk" className="fd-btn-ghost">Se events →</Link>
-            </div>
-            <div className="fd-hero-email">
-              <span className="fd-hero-email-hint">📨 Få ugentlige event-tips direkte i din indbakke</span>
-              <EmailCaptureInline />
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ── MAIN GRID ── */}
       <div className="fd-grid">
         <div className="fd-main">
-          {isAnonymous && tagSections.length === 0 ? (
-            <>
-              {filteredDemoSections.length === 0 && activeSearch ? (
-                <div className="fd-empty-search">
-                  <Search size={32} />
-                  <p>Ingen events fundet for "{activeSearch}"</p>
+          {masonryEvents.length === 0 ? (
+            !isAnonymous && tagSections.length === 0 ? (
+              <div className="fd-empty fd-fade-up">
+                <div className="fd-empty-icon"><Compass size={28} /></div>
+                <h2 className="fd-empty-h2">{t('feed.get_started')}</h2>
+                <p className="fd-empty-p">
+                  {selectedTags.length === 0 ? t('feed.select_interests') : t('feed.no_events_for_tags')}
+                </p>
+                <div className="fd-empty-actions">
+                  <button onClick={() => setTagEditorOpen(true)} className="fd-btn">
+                    {selectedTags.length === 0 ? t('feed.select_interests_btn') : t('feed.edit_tags')}
+                  </button>
+                  <Link href="/udforsk" className="fd-btn-ghost">{t('feed.explore_all_events')}</Link>
                 </div>
-              ) : filteredDemoSections.map(section => (
-                <div key={section.tag} className="fd-section fd-fade-up">
-                  <div className="fd-section-header">
-                    <h2 className="fd-section-title">{section.emoji}&nbsp;&nbsp;{section.label}</h2>
-                    <Link href="/udforsk" className="fd-section-link">
-                      <span>{t('feed.see_all')}</span> <ChevronRight size={14} />
-                    </Link>
-                  </div>
-                  <div className="fd-events-row">
-                    {section.events.map((event, idx) => (
-                      <Link key={event.id} href={`/event/${event.id}`} className={`fd-event-card${idx === 0 ? ' fd-featured' : ''}`}>
-                        <div className="fd-event-card-img-wrap">
-                          <img src={getEventImage(event)} alt={event.title} className="fd-event-card-img" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
-                          <div className="fd-event-card-gradient" />
-                        </div>
-                        <div className="fd-event-card-body">
-                          <p className="fd-event-card-date">{formatDanishDate(event.date)}</p>
-                          <h3 className="fd-event-card-name">{event.title}</h3>
-                          {idx === 0 && event.description && <p className="fd-event-card-desc">{event.description}</p>}
-                          {event.location && <p className="fd-event-card-location">📍 {event.location}</p>}
-                          <div className="fd-event-card-tags">
-                            {event.interest_tags && event.interest_tags.slice(0, 2).map((tag: string) => (
-                              <span key={tag} className="fd-event-tag">#{tag}</span>
-                            ))}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              <div className="fd-floating-cta">
-                <Link href="/auth" className="fd-floating-cta-btn">{t('feed.demo_cta_banner')}</Link>
               </div>
-            </>
-          ) : !isAnonymous && tagSections.length === 0 ? (
-            <div className="fd-empty fd-fade-up">
-              <div className="fd-empty-icon"><Compass size={28} /></div>
-              <h2 className="fd-empty-h2">{t('feed.get_started')}</h2>
-              <p className="fd-empty-p">
-                {selectedTags.length === 0 ? t('feed.select_interests') : t('feed.no_events_for_tags')}
-              </p>
-              <div className="fd-empty-actions">
-                <button onClick={() => setTagEditorOpen(true)} className="fd-btn">
-                  {selectedTags.length === 0 ? t('feed.select_interests_btn') : t('feed.edit_tags')}
-                </button>
-                <Link href="/udforsk" className="fd-btn-ghost">{t('feed.explore_all_events')}</Link>
-              </div>
-            </div>
-          ) : (
-            filteredTagSections.length === 0 && activeSearch ? (
+            ) : activeSearch ? (
               <div className="fd-empty-search">
                 <Search size={32} />
                 <p>Ingen events fundet for "{activeSearch}"</p>
               </div>
-            ) : filteredTagSections.map(section => (
-              <div key={section.tag} className="fd-section fd-fade-up">
-                <div className="fd-section-header">
-                  <h2 className="fd-section-title">{section.emoji}&nbsp;&nbsp;{section.label}</h2>
-                  <Link href="/udforsk" className="fd-section-link">
-                    <span>{t('feed.see_all')}</span> <ChevronRight size={14} />
-                  </Link>
-                </div>
-                <div className="fd-events-row">
-                  {section.events.map((event, idx) => (
-                    <Link key={event.id} href={`/event/${event.id}`} className={`fd-event-card${idx === 0 ? ' fd-featured' : ''}`}>
-                      <div className="fd-event-card-img-wrap">
-                        <img src={getEventImage(event)} alt={event.title} className="fd-event-card-img" loading="lazy" onError={(e) => { const target = e.target as HTMLImageElement; target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
-                        <div className="fd-event-card-gradient" />
-                      </div>
-                      <div className="fd-event-card-body">
-                        <p className="fd-event-card-date">{formatDanishDate(event.date)}</p>
-                        <h3 className="fd-event-card-name">{event.title}</h3>
-                        {idx === 0 && event.description && <p className="fd-event-card-desc">{event.description}</p>}
-                        {event.location && <p className="fd-event-card-location">📍 {event.location}</p>}
-                        <div className="fd-event-card-tags">
-                          {event.interest_tags && event.interest_tags.slice(0, 2).map((tag: string) => (
-                            <span key={tag} className="fd-event-tag">#{tag}</span>
-                          ))}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))
+            ) : null
+          ) : (
+            <div className="fd-masonry">
+              {masonryEvents.map((event) => (
+                <Link key={event.id} href={`/event/${event.id}`} className="fd-masonry-card fd-fade-up">
+                  <img src={getEventImage(event)} alt={event.title} className="fd-masonry-img" loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                  <div className="fd-masonry-overlay" />
+                  <div className="fd-masonry-text">
+                    <p className="fd-masonry-date">{formatDanishDate(event.date)}</p>
+                    <h3 className="fd-masonry-title">{event.title}</h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {isAnonymous && (
+            <div className="fd-floating-cta">
+              <Link href="/auth" className="fd-floating-cta-btn">{t('feed.demo_cta_banner')}</Link>
+            </div>
           )}
         </div>
 
         {/* ── SIDEBAR ── */}
         <aside className="fd-sidebar">
+          {/* Trending Tags — colorful */}
+          <div className="fd-sidebar-card fd-fade-up fd-d2">
+            <h3 className="fd-sidebar-card-title">Trending Tags</h3>
+            <div className="fd-trending-tags">
+              {trendingTags.map(({ tag, count }, i) => {
+                const node = getTagNode(tag);
+                const isActive = selectedTags.includes(tag);
+                const color = tagColors[i % tagColors.length];
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      if (isActive) setSelectedTags(selectedTags.filter(t => t !== tag));
+                      else setSelectedTags([...selectedTags, tag]);
+                    }}
+                    className={`fd-trending-tag ${isActive ? "active" : ""}`}
+                    style={!isActive ? { color, borderColor: `${color}33` } : undefined}
+                  >
+                    #{node?.label || tag}
+                    <span className="fd-trending-count">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Live Activity */}
           <div className="fd-sidebar-card fd-fade-up fd-d3">
+            <div className="fd-sidebar-header">
+              <h3>Live Activity</h3>
+              <span className="fd-live-badge">LIVE</span>
+            </div>
+            <div className="fd-activity-list">
+              {[
+                { avatar: '👩', name: 'Anna', action: 'liked a photo of', target: 'Tivoli Gardens' },
+                { avatar: '👩‍🦰', name: 'Sofia', action: 'commented', target: 'Hygge i Nyhavn' },
+                { avatar: '🧑', name: 'Erik', action: "RSVP'd to", target: 'Jazz i Kødbyen' },
+              ].map((item, i) => (
+                <div key={i} className="fd-activity-item">
+                  <span className="fd-activity-avatar">{item.avatar}</span>
+                  <p className="fd-activity-text">
+                    <strong>{item.name}</strong> {item.action} <em>'{item.target}'</em>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* News */}
+          <div className="fd-sidebar-card fd-fade-up fd-d4">
             <div className="fd-sidebar-header">
               <h3>{t('feed.news_for_you')}</h3>
               <span className="fd-live-badge">LIVE</span>
@@ -441,32 +399,6 @@ export default function Feed() {
               <p className="fd-sidebar-empty">{t('feed.no_news')}</p>
             )}
           </div>
-
-          <div className="fd-sidebar-card fd-fade-up fd-d4">
-            <h3 className="fd-sidebar-card-title">{t('feed.popular_tags')}</h3>
-            <div className="fd-trending-tags">
-              {trendingTags.map(({ tag, count }) => {
-                const node = getTagNode(tag);
-                const isActive = selectedTags.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => {
-                      if (isActive) {
-                        setSelectedTags(selectedTags.filter(t => t !== tag));
-                      } else {
-                        setSelectedTags([...selectedTags, tag]);
-                      }
-                    }}
-                    className={`fd-trending-tag ${isActive ? "active" : ""}`}
-                  >
-                    {node?.emoji || "🏷️"} #{node?.label || tag}
-                    <span className="fd-trending-count">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </aside>
       </div>
 
@@ -479,20 +411,32 @@ export default function Feed() {
 
 /* ──────────────────────────────────────────────
    Scoped CSS — all classes prefixed with fd-
-   IMMERSIVE MAGAZINE LAYOUT (Option B)
+   IMMERSIVE MAGAZINE — Pinterest masonry + overlay text
    ────────────────────────────────────────────── */
 const feedCSS = `
 ${pageBase("fd")}
 
-/* ── Override cover to be taller (immersive) ── */
-.fd-cover { height: 300px; }
+/* ── Immersive cover with greeting overlaid ── */
+.fd-cover { height: clamp(320px, 40vh, 480px); }
 .fd-cover-overlay {
   background: linear-gradient(
     to bottom,
-    rgba(6,10,15,0.15) 0%,
-    rgba(6,10,15,0.5) 50%,
-    rgba(6,10,15,0.95) 100%
+    transparent 30%,
+    rgba(6,10,15,0.7) 65%,
+    rgba(6,10,15,0.98) 100%
   ) !important;
+}
+.fd-cover-greeting {
+  position: absolute; bottom: 28px; left: 32px; z-index: 2;
+}
+.fd-cover-title {
+  font-family: var(--serif); font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400; color: var(--pg-white); line-height: 1.05;
+  letter-spacing: -0.5px; text-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.fd-cover-sub {
+  font-size: 13px; color: var(--teal); margin-top: 6px;
+  font-weight: 500; letter-spacing: 0.3px;
 }
 
 /* ── Loading ── */
@@ -510,7 +454,7 @@ ${pageBase("fd")}
 /* ── Content wrapper ── */
 .fd-content { padding: 0 20px; }
 
-/* ── Action bar (search + filter) ── */
+/* ── Action bar ── */
 .fd-action-bar {
   display: flex; align-items: center; gap: 8px;
   padding: 20px 0 16px;
@@ -531,9 +475,7 @@ ${pageBase("fd")}
 }
 
 /* ── Search ── */
-.fd-search-wrap {
-  position: relative; display: none;
-}
+.fd-search-wrap { position: relative; display: none; }
 @media (min-width: 640px) { .fd-search-wrap { display: block; } }
 .fd-search-icon {
   position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
@@ -573,7 +515,7 @@ ${pageBase("fd")}
 /* ── Active tags ── */
 .fd-active-tags {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  padding: 0 4px; margin-bottom: 16px;
+  margin-bottom: 16px;
 }
 .fd-active-tags-label { font-size: 11px; color: var(--pg-white-muted); }
 .fd-tag-pill {
@@ -590,183 +532,74 @@ ${pageBase("fd")}
 }
 .fd-clear-all:hover { color: var(--pg-white-dim); }
 
-/* ── Tag trigger ── */
-.fd-tag-trigger { margin-bottom: 28px; padding: 0 4px; }
-.fd-tag-trigger-btn {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 10px 22px; border-radius: 100px;
-  background: var(--teal-dim); border: 1px solid rgba(78,205,196,0.15);
-  cursor: pointer; transition: all 0.25s; font-family: var(--sans);
-  color: var(--teal); font-size: 13px; font-weight: 500;
+/* ── Events header ── */
+.fd-events-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0 20px;
 }
-.fd-tag-trigger-btn:hover { background: rgba(78,205,196,0.2); border-color: rgba(78,205,196,0.3); }
-.fd-tag-trigger-icon {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: rgba(78,205,196,0.15); display: flex;
-  align-items: center; justify-content: center;
+.fd-events-count {
+  font-family: var(--serif); font-size: clamp(22px, 3vw, 32px);
+  font-weight: 400; color: var(--pg-white);
 }
 
-/* ── Hero (anonymous) ── */
-.fd-hero {
-  position: relative; border-radius: 20px; overflow: hidden;
-  margin-bottom: 36px; border: 1px solid var(--glass-border);
-}
-.fd-hero-bg {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  transform: scale(1.05); transition: transform 8s ease;
-}
-.fd-hero:hover .fd-hero-bg { transform: scale(1.1); }
-.fd-hero-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(6,10,15,0.2) 0%, rgba(6,10,15,0.75) 50%, rgba(6,10,15,0.98) 100%);
-}
-.fd-hero-content { position: relative; z-index: 2; padding: 180px 32px 36px; }
-.fd-hero-live {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 16px; border-radius: 100px; margin-bottom: 20px;
-  background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.12);
-  backdrop-filter: blur(8px);
-  font-size: 11px; color: var(--teal); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 1.5px;
-}
-.fd-live-dot { position: relative; width: 8px; height: 8px; }
-.fd-live-ping {
-  position: absolute; inset: 0; border-radius: 50%;
-  background: var(--teal); animation: fd-ping 1.5s cubic-bezier(0,0,0.2,1) infinite; opacity: 0.6;
-}
-.fd-live-core { position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
-@keyframes fd-ping { 75%,100% { transform: scale(2); opacity: 0; } }
-.fd-hero-h2 {
-  font-family: var(--serif); font-size: clamp(28px, 5vw, 46px);
-  font-weight: 400; line-height: 1.05; letter-spacing: -1px; margin-bottom: 14px;
-}
-.fd-hero-h2 em { font-style: italic; color: var(--teal); }
-.fd-hero-p {
-  font-size: 15px; color: var(--pg-white-dim); line-height: 1.6;
-  max-width: 420px; margin-bottom: 24px;
-}
-.fd-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
-.fd-hero-stat {
-  padding: 14px; border-radius: 14px; text-align: center;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  backdrop-filter: blur(8px); transition: transform 0.3s;
-}
-.fd-hero-stat:hover { transform: translateY(-2px); }
-.fd-hero-stat-num {
-  font-family: var(--serif); font-size: 22px; font-weight: 400;
-  color: var(--teal); line-height: 1;
-}
-.fd-hero-stat-label {
-  font-size: 10px; color: var(--pg-white-muted); text-transform: uppercase;
-  letter-spacing: 1.2px; margin-top: 4px;
-}
-.fd-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-.fd-hero-email { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
-.fd-hero-email-hint { display: block; font-size: 12px; color: var(--pg-white-muted); margin-bottom: 10px; }
-
-/* ── Main grid ── */
+/* ── Main grid (content + sidebar) ── */
 .fd-grid {
   display: grid; grid-template-columns: 1fr; gap: 32px;
 }
 @media (min-width: 1024px) {
-  .fd-grid { grid-template-columns: 1fr 340px; }
+  .fd-grid { grid-template-columns: 1fr 320px; }
 }
 
-/* ── Event sections ── */
-.fd-section { margin-bottom: 48px; }
-.fd-section-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 20px; padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+/* ═══ MASONRY — CSS columns for Pinterest layout ═══ */
+.fd-masonry {
+  column-count: 3; column-gap: 16px;
 }
-.fd-section-title {
-  font-family: var(--serif); font-size: 26px; font-weight: 400;
-  letter-spacing: -0.5px;
+.fd-masonry > * {
+  break-inside: avoid; margin-bottom: 16px;
 }
-.fd-section-link {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 13px; color: var(--teal); text-decoration: none;
-  padding: 8px 12px; border-radius: 10px; transition: all 0.2s;
-  min-height: 44px;
-}
-.fd-section-link:hover { background: var(--teal-dim); }
+@media (max-width: 1200px) { .fd-masonry { column-count: 2; } }
+@media (max-width: 600px)  { .fd-masonry { column-count: 1; } }
 
-/* ═══ MASONRY EVENT GRID (immersive) ═══ */
-.fd-events-row {
-  display: grid; gap: 16px; padding-bottom: 0;
-  grid-template-columns: 1fr 1fr;
+/* ── Masonry card — image with overlay text ── */
+.fd-masonry-card {
+  position: relative; border-radius: 16px; overflow: hidden;
+  display: block; text-decoration: none; color: var(--pg-white);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), box-shadow 0.4s;
 }
-/* Featured card spans full width */
-.fd-event-card.fd-featured {
-  grid-column: 1 / -1;
-  display: grid; grid-template-columns: 1fr 1fr;
-  flex: unset;
+.fd-masonry-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
 }
-.fd-event-card.fd-featured .fd-event-card-img-wrap {
-  border-radius: 16px 0 0 16px; overflow: hidden;
-}
-.fd-event-card.fd-featured .fd-event-card-img {
-  height: 100%; min-height: 220px;
-}
-.fd-event-card.fd-featured .fd-event-card-body {
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 28px 32px;
-}
-.fd-event-card.fd-featured .fd-event-card-date {
-  font-size: 12px; margin-bottom: 10px;
-}
-.fd-event-card.fd-featured .fd-event-card-name {
-  font-family: var(--serif); font-size: 22px; font-weight: 400;
-  -webkit-line-clamp: 3; line-height: 1.2; letter-spacing: -0.3px;
-}
-.fd-event-card.fd-featured .fd-event-card-desc {
-  font-size: 13px; color: var(--pg-white-muted); line-height: 1.5;
-  margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical; overflow: hidden;
-}
-.fd-event-card.fd-featured .fd-event-card-tags { margin-top: 16px; }
-
-/* Regular masonry cards */
-.fd-event-card {
-  flex: unset; border-radius: 16px; overflow: hidden;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  cursor: pointer; text-decoration: none; color: var(--pg-white);
-  transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
-}
-.fd-event-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(78,205,196,0.25);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
-}
-.fd-event-card-img-wrap { position: relative; overflow: hidden; }
-.fd-event-card-img {
-  width: 100%; height: 180px; object-fit: cover;
+.fd-masonry-img {
+  width: 100%; display: block; object-fit: cover;
   transition: transform 0.6s ease;
 }
-.fd-event-card:hover .fd-event-card-img { transform: scale(1.08); }
-.fd-event-card-gradient {
-  position: absolute; bottom: 0; left: 0; right: 0; height: 50px;
-  background: linear-gradient(to top, rgba(6,10,15,0.8), transparent);
+.fd-masonry-card:hover .fd-masonry-img { transform: scale(1.05); }
+
+/* Vary heights for visual rhythm */
+.fd-masonry-card:nth-child(3n+1) .fd-masonry-img { height: 280px; }
+.fd-masonry-card:nth-child(3n+2) .fd-masonry-img { height: 200px; }
+.fd-masonry-card:nth-child(3n)   .fd-masonry-img { height: 340px; }
+
+.fd-masonry-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(6,10,15,0.85) 0%, rgba(6,10,15,0.2) 40%, transparent 60%);
+  pointer-events: none;
 }
-.fd-event-card-body { padding: 16px 18px 18px; }
-.fd-event-card-date {
+.fd-masonry-text {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 16px 18px; z-index: 2;
+}
+.fd-masonry-date {
   font-size: 11px; color: var(--teal); text-transform: uppercase;
-  letter-spacing: 1px; font-weight: 500; margin-bottom: 6px;
+  letter-spacing: 1px; font-weight: 500; margin-bottom: 4px;
 }
-.fd-event-card-name {
+.fd-masonry-title {
   font-size: 15px; font-weight: 600; line-height: 1.3;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.fd-event-card-desc { display: none; }
-.fd-event-card-tags { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
-.fd-event-tag {
-  font-size: 11px; padding: 3px 9px; border-radius: 100px;
-  background: rgba(255,255,255,0.06); color: var(--pg-white-muted);
-}
-.fd-event-card-location {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 11px; color: var(--pg-white-muted); margin-top: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
 /* ── Empty states ── */
@@ -779,9 +612,7 @@ ${pageBase("fd")}
 .fd-empty-h2 { font-family: var(--serif); font-size: 20px; margin-bottom: 10px; }
 .fd-empty-p { font-size: 14px; color: var(--pg-white-muted); margin-bottom: 24px; }
 .fd-empty-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.fd-empty-search {
-  text-align: center; padding: 48px 24px; color: var(--pg-white-muted);
-}
+.fd-empty-search { text-align: center; padding: 48px 24px; color: var(--pg-white-muted); }
 .fd-empty-search p { font-size: 14px; margin-top: 12px; }
 
 /* ── Floating CTA ── */
@@ -794,8 +625,7 @@ ${pageBase("fd")}
   padding: 14px 28px; border-radius: 100px;
   background: var(--teal); color: var(--bg); font-size: 14px;
   font-weight: 600; text-decoration: none; font-family: var(--sans);
-  box-shadow: 0 8px 32px rgba(78,205,196,0.3);
-  transition: all 0.3s;
+  box-shadow: 0 8px 32px rgba(78,205,196,0.3); transition: all 0.3s;
 }
 .fd-floating-cta-btn:hover {
   transform: translateY(-2px);
@@ -845,34 +675,49 @@ ${pageBase("fd")}
 .fd-news-ext { color: var(--pg-white-muted); flex-shrink: 0; margin-top: 4px; }
 .fd-news-item:hover .fd-news-ext { color: var(--pg-white-dim); }
 
-/* ── Trending tags ── */
+/* ── Trending tags — colorful ── */
 .fd-trending-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .fd-trending-tag {
-  font-size: 12px; padding: 7px 14px; border-radius: 100px;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  color: var(--pg-white-dim); cursor: pointer; transition: all 0.25s;
-  font-family: var(--sans);
+  font-size: 13px; padding: 7px 14px; border-radius: 100px;
+  background: transparent; border: 1px solid var(--glass-border);
+  cursor: pointer; transition: all 0.25s; font-family: var(--sans);
+  font-weight: 500;
 }
-.fd-trending-tag:hover { background: var(--glass-bg-hover); border-color: var(--glass-border-hover); }
+.fd-trending-tag:hover { background: rgba(255,255,255,0.05); }
 .fd-trending-tag.active {
-  background: var(--teal); color: var(--bg); border-color: var(--teal);
+  background: var(--teal); color: var(--bg) !important;
+  border-color: var(--teal) !important;
   font-weight: 600; box-shadow: 0 4px 16px rgba(78,205,196,0.25);
 }
-.fd-trending-count {
-  margin-left: 4px; opacity: 0.5; font-size: 10px;
-}
+.fd-trending-count { margin-left: 4px; opacity: 0.5; font-size: 10px; }
 .fd-trending-tag.active .fd-trending-count { opacity: 0.6; }
+
+/* ── Live Activity ── */
+.fd-activity-list { display: flex; flex-direction: column; gap: 4px; }
+.fd-activity-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px; border-radius: 10px; transition: background 0.2s;
+}
+.fd-activity-item:hover { background: var(--glass-bg-hover); }
+.fd-activity-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--glass-bg); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+  border: 1px solid var(--glass-border);
+}
+.fd-activity-text {
+  font-size: 12px; color: var(--pg-white-dim); line-height: 1.45;
+}
+.fd-activity-text strong { color: var(--pg-white); font-weight: 600; }
+.fd-activity-text em { color: var(--teal); font-style: normal; }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .fd-cover { height: 220px; }
-  .fd-hero-content { padding: 120px 20px 28px; }
-  .fd-hero-h2 { font-size: 26px; }
-  .fd-hero-stats { gap: 6px; }
-  .fd-events-row { grid-template-columns: 1fr; }
-  .fd-event-card.fd-featured { grid-template-columns: 1fr; }
-  .fd-event-card.fd-featured .fd-event-card-img { min-height: 160px; height: 160px; }
-  .fd-event-card.fd-featured .fd-event-card-img-wrap { border-radius: 16px 16px 0 0; }
-  .fd-event-card-img { height: 150px; }
+  .fd-cover { height: clamp(200px, 30vh, 280px); }
+  .fd-cover-greeting { bottom: 20px; left: 20px; }
+  .fd-cover-title { font-size: 26px; }
+  .fd-masonry { column-count: 1; }
+  .fd-masonry-card:nth-child(n) .fd-masonry-img { height: 220px; }
 }
 `;
