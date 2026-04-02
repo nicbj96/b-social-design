@@ -127,6 +127,7 @@ function RootRouter() {
   if (isInviter) return <DesktopAppLayout><Suspense fallback={<PageLoader />}><InviterVenner /></Suspense></DesktopAppLayout>;
   if (isAuth) return <Suspense fallback={<PageLoader />}><Auth /></Suspense>;
   if (isOnboarding) return <Suspense fallback={<PageLoader />}><Onboarding /></Suspense>;
+  if (location === "/app") return <Redirect to="/feed" />;
   return <MainRouter />;
 }
 /* ── Premium cursor (desktop pointer:fine only) ── */
