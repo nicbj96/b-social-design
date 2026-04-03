@@ -18,7 +18,7 @@ import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 
 /* ─────────────────────────────────────────────
-   B-Social Udforsk — Premium Redesign
+   B-Social Udforsk — Bento Dashboard Redesign
    Scoped CSS prefix: ud-
    ───────────────────────────────────────────── */
 
@@ -45,22 +45,19 @@ const EUROPE_CODES = [
 const COUNTRY_CHIP_ORDER = ['DK', 'SE', 'NO', 'DE', 'NL', 'GB', 'FR', 'ES', 'IT', 'EUROPE', 'ALL'] as const;
 
 const BRUGERE = [
-  { name: "Anna", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&auto=format&fit=crop&crop=face" },
-  { name: "Mads", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&crop=face" },
-  { name: "Sofie", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&crop=face" },
-  { name: "Jonas", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&crop=face" },
-  { name: "Emil", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&crop=face" },
-  { name: "Lise", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&crop=face" },
-  { name: "Peter", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&crop=face" },
+  { name: "Anna", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&auto=format&fit=crop&crop=face", action: "Koncert" },
+  { name: "Mads", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&crop=face", action: "Festival" },
+  { name: "Sofie", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&crop=face", action: "Udstilling" },
+  { name: "Jonas", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&crop=face", action: "Løbeevent" },
+  { name: "Emil", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&crop=face", action: "Madmarked" },
+  { name: "Lise", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&crop=face", action: "Teater" },
+  { name: "Peter", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&crop=face", action: "Fodbold" },
 ];
 
-const PLACE_CATEGORY_IMAGES: Record<string, string> = {
-  natur: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400",
-  aktiv_sport: "https://images.unsplash.com/photo-1461896836934-bd45ba3ff2b3?w=400",
-  mad_hangout: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400",
-  sport: "https://images.unsplash.com/photo-1461896836934-bd45ba3ff2b3?w=400",
-  kultur: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400",
-  musik: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400",
+const PLACE_CAT_EMOJI: Record<string, string> = {
+  natur: "🌿", aktiv_sport: "🏃", mad_hangout: "🍽️", sport: "⚽", kultur: "🎭", musik: "🎵",
+  strand: "🏖️", badning: "🏊", hundeskov: "🐕", hund: "🐕", shelter: "⛺", fiskeri: "🎣",
+  loeb: "🏃", mtb: "🚵", vandring: "🥾", mad: "🍽️", fitness: "💪", outdoor: "🌲",
 };
 
 const DB_FILTERS: { key: string | null; label: string; emoji: string }[] = [
@@ -73,77 +70,25 @@ const DB_FILTERS: { key: string | null; label: string; emoji: string }[] = [
   { key: "mad", label: "Mad", emoji: "🍽️" },
 ];
 
-const PLACE_CAT_EMOJI: Record<string, string> = {
-  natur: "🌿", aktiv_sport: "🏃", mad_hangout: "🍽️", sport: "⚽", kultur: "🎭", musik: "🎵",
-  strand: "🏖️", badning: "🏊", hundeskov: "🐕", hund: "🐕", shelter: "⛺", fiskeri: "🎣",
-  loeb: "🏃", mtb: "🚵", vandring: "🥾", mad: "🍽️", fitness: "💪", outdoor: "🌲",
+/* Category colors for trending chips */
+const CAT_COLORS: Record<string, string> = {
+  musik: "#e74c3c",
+  kunst: "#9b59b6",
+  kultur: "#9b59b6",
+  mad: "#e67e22",
+  drikke: "#f39c12",
+  sport: "#27ae60",
+  natur: "#2ecc71",
+  udliv: "#16a085",
+  livstil: "#3498db",
+  teknologi: "#2980b9",
+  socialt: "#e91e63",
+  spil: "#8e44ad",
+  fitness: "#1abc9c",
+  kreativt: "#e74c3c",
 };
 
 /* ── Sub-components ── */
-
-function PopularCard({ event }: { event: Event }) {
-  const { t } = useTranslation();
-  const isGratis = !event.price || event.price === 0;
-  return (
-    <Link href={`/event/${event.id}`} className="ud-pop-card">
-      <div className="ud-pop-card-img-wrap">
-        <img src={getEventImage(event)} alt={event.title} className="ud-pop-card-img" loading="lazy" />
-        <div className="ud-pop-card-gradient" />
-        <span className={`ud-pop-card-price ${isGratis ? "free" : ""}`}>
-          {isGratis ? t('events.free') : `${event.price} kr`}
-        </span>
-      </div>
-      <div className="ud-pop-card-body">
-        <h3 className="ud-pop-card-name">{event.title}</h3>
-        <p className="ud-pop-card-cat">{getCategoryEmoji(event.category || "")} {event.category}</p>
-      </div>
-    </Link>
-  );
-}
-
-function CalendarListCard({ event }: { event: Event }) {
-  const { t } = useTranslation();
-  const isGratis = !event.price || event.price === 0;
-  return (
-    <Link href={`/event/${event.id}`} className="ud-cal-card">
-      <div className="ud-cal-card-img-wrap">
-        <img src={getEventImage(event)} alt={event.title} className="ud-cal-card-img" loading="lazy" />
-      </div>
-      <div className="ud-cal-card-body">
-        <div className="ud-cal-card-meta">
-          <span className="ud-cal-card-cat">{getCategoryEmoji(event.category || "")} {event.category}</span>
-          <span className={`ud-cal-card-price ${isGratis ? "free" : ""}`}>
-            {isGratis ? t('events.free') : `${event.price} kr`}
-          </span>
-        </div>
-        <h3 className="ud-cal-card-name">{event.title}</h3>
-        <div className="ud-cal-card-info">
-          <span>{formatDanishDate(event.date)}</span>
-          {event.location && (
-            <span className="ud-cal-card-loc"><MapPin size={9} />{event.location.split(",")[0]}</span>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function TrendingCard({ activity }: { activity: SocialActivity }) {
-  const { t } = useTranslation();
-  return (
-    <Link href={`/social/${activity.id}`} className="ud-trend-card">
-      <div className="ud-trend-card-icon">{activity.emoji}</div>
-      <div className="ud-trend-card-body">
-        <h3 className="ud-trend-card-name">{activity.title}</h3>
-        <div className="ud-trend-card-meta">
-          <span><MapPin size={8} />{activity.location}</span>
-          <span><Users size={8} />{activity.spots.current}/{activity.spots.total}</span>
-        </div>
-      </div>
-      <span className="ud-trend-card-badge">{t('events.free')}</span>
-    </Link>
-  );
-}
 
 function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   const { t } = useTranslation();
@@ -301,7 +246,6 @@ export default function Udforsk() {
 
   const popular = [...filtered].sort((a, b) => (b.max_participants || 0) - (a.max_participants || 0)).slice(0, 10);
   const comingSoon = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 6);
-  const trendingSocial = OPLEVELSER_NAER_DIG.slice(0, 4);
 
   function pickTag(tag: string) {
     setActiveCategory(tag);
@@ -311,26 +255,27 @@ export default function Udforsk() {
   }
 
   const featuredEvent = popular[0] || null;
-  const feedEvents = comingSoon.length > 0 ? comingSoon : filtered.slice(0, 6);
 
   return (
     <div ref={containerRef} className="ud-root" data-testid="udforsk-page">
       <style>{udforskCSS}</style>
 
-      {/* ── COVER STRIP ── */}
-      <div className="ud-cover-strip">
-        <img src="https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=1400&auto=format&fit=crop" alt="Copenhagen skyline" className="ud-cover-strip-img" />
-        <div className="ud-cover-strip-gradient" />
+      {/* ── HERO COVER ── */}
+      <div className="ud-hero ud-fade-up">
+        <img
+          src="https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=1400&auto=format&fit=crop"
+          alt="Copenhagen skyline"
+          className="ud-hero-img"
+        />
+        <div className="ud-hero-gradient" />
+        <div className="ud-hero-content">
+          <h1 className="ud-hero-title">Udforsk</h1>
+          <p className="ud-hero-sub">Hvad sker der i Danmark?</p>
+        </div>
       </div>
 
-      {/* ── IDENTITY BLOCK ── */}
-      <div className="ud-identity-block ud-fade-up">
-        <h1 className="ud-identity-serif">Udforsk</h1>
-        <p className="ud-identity-teal">Hvad sker der i Danmark?</p>
-      </div>
-
-      {/* ── SEARCH ── */}
-      <div className="ud-search-wrap-outer ud-fade-up ud-d1">
+      {/* ── SEARCH (hidden when scrolled into bento) ── */}
+      <div className="ud-search-wrap ud-fade-up ud-d1">
         <div className="ud-search-bar">
           <Search size={16} className="ud-search-icon" />
           <input
@@ -368,7 +313,6 @@ export default function Udforsk() {
       {/* ═══ SEARCH RESULTS ═══ */}
       {search && (
         <div className="ud-search-results">
-          {/* Kategorier */}
           {(() => {
             const results = searchTags(search);
             if (results.length === 0) return null;
@@ -390,20 +334,31 @@ export default function Udforsk() {
             );
           })()}
 
-          {/* Events */}
           {filtered.length > 0 && (
             <div className="ud-result-group">
               <p className="ud-label">{t('udforsk.search_events')}</p>
               <div className="ud-result-list">
-                {filtered.slice(0, 3).map(e => <CalendarListCard key={e.id} event={e} />)}
+                {filtered.slice(0, 3).map(e => (
+                  <Link key={e.id} href={`/event/${e.id}`} className="ud-cal-card">
+                    <div className="ud-cal-card-img-wrap">
+                      <img src={getEventImage(e)} alt={e.title} className="ud-cal-card-img" loading="lazy" />
+                    </div>
+                    <div className="ud-cal-card-body">
+                      <div className="ud-cal-card-meta">
+                        <span className="ud-cal-card-cat">{getCategoryEmoji(e.category || "")} {e.category}</span>
+                      </div>
+                      <h3 className="ud-cal-card-name">{e.title}</h3>
+                      <div className="ud-cal-card-info">
+                        <span>{formatDanishDate(e.date)}</span>
+                        {e.location && <span className="ud-cal-card-loc"><MapPin size={9} />{e.location.split(",")[0]}</span>}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
-              {filtered.length > 3 && (
-                <button className="ud-see-more">{t('events.see_all_events', {count: filtered.length})}</button>
-              )}
             </div>
           )}
 
-          {/* Steder */}
           {(() => {
             const q = search.toLowerCase();
             const tagResults = searchTags(q);
@@ -430,7 +385,6 @@ export default function Udforsk() {
             );
           })()}
 
-          {/* Brugere */}
           {(() => {
             const q = search.toLowerCase();
             const matchedUsers = BRUGERE.filter(b => b.name.toLowerCase().includes(q)).slice(0, 3);
@@ -459,9 +413,9 @@ export default function Udforsk() {
         </div>
       )}
 
-      {/* ═══ MAIN CONTENT — TWO-COLUMN SOCIAL DISCOVERY ═══ */}
+      {/* ═══ BENTO DASHBOARD ═══ */}
       {!search && !searchFocused && (
-        <div className="ud-discovery">
+        <div className="ud-bento">
 
           {activeCategory && (
             <div className="ud-active-cat ud-fade-up" style={{ gridColumn: '1 / -1' }}>
@@ -470,166 +424,144 @@ export default function Udforsk() {
             </div>
           )}
 
-          {/* ──── LEFT COLUMN (65%) ──── */}
-          <div className="ud-left-col">
+          {/* ──── ROW 1: Featured + Trending/Friends ──── */}
 
-            {/* Featured event card */}
-            {featuredEvent && (
-              <Link href={`/event/${featuredEvent.id}`} className="ud-featured-card ud-fade-up">
-                <div className="ud-featured-img-wrap">
-                  <img src={getEventImage(featuredEvent)} alt={featuredEvent.title} className="ud-featured-img" loading="lazy" />
-                  <div className="ud-featured-img-gradient" />
-                </div>
-                <div className="ud-featured-body">
-                  <span className="ud-featured-badge">
-                    <Star size={10} /> Fremhaevet
-                  </span>
-                  <h2 className="ud-featured-title">{featuredEvent.title}</h2>
-                  <p className="ud-featured-meta">
-                    {formatDanishDate(featuredEvent.date)}
-                    {featuredEvent.location && <> &middot; <MapPin size={10} /> {featuredEvent.location.split(",")[0]}</>}
-                  </p>
-                  <p className="ud-featured-desc">
-                    {featuredEvent.description?.slice(0, 120)}{featuredEvent.description && featuredEvent.description.length > 120 ? "..." : ""}
-                  </p>
-                  <span className="ud-featured-cta">Se event <ChevronRight size={14} /></span>
-                </div>
-              </Link>
-            )}
-
-            {/* Populaert lige nu — circular avatar scroll */}
-            <section className="ud-fade-up ud-d1">
-              <div className="ud-section-head">
-                <span>🔥</span>
-                <h2>Populaert lige nu</h2>
+          {/* Featured Event — large card */}
+          {featuredEvent && (
+            <Link href={`/event/${featuredEvent.id}`} className="ud-feat ud-glass ud-fade-up">
+              <div className="ud-feat-img-wrap">
+                <img src={getEventImage(featuredEvent)} alt={featuredEvent.title} className="ud-feat-img" loading="lazy" />
+                <div className="ud-feat-img-overlay" />
               </div>
-              <div className="ud-avatar-scroll">
-                {popular.slice(0, 10).map((e) => (
-                  <Link key={e.id} href={`/event/${e.id}`} className="ud-avatar-item">
-                    <div className="ud-avatar-circle">
-                      <img src={getEventImage(e)} alt={e.title} loading="lazy" />
+              <div className="ud-feat-info">
+                <div className="ud-feat-header">
+                  <div className="ud-feat-logo">B</div>
+                  <span className="ud-feat-accent">#4ECDC4</span>
+                </div>
+                <h2 className="ud-feat-title">{featuredEvent.title}</h2>
+                <div className="ud-feat-details">
+                  <div className="ud-feat-detail-row">
+                    <span className="ud-feat-date">{formatDanishDate(featuredEvent.date)}</span>
+                    <span className="ud-feat-attendees">12.5Tus</span>
+                  </div>
+                  <div className="ud-feat-detail-row">
+                    <span className="ud-feat-loc">
+                      {featuredEvent.location ? `${featuredEvent.location.split(",")[0]}` : "Danmark"}
+                    </span>
+                    <span className="ud-feat-price">
+                      {!featuredEvent.price || featuredEvent.price === 0 ? "Gratis" : `${featuredEvent.price} kr`}
+                    </span>
+                  </div>
+                  {featuredEvent.location && (
+                    <div className="ud-feat-venue">
+                      <MapPin size={10} /> {featuredEvent.location.split(",")[0]}
                     </div>
-                    <span className="ud-avatar-label">{e.title.length > 12 ? e.title.slice(0, 12) + "..." : e.title}</span>
-                  </Link>
-                ))}
+                  )}
+                </div>
+                <div className="ud-feat-social">
+                  {BRUGERE.slice(0, 5).map((b, i) => (
+                    <img key={b.name} src={b.avatar} alt={b.name} className="ud-feat-social-avatar" style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }} loading="lazy" />
+                  ))}
+                  <span className="ud-feat-social-label">Socialhot</span>
+                </div>
               </div>
-            </section>
+            </Link>
+          )}
 
-            {/* Country chips */}
-            <section className="ud-fade-up ud-d1">
-              <div className="ud-section-head">
-                <span>🌎</span>
-                <h2>{t('udforsk.country_filter_label')}</h2>
-              </div>
-              <div className="ud-chip-scroll">
-                {COUNTRY_CHIP_ORDER.map((code) => {
-                  const region = REGIONS[code];
-                  if (!region) return null;
+          {/* Right stack: Trending + Friends */}
+          <div className="ud-right-stack">
+            {/* Trending kategorier */}
+            <div className="ud-bento-card ud-glass ud-fade-up ud-d1">
+              <h3 className="ud-bento-card-title">Trending kategorier</h3>
+              <div className="ud-trending-chips">
+                {ALL_CATEGORIES.slice(0, 10).map((cat) => {
+                  const color = CAT_COLORS[cat.key] || "#4ECDC4";
                   return (
-                    <button key={code} onClick={() => setActiveCountry(code)}
-                      className={`ud-chip ${activeCountry === code ? "active" : ""}`}
-                      data-testid={`country-chip-${code}`}>
-                      <span>{region.flag}</span> {region.label}
+                    <button
+                      key={cat.key}
+                      onClick={() => pickTag(cat.key)}
+                      className={`ud-trend-chip ${activeCategory === cat.key ? "active" : ""}`}
+                      style={{ '--chip-color': color } as React.CSSProperties}
+                      data-testid={`cat-chip-${cat.key}`}
+                    >
+                      {cat.label}
                     </button>
                   );
                 })}
               </div>
-            </section>
-
-            {/* Database places */}
-            <div className="ud-fade-up ud-d2">
-              <SupabasePlacesSection activeCountry={activeCountry} />
-            </div>
-
-            {/* Event feed */}
-            <section className="ud-fade-up ud-d2">
-              <div className="ud-section-head">
-                <span>📅</span>
-                <h2>{t('events.coming_soon')}</h2>
-              </div>
-              <div className="ud-feed-list">
-                {feedEvents.map(e => <CalendarListCard key={e.id} event={e} />)}
-              </div>
-            </section>
-
-            {/* Trending social */}
-            <section className="ud-fade-up ud-d3">
-              <div className="ud-section-head">
-                <TrendingUp size={14} className="ud-teal-icon" />
-                <h2>{t('udforsk.trending_nearby')}</h2>
-              </div>
-              <div className="ud-trend-list">
-                {trendingSocial.map((s) => <TrendingCard key={s.id} activity={s} />)}
-              </div>
-            </section>
-          </div>
-
-          {/* ──── RIGHT COLUMN (35%) ──── */}
-          <aside className="ud-right-col">
-
-            {/* Trending kategorier */}
-            <div className="ud-sidebar-card ud-fade-up ud-d1">
-              <h3 className="ud-sidebar-title">Trending kategorier</h3>
-              <div className="ud-trending-tags">
-                {ALL_CATEGORIES.slice(0, 10).map((cat) => (
-                  <button key={cat.key} onClick={() => pickTag(cat.key)}
-                    className={`ud-tag-chip ${activeCategory === cat.key ? "active" : ""}`}
-                    data-testid={`cat-chip-${cat.key}`}>
-                    <span>{cat.emoji}</span> {cat.label}
-                  </button>
-                ))}
-                <Link href="/kort" className="ud-tag-chip ud-tag-hotel">
-                  <span>🏨</span> Hoteller
-                </Link>
-              </div>
             </div>
 
             {/* Venner deltager */}
-            <div className="ud-sidebar-card ud-fade-up ud-d2">
-              <h3 className="ud-sidebar-title">
-                <Heart size={13} className="ud-teal-icon" /> Venner deltager
-              </h3>
-              <div className="ud-friends-list">
-                {BRUGERE.slice(0, 5).map((b) => (
-                  <div key={b.name} className="ud-friend-row">
+            <div className="ud-bento-card ud-glass ud-fade-up ud-d2">
+              <h3 className="ud-bento-card-title">Venner deltager</h3>
+              <div className="ud-friends-row">
+                {BRUGERE.slice(0, 4).map((b) => (
+                  <div key={b.name} className="ud-friend-item">
                     <img src={b.avatar} alt={b.name} className="ud-friend-avatar" loading="lazy" />
-                    <div className="ud-friend-info">
-                      <span className="ud-friend-name">{b.name}</span>
-                      <span className="ud-friend-action">deltager i et event</span>
-                    </div>
                   </div>
                 ))}
+                <div className="ud-friend-detail">
+                  <span className="ud-friend-name">{BRUGERE[0].name} deltager i {BRUGERE[0].action}</span>
+                  <ChevronRight size={12} className="ud-friend-arrow" />
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Redaktoerens valg */}
-            <div className="ud-sidebar-card ud-fade-up ud-d3">
-              <h3 className="ud-sidebar-title">
-                <Star size={13} className="ud-teal-icon" /> Redaktoerens valg
-              </h3>
-              <div className="ud-editor-picks">
-                {popular.slice(1, 4).map((e) => (
-                  <Link key={e.id} href={`/event/${e.id}`} className="ud-editor-pick">
-                    <div className="ud-editor-pick-img-wrap">
-                      <img src={getEventImage(e)} alt={e.title} loading="lazy" />
-                    </div>
-                    <div className="ud-editor-pick-body">
-                      <span className="ud-editor-pick-cat">{getCategoryEmoji(e.category || "")} {e.category}</span>
-                      <h4 className="ud-editor-pick-name">{e.title}</h4>
-                      <span className="ud-editor-pick-date">{formatDanishDate(e.date)}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+          {/* ──── ROW 2: Populært + Redaktørens valg ──── */}
 
-            {/* Stats compact */}
-            <div className="ud-sidebar-card ud-sidebar-stats ud-fade-up ud-d3">
-              <div className="ud-mini-stat"><span className="ud-mini-stat-val">97K+</span><span className="ud-mini-stat-lbl">Steder</span></div>
-              <div className="ud-mini-stat"><span className="ud-mini-stat-val">{allEvents.length}</span><span className="ud-mini-stat-lbl">Events</span></div>
-              <div className="ud-mini-stat"><span className="ud-mini-stat-val">{Object.keys(REGIONS).length - 1}</span><span className="ud-mini-stat-lbl">Lande</span></div>
+          {/* Populært lige nu — image grid */}
+          <div className="ud-bento-card ud-pop-section ud-glass ud-fade-up ud-d2">
+            <h3 className="ud-bento-card-title">Populært lige nu</h3>
+            <div className="ud-pop-grid">
+              {popular.slice(0, 5).map((e, i) => (
+                <Link key={e.id} href={`/event/${e.id}`} className={`ud-pop-item ${i === 0 ? 'ud-pop-large' : ''}`}>
+                  <img src={getEventImage(e)} alt={e.title} className="ud-pop-item-img" loading="lazy" />
+                  <div className="ud-pop-item-overlay" />
+                  <span className="ud-pop-item-label">{e.title}</span>
+                </Link>
+              ))}
             </div>
-          </aside>
+          </div>
+
+          {/* Redaktørens valg */}
+          <div className="ud-bento-card ud-editor-section ud-glass ud-fade-up ud-d3">
+            <h3 className="ud-bento-card-title">
+              <Star size={13} className="ud-teal-icon" /> Redaktørens valg
+            </h3>
+            <div className="ud-editor-grid">
+              {popular.slice(1, 3).map((e) => (
+                <Link key={e.id} href={`/event/${e.id}`} className="ud-editor-card">
+                  <img src={getEventImage(e)} alt={e.title} className="ud-editor-card-img" loading="lazy" />
+                  <div className="ud-editor-card-overlay" />
+                  <div className="ud-editor-card-body">
+                    <span className="ud-editor-card-name">{e.title}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* ──── ROW 3: Country filter + Places ──── */}
+          <div className="ud-full-row ud-fade-up ud-d3">
+            <div className="ud-chip-scroll">
+              {COUNTRY_CHIP_ORDER.map((code) => {
+                const region = REGIONS[code];
+                if (!region) return null;
+                return (
+                  <button key={code} onClick={() => setActiveCountry(code)}
+                    className={`ud-chip ${activeCountry === code ? "active" : ""}`}
+                    data-testid={`country-chip-${code}`}>
+                    <span>{region.flag}</span> {region.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="ud-full-row ud-fade-up ud-d3">
+            <SupabasePlacesSection activeCountry={activeCountry} />
+          </div>
 
           {activeCategory && filtered.length === 0 && (
             <div className="ud-empty-state" style={{ gridColumn: '1 / -1' }}>
@@ -653,43 +585,40 @@ ${pageBase("ud")}
 .ud-root { position: relative; padding-bottom: 96px; }
 
 /* ═══════════════════════════════════════════
-   COVER STRIP
+   HERO COVER
    ═══════════════════════════════════════════ */
-.ud-cover-strip {
-  position: relative; width: 100%; height: 150px; overflow: hidden;
+.ud-hero {
+  position: relative; width: 100%; height: 200px; overflow: hidden;
+  border-radius: 0 0 20px 20px; margin-bottom: 20px;
 }
-.ud-cover-strip-img {
+.ud-hero-img {
   width: 100%; height: 100%; object-fit: cover; object-position: center 40%;
-  filter: brightness(0.7);
+  filter: brightness(0.65);
 }
-.ud-cover-strip-gradient {
+.ud-hero-gradient {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.3) 0%, rgba(6,10,15,0.95) 100%);
+  background: linear-gradient(to bottom, rgba(6,10,15,0.2) 0%, rgba(6,10,15,0.85) 100%);
 }
-
-/* ═══════════════════════════════════════════
-   IDENTITY BLOCK
-   ═══════════════════════════════════════════ */
-.ud-identity-block {
-  text-align: center; padding: 24px 20px 8px; margin-top: -40px;
-  position: relative; z-index: 2;
+.ud-hero-content {
+  position: absolute; bottom: 24px; left: 28px; z-index: 2;
 }
-.ud-identity-serif {
-  font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
-  font-size: 42px; font-weight: 400; color: var(--pg-white);
-  letter-spacing: -0.5px; line-height: 1.1; margin: 0;
+.ud-hero-title {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 48px; font-weight: 400; color: var(--pg-white);
+  letter-spacing: -1px; line-height: 1; margin: 0;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
 }
-.ud-identity-teal {
-  font-size: 14px; color: var(--teal); font-weight: 500;
-  margin: 6px 0 0; letter-spacing: 0.3px;
-  font-family: var(--sans);
+.ud-hero-sub {
+  font-size: 15px; color: var(--teal); font-weight: 500;
+  margin: 6px 0 0; font-family: var(--sans);
+  text-shadow: 0 1px 10px rgba(0,0,0,0.5);
 }
 
 /* ═══════════════════════════════════════════
    SEARCH
    ═══════════════════════════════════════════ */
-.ud-search-wrap-outer { padding: 16px 20px 20px; }
-.ud-search-bar { position: relative; max-width: 640px; margin: 0 auto; }
+.ud-search-wrap { padding: 0 24px 20px; }
+.ud-search-bar { position: relative; max-width: 640px; }
 .ud-search-icon {
   position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
   color: var(--pg-white-muted); pointer-events: none; z-index: 1;
@@ -709,9 +638,7 @@ ${pageBase("ud")}
 }
 .ud-search-clear:hover { color: var(--pg-white); }
 
-/* ── Search overlay / results ── */
-.ud-search-overlay, .ud-search-results { padding: 0 20px 16px; margin-top: 0; max-width: 700px; margin-left: auto; margin-right: auto; }
-.ud-search-results { padding-bottom: 16px; }
+.ud-search-overlay, .ud-search-results { padding: 0 24px 16px; max-width: 700px; }
 .ud-tag-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
 .ud-result-group { margin-bottom: 20px; }
 .ud-result-list { display: flex; flex-direction: column; gap: 8px; }
@@ -733,30 +660,221 @@ ${pageBase("ud")}
 .ud-result-row-name { font-size: 13px; font-weight: 500; }
 .ud-result-row-cat { font-size: 11px; color: var(--pg-white-muted); }
 .ud-result-row-pin { margin-left: auto; color: var(--pg-white-muted); }
-.ud-see-more {
-  font-size: 12px; color: var(--teal); font-weight: 500;
-  background: none; border: none; cursor: pointer; margin-top: 8px;
-  font-family: var(--sans);
-}
 .ud-no-results { text-align: center; padding: 40px 20px; }
 .ud-no-results span { font-size: 32px; display: block; margin-bottom: 10px; }
 .ud-no-results p { font-size: 14px; color: var(--pg-white-dim); }
 
 /* ═══════════════════════════════════════════
-   TWO-COLUMN DISCOVERY LAYOUT
+   BENTO DASHBOARD GRID
    ═══════════════════════════════════════════ */
-.ud-discovery {
+.ud-bento {
   display: grid;
   grid-template-columns: 1fr 340px;
-  gap: 28px;
+  gap: 16px;
   padding: 0 24px;
   max-width: 1200px;
   margin: 0 auto;
 }
-.ud-left-col { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
-.ud-right-col { display: flex; flex-direction: column; gap: 20px; }
+.ud-full-row { grid-column: 1 / -1; }
 
-/* ── Active category ── */
+/* ═══════════════════════════════════════════
+   BENTO CARD BASE
+   ═══════════════════════════════════════════ */
+.ud-bento-card { padding: 20px; }
+.ud-bento-card-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--pg-white);
+  margin: 0 0 14px; font-family: var(--sans);
+}
+
+/* ═══════════════════════════════════════════
+   FEATURED EVENT CARD (bento left)
+   ═══════════════════════════════════════════ */
+.ud-feat {
+  display: flex; overflow: hidden; text-decoration: none; color: var(--pg-white);
+  cursor: pointer; transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
+  min-height: 240px;
+}
+.ud-feat:hover {
+  transform: translateY(-3px);
+  border-color: rgba(78,205,196,0.25);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.ud-feat-img-wrap {
+  position: relative; width: 42%; flex-shrink: 0; overflow: hidden;
+}
+.ud-feat-img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.ud-feat:hover .ud-feat-img { transform: scale(1.06); }
+.ud-feat-img-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, transparent 50%, rgba(6,10,15,0.5) 100%);
+}
+.ud-feat-info {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 22px 24px; flex: 1; min-width: 0; gap: 10px;
+}
+.ud-feat-header {
+  display: flex; align-items: center; gap: 10px;
+}
+.ud-feat-logo {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--teal); color: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; font-family: var(--sans);
+}
+.ud-feat-accent {
+  font-size: 11px; color: var(--teal); font-family: monospace;
+  opacity: 0.6;
+}
+.ud-feat-title {
+  font-size: 20px; font-weight: 700; line-height: 1.25; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ud-feat-details {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ud-feat-detail-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--pg-white-dim);
+}
+.ud-feat-date { color: var(--pg-white-muted); }
+.ud-feat-attendees { color: var(--teal); font-weight: 600; }
+.ud-feat-loc { color: var(--pg-white-muted); }
+.ud-feat-price {
+  font-weight: 600; color: var(--pg-white-dim);
+}
+.ud-feat-venue {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--pg-white-muted);
+}
+.ud-feat-social {
+  display: flex; align-items: center; margin-top: 4px;
+}
+.ud-feat-social-avatar {
+  width: 26px; height: 26px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--bg); position: relative;
+}
+.ud-feat-social-label {
+  font-size: 11px; color: var(--pg-white-muted);
+  margin-left: 10px; font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════
+   RIGHT STACK (trending + friends)
+   ═══════════════════════════════════════════ */
+.ud-right-stack {
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* ── Trending chips with color ── */
+.ud-trending-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.ud-trend-chip {
+  padding: 6px 14px; border-radius: 100px;
+  background: color-mix(in srgb, var(--chip-color) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 30%, transparent);
+  color: var(--chip-color);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; font-family: var(--sans);
+}
+.ud-trend-chip:hover {
+  background: color-mix(in srgb, var(--chip-color) 30%, transparent);
+  border-color: var(--chip-color);
+}
+.ud-trend-chip.active {
+  background: var(--chip-color); color: white;
+  border-color: var(--chip-color);
+}
+
+/* ── Friends row ── */
+.ud-friends-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.ud-friend-item { flex-shrink: 0; }
+.ud-friend-avatar {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+  border: 2px solid rgba(78,205,196,0.25);
+}
+.ud-friend-detail {
+  display: flex; align-items: center; gap: 6px;
+  flex: 1; min-width: 0;
+}
+.ud-friend-name {
+  font-size: 12px; color: var(--pg-white-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ud-friend-arrow { color: var(--pg-white-muted); flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════
+   POPULÆRT — IMAGE GRID
+   ═══════════════════════════════════════════ */
+.ud-pop-section { }
+.ud-pop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto;
+  gap: 10px;
+}
+.ud-pop-large {
+  grid-row: 1 / 3;
+}
+.ud-pop-item {
+  position: relative; border-radius: 12px; overflow: hidden;
+  height: 110px; cursor: pointer; text-decoration: none; color: white;
+  display: block;
+}
+.ud-pop-large { height: 100%; min-height: 230px; }
+.ud-pop-item-img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.ud-pop-item:hover .ud-pop-item-img { transform: scale(1.06); }
+.ud-pop-item-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+}
+.ud-pop-item-label {
+  position: absolute; bottom: 8px; left: 10px; right: 10px;
+  font-size: 11px; font-weight: 600; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ═══════════════════════════════════════════
+   REDAKTØRENS VALG — 2-col image cards
+   ═══════════════════════════════════════════ */
+.ud-editor-section { }
+.ud-editor-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.ud-editor-card {
+  position: relative; border-radius: 12px; overflow: hidden;
+  height: 140px; cursor: pointer; text-decoration: none; color: white;
+  display: block;
+}
+.ud-editor-card-img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.ud-editor-card:hover .ud-editor-card-img { transform: scale(1.06); }
+.ud-editor-card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+}
+.ud-editor-card-body {
+  position: absolute; bottom: 10px; left: 12px; right: 12px;
+}
+.ud-editor-card-name {
+  font-size: 12px; font-weight: 600; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   ACTIVE CATEGORY BAR
+   ═══════════════════════════════════════════ */
 .ud-active-cat {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 18px; border-radius: 14px;
@@ -769,180 +887,10 @@ ${pageBase("ud")}
 }
 
 /* ═══════════════════════════════════════════
-   FEATURED EVENT CARD
+   SHARED ELEMENTS
    ═══════════════════════════════════════════ */
-.ud-featured-card {
-  display: flex; border-radius: 20px; overflow: hidden;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  text-decoration: none; color: var(--pg-white); cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
-  min-height: 220px;
-}
-.ud-featured-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(78,205,196,0.25);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-}
-.ud-featured-img-wrap {
-  position: relative; width: 45%; flex-shrink: 0; overflow: hidden;
-}
-.ud-featured-img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform 0.6s ease;
-}
-.ud-featured-card:hover .ud-featured-img { transform: scale(1.06); }
-.ud-featured-img-gradient {
-  position: absolute; inset: 0;
-  background: linear-gradient(to right, transparent 60%, rgba(6,10,15,0.6) 100%);
-}
-.ud-featured-body {
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 24px 28px; flex: 1; min-width: 0;
-}
-.ud-featured-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 700; color: var(--teal);
-  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
-}
-.ud-featured-title {
-  font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 8px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.ud-featured-meta {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--pg-white-muted); margin: 0 0 10px;
-}
-.ud-featured-meta svg { flex-shrink: 0; }
-.ud-featured-desc {
-  font-size: 13px; color: var(--pg-white-dim); line-height: 1.5;
-  margin: 0 0 14px;
-}
-.ud-featured-cta {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 13px; font-weight: 600; color: var(--teal);
-  transition: gap 0.2s;
-}
-.ud-featured-card:hover .ud-featured-cta { gap: 8px; }
+.ud-teal-icon { color: var(--teal); }
 
-/* ═══════════════════════════════════════════
-   POPULAR — CIRCULAR AVATAR SCROLL
-   ═══════════════════════════════════════════ */
-.ud-avatar-scroll {
-  display: flex; gap: 16px; overflow-x: auto; padding-bottom: 6px;
-  scrollbar-width: none;
-}
-.ud-avatar-scroll::-webkit-scrollbar { display: none; }
-.ud-avatar-item {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  flex-shrink: 0; text-decoration: none; color: var(--pg-white);
-  cursor: pointer; width: 72px;
-}
-.ud-avatar-circle {
-  width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
-  border: 2px solid transparent;
-  background: linear-gradient(var(--bg), var(--bg)) padding-box,
-              linear-gradient(135deg, var(--teal), rgba(78,205,196,0.3)) border-box;
-  transition: all 0.3s ease;
-}
-.ud-avatar-item:hover .ud-avatar-circle {
-  border-color: transparent;
-  background: linear-gradient(var(--bg), var(--bg)) padding-box,
-              linear-gradient(135deg, var(--teal), #a78bfa) border-box;
-  transform: scale(1.08);
-}
-.ud-avatar-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.ud-avatar-label {
-  font-size: 10px; color: var(--pg-white-muted); text-align: center;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 72px;
-}
-
-/* ═══════════════════════════════════════════
-   FEED LIST
-   ═══════════════════════════════════════════ */
-.ud-feed-list { display: flex; flex-direction: column; gap: 10px; }
-
-/* ═══════════════════════════════════════════
-   SIDEBAR
-   ═══════════════════════════════════════════ */
-.ud-sidebar-card {
-  padding: 20px; border-radius: 18px;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-}
-.ud-sidebar-title {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 14px; font-weight: 600; color: var(--pg-white);
-  margin: 0 0 14px;
-}
-
-/* Trending tags */
-.ud-trending-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.ud-tag-chip {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 7px 14px; border-radius: 100px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-  color: var(--pg-white-dim); font-size: 12px; font-weight: 500;
-  cursor: pointer; transition: all 0.2s; text-decoration: none;
-  font-family: var(--sans);
-}
-.ud-tag-chip:hover {
-  background: rgba(78,205,196,0.1); border-color: rgba(78,205,196,0.2);
-  color: var(--pg-white);
-}
-.ud-tag-chip.active {
-  background: var(--teal); border-color: var(--teal); color: var(--bg);
-}
-.ud-tag-chip span { font-size: 13px; }
-.ud-tag-hotel {
-  background: rgba(0,53,128,0.25); border-color: rgba(0,53,128,0.4); color: #7db4ff;
-}
-.ud-tag-hotel:hover { background: rgba(0,53,128,0.4); color: #b3d4ff; }
-
-/* Friends list */
-.ud-friends-list { display: flex; flex-direction: column; gap: 12px; }
-.ud-friend-row {
-  display: flex; align-items: center; gap: 10px;
-}
-.ud-friend-avatar {
-  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
-  border: 2px solid rgba(78,205,196,0.2); flex-shrink: 0;
-}
-.ud-friend-info { display: flex; flex-direction: column; min-width: 0; }
-.ud-friend-name { font-size: 13px; font-weight: 600; color: var(--pg-white); }
-.ud-friend-action { font-size: 11px; color: var(--pg-white-muted); }
-
-/* Editor picks */
-.ud-editor-picks { display: flex; flex-direction: column; gap: 12px; }
-.ud-editor-pick {
-  display: flex; gap: 12px; text-decoration: none; color: var(--pg-white);
-  cursor: pointer; padding: 8px; border-radius: 12px;
-  transition: background 0.2s;
-}
-.ud-editor-pick:hover { background: rgba(255,255,255,0.04); }
-.ud-editor-pick-img-wrap {
-  width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
-  flex-shrink: 0;
-}
-.ud-editor-pick-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-.ud-editor-pick-body { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-.ud-editor-pick-cat { font-size: 10px; color: var(--pg-white-muted); margin-bottom: 2px; }
-.ud-editor-pick-name {
-  font-size: 13px; font-weight: 600; margin: 0; line-height: 1.3;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.ud-editor-pick-date { font-size: 11px; color: var(--pg-white-muted); margin-top: 2px; }
-
-/* Sidebar stats */
-.ud-sidebar-stats {
-  display: flex; justify-content: space-around; text-align: center;
-}
-.ud-mini-stat { display: flex; flex-direction: column; gap: 2px; }
-.ud-mini-stat-val { font-size: 18px; font-weight: 700; color: var(--teal); }
-.ud-mini-stat-lbl { font-size: 11px; color: var(--pg-white-muted); }
-
-/* ═══════════════════════════════════════════
-   SECTION HEADS (shared)
-   ═══════════════════════════════════════════ */
 .ud-section-head {
   display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
 }
@@ -959,11 +907,7 @@ ${pageBase("ud")}
   cursor: pointer; transition: color 0.2s;
 }
 .ud-section-link:hover { color: var(--pg-white-dim); }
-.ud-teal-icon { color: var(--teal); }
 
-/* ═══════════════════════════════════════════
-   CHIPS
-   ═══════════════════════════════════════════ */
 .ud-chip-scroll {
   display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
   scrollbar-width: none;
@@ -987,7 +931,7 @@ ${pageBase("ud")}
   scrollbar-width: none;
 }
 .ud-filter-row::-webkit-scrollbar { display: none; }
-.ud-places-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ud-places-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .ud-place-card {
   padding: 14px; border-radius: 16px;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
@@ -1016,77 +960,8 @@ ${pageBase("ud")}
 .ud-empty-places { padding: 16px 0; text-align: center; font-size: 12px; color: var(--pg-white-muted); }
 
 /* ═══════════════════════════════════════════
-   TRENDING CARDS
+   CALENDAR LIST CARDS (search results)
    ═══════════════════════════════════════════ */
-.ud-trend-list { display: flex; flex-direction: column; gap: 8px; }
-.ud-trend-card {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px; border-radius: 16px;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  text-decoration: none; color: var(--pg-white); cursor: pointer;
-  transition: all 0.25s;
-}
-.ud-trend-card:hover { background: var(--glass-bg-hover); transform: translateY(-2px); }
-.ud-trend-card-icon {
-  width: 42px; height: 42px; border-radius: 12px;
-  background: var(--teal-dim); display: flex;
-  align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
-}
-.ud-trend-card-body { flex: 1; min-width: 0; }
-.ud-trend-card-name { font-size: 14px; font-weight: 600; }
-.ud-trend-card-meta {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 3px; font-size: 12px; color: var(--pg-white-muted);
-}
-.ud-trend-card-meta span { display: flex; align-items: center; gap: 3px; }
-.ud-trend-card-badge {
-  padding: 4px 12px; border-radius: 100px;
-  background: var(--teal); color: var(--bg);
-  font-size: 11px; font-weight: 700; flex-shrink: 0;
-}
-
-/* ═══════════════════════════════════════════
-   POPULAR ROW (kept for PopularCard sub-component)
-   ═══════════════════════════════════════════ */
-.ud-pop-row {
-  display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none;
-}
-.ud-pop-row::-webkit-scrollbar { display: none; }
-.ud-pop-card {
-  flex: 0 0 175px; border-radius: 16px; overflow: hidden;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  text-decoration: none; color: var(--pg-white); cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
-}
-.ud-pop-card:hover { transform: translateY(-6px); border-color: rgba(78,205,196,0.2); }
-.ud-pop-card-img-wrap { position: relative; height: 112px; overflow: hidden; }
-.ud-pop-card-img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform 0.5s ease;
-}
-.ud-pop-card:hover .ud-pop-card-img { transform: scale(1.08); }
-.ud-pop-card-gradient {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(6,10,15,0.8) 0%, transparent 50%);
-}
-.ud-pop-card-price {
-  position: absolute; top: 8px; right: 8px;
-  padding: 3px 8px; border-radius: 100px;
-  font-size: 11px; font-weight: 600;
-  background: rgba(245,158,11,0.8); color: white;
-}
-.ud-pop-card-price.free { background: rgba(78,205,196,0.8); }
-.ud-pop-card-body { padding: 10px 12px 12px; }
-.ud-pop-card-name {
-  font-size: 12px; font-weight: 600; line-height: 1.3;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.ud-pop-card-cat { font-size: 11px; color: var(--pg-white-muted); margin-top: 4px; }
-
-/* ═══════════════════════════════════════════
-   CALENDAR LIST CARDS
-   ═══════════════════════════════════════════ */
-.ud-cal-list { display: flex; flex-direction: column; gap: 8px; }
 .ud-cal-card {
   display: flex; gap: 12px; padding-right: 14px;
   border-radius: 16px; overflow: hidden;
@@ -1100,12 +975,6 @@ ${pageBase("ud")}
 .ud-cal-card-body { display: flex; flex-direction: column; justify-content: center; padding: 8px 0; min-width: 0; flex: 1; }
 .ud-cal-card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
 .ud-cal-card-cat { font-size: 11px; color: var(--pg-white-dim); }
-.ud-cal-card-price {
-  padding: 1px 8px; border-radius: 100px;
-  font-size: 11px; font-weight: 600;
-  background: rgba(245,158,11,0.15); color: #f59e0b;
-}
-.ud-cal-card-price.free { background: var(--teal-dim); color: var(--teal); }
 .ud-cal-card-name {
   font-size: 13px; font-weight: 600; line-height: 1.3;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1126,26 +995,32 @@ ${pageBase("ud")}
 .ud-empty-state p { font-size: 14px; color: var(--pg-white-dim); margin-bottom: 16px; }
 
 /* ═══════════════════════════════════════════
-   RESPONSIVE — COLLAPSE TO SINGLE COLUMN
+   RESPONSIVE
    ═══════════════════════════════════════════ */
 @media (max-width: 900px) {
-  .ud-discovery {
+  .ud-bento {
     grid-template-columns: 1fr;
     padding: 0 16px;
   }
-  .ud-right-col { order: -1; }
-  .ud-featured-card { flex-direction: column; min-height: auto; }
-  .ud-featured-img-wrap { width: 100%; height: 180px; }
-  .ud-featured-img-gradient {
+  .ud-feat { flex-direction: column; min-height: auto; }
+  .ud-feat-img-wrap { width: 100%; height: 180px; }
+  .ud-feat-img-overlay {
     background: linear-gradient(to top, rgba(6,10,15,0.7) 0%, transparent 60%);
   }
-  .ud-featured-body { padding: 18px 20px; }
-  .ud-featured-title { font-size: 18px; }
+  .ud-feat-info { padding: 18px 20px; }
+  .ud-feat-title { font-size: 18px; }
+  .ud-pop-grid { grid-template-columns: 1fr 1fr; }
+  .ud-pop-large { grid-row: auto; min-height: 140px; }
+  .ud-places-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 480px) {
-  .ud-identity-serif { font-size: 34px; }
-  .ud-cover-strip { height: 120px; }
-  .ud-identity-block { margin-top: -30px; padding: 18px 16px 4px; }
+  .ud-hero { height: 160px; }
+  .ud-hero-title { font-size: 36px; }
+  .ud-hero-content { bottom: 18px; left: 20px; }
+  .ud-bento { gap: 12px; }
+  .ud-pop-grid { grid-template-columns: 1fr; }
+  .ud-pop-large { min-height: 160px; }
+  .ud-editor-grid { grid-template-columns: 1fr; }
   .ud-places-grid { grid-template-columns: 1fr; }
 }
 `;
