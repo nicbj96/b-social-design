@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings, Calendar, BarChart3, Clock, StickyNote } from "lucide-react";
+import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings, Calendar, BarChart3, Clock, StickyNote, MoreHorizontal, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNotifications } from "@/context/NotificationContext";
@@ -21,6 +21,7 @@ const MIN_SIDE_SUBS = ["/indstillinger", "/kalender", "/overblik", "/noter", "/h
 export default function DesktopAppLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
+  const [moreOpen, setMoreOpen] = useState(false);
   const { unreadCount } = useNotifications();
   const { isLoggedIn, profile, signOut, loading: authLoading, user } = useAuth();
   const loggedIn = !authLoading && isLoggedIn;
@@ -308,7 +309,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
         {children}
       </main>
 
-      {/* Mobile bottom nav — unchanged */}
+      {/* Mobile bottom nav — original 5 items */}
       <div className="dsk-bottom-nav glass-nav">
         <div className="flex items-center justify-around h-20">
           {NAV_MAIN.map((item) => {
@@ -333,6 +334,89 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
           })}
         </div>
       </div>
+
+      {/* Mobile hamburger — fixed top-right, only on mobile */}
+      <button
+        onClick={() => setMoreOpen(o => !o)}
+        className="dsk-hamburger"
+        aria-label="Menu"
+        style={{
+          position: "fixed", top: 14, right: 14, zIndex: 55,
+          width: 40, height: 40, borderRadius: 12,
+          background: "rgba(13,17,23,0.85)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          backdropFilter: "blur(12px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "rgba(255,255,255,0.7)", cursor: "pointer",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
+        }}
+      >
+        {moreOpen ? <X size={18} /> : <MoreHorizontal size={18} />}
+      </button>
+      <style>{`
+        @media (min-width: 769px) { .dsk-hamburger { display: none !important; } }
+      `}</style>
+
+      {/* Mobile "Mere" drawer */}
+      {moreOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setMoreOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 60, backdropFilter: "blur(4px)" }}
+          />
+          {/* Sheet */}
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+            background: "#0d1117",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "20px 20px 0 0",
+            padding: "20px 16px 40px",
+          }}>
+            {/* Handle + close */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.15)", margin: "0 auto" }} />
+              <button onClick={() => setMoreOpen(false)} style={{ position: "absolute", right: 16, top: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: 6, cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex" }}>
+                <X size={16} />
+              </button>
+            </div>
+            {/* Grid of nav items */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+              {[
+                { href: "/inviter", icon: UserPlus, label: "Invitér" },
+                { href: "/notifikationer", icon: Bell, label: "Notifikationer" },
+                { href: "/henvisning", icon: CircleDollarSign, label: "Henvisning" },
+                { href: "/firma", icon: Building2, label: "Firma" },
+                { href: "/kalender", icon: Calendar, label: "Kalender" },
+                { href: "/overblik", icon: BarChart3, label: "Overblik" },
+                { href: "/historik", icon: Clock, label: "Historik" },
+                { href: "/noter", icon: StickyNote, label: "Noter" },
+                { href: "/indstillinger", icon: Settings, label: "Indstillinger" },
+              ].map(({ href, icon: Icon, label }) => {
+                const isActive = location.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setMoreOpen(false)}
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                      padding: "14px 8px", borderRadius: 14, textDecoration: "none",
+                      background: isActive ? "rgba(78,205,196,0.1)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${isActive ? "rgba(78,205,196,0.2)" : "rgba(255,255,255,0.07)"}`,
+                      color: isActive ? "#4ECDC4" : "rgba(255,255,255,0.55)",
+                      fontSize: 11, fontWeight: 500, textAlign: "center",
+                    }}
+                  >
+                    <Icon size={20} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

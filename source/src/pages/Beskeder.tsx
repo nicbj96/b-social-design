@@ -120,6 +120,9 @@ ${pageBase("bk")}
   height: 100vh;
   overflow: hidden;
 }
+@media (max-width: 768px) {
+  .bk-layout { height: calc(100dvh - 80px); }
+}
 
 /* ── Left sidebar — Channel list ── */
 .bk-channels {
