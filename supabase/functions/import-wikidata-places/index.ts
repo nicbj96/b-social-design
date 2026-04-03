@@ -238,13 +238,13 @@ SELECT DISTINCT ?item ?itemLabel ?lat ?lon ?desc WHERE {
 // ---------------------------------------------------------------------------
 async function upsertPlaces(rows: any[]): Promise<number> {
   if (!SUPABASE_KEY || rows.length === 0) return 0;
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/places`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/places?on_conflict=name,country,latitude,longitude`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "apikey": SUPABASE_KEY,
       "Authorization": `Bearer ${SUPABASE_KEY}`,
-      "Prefer": "resolution=merge-duplicates,return=minimal",
+      "Prefer": "resolution=ignore-duplicates,return=minimal",
     },
     body: JSON.stringify(rows),
   });
