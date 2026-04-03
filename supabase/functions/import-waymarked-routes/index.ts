@@ -389,7 +389,7 @@ Deno.serve(async (req) => {
           longitude: lon,
           city: "",
           region: "",
-          country: countryName,
+          country: countryCode,
           main_categories: source.main_categories,
           tags: source.tags,
           smart_tags: source.smart_tags,

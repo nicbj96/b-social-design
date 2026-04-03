@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
           longitude: lon,
           city: "",
           region: "",
-          country: countryName,
+          country: countryCode,
           main_categories: group.main_categories,
           tags: group.tags,
           smart_tags: group.smart_tags,

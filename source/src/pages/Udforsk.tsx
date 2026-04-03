@@ -31,8 +31,17 @@ const REGIONS: Record<string, { flag: string; label: string }> = {
   'FR': { flag: '🇫🇷', label: 'Frankrig' },
   'ES': { flag: '🇪🇸', label: 'Spanien' },
   'IT': { flag: '🇮🇹', label: 'Italien' },
+  'JP': { flag: '🇯🇵', label: 'Japan' },
+  'US': { flag: '🇺🇸', label: 'USA' },
+  'AU': { flag: '🇦🇺', label: 'Australien' },
+  'BR': { flag: '🇧🇷', label: 'Brasilien' },
+  'IN': { flag: '🇮🇳', label: 'Indien' },
+  'ZA': { flag: '🇿🇦', label: 'S. Afrika' },
   'EUROPE': { flag: '🌍', label: 'Europa' },
-  'ALL': { flag: '🌎', label: 'Hele verden' },
+  'ASIA': { flag: '🌏', label: 'Asien' },
+  'AMERICAS': { flag: '🌎', label: 'Amerika' },
+  'AFRICA': { flag: '🌍', label: 'Afrika' },
+  'ALL': { flag: '🌐', label: 'Hele verden' },
 };
 
 const EUROPE_CODES = [
@@ -40,8 +49,21 @@ const EUROPE_CODES = [
   'PT','GR','HU','RO','HR','SK','SI','LT','LV','EE','BG','RS','UA','BY',
   'LU','MT','CY','LI','IS','AL','MK','BA','ME','MD','AM','GE','AZ',
 ];
+const ASIA_CODES = [
+  'JP','KR','CN','TW','TH','VN','ID','MY','PH','SG','MM','KH','LA',
+  'IN','BD','PK','LK','NP','KZ','UZ','KG','TJ','TM','MN','AF',
+  'IR','IQ','SA','QA','KW','BH','OM','YE','JO','IL','LB','SY','TR','AE',
+];
+const AMERICAS_CODES = [
+  'US','CA','MX','BR','AR','CL','CO','PE','VE','EC','BO','PY','UY','GY',
+  'CR','PA','GT','HN','SV','NI','CU','JM','DO','HT','TT',
+];
+const AFRICA_CODES = [
+  'ZA','EG','MA','DZ','TN','LY','NG','GH','SN','CI','CM','ET','KE','TZ',
+  'UG','RW','SD','CD','AO','MZ','ZM','ZW','BW','NA','MG',
+];
 
-const COUNTRY_CHIP_ORDER = ['DK', 'SE', 'NO', 'DE', 'NL', 'GB', 'FR', 'ES', 'IT', 'EUROPE', 'ALL'] as const;
+const COUNTRY_CHIP_ORDER = ['DK','SE','NO','DE','NL','GB','FR','ES','IT','JP','US','AU','BR','IN','ZA','EUROPE','ASIA','AMERICAS','AFRICA','ALL'] as const;
 
 const BRUGERE = [
   { name: "Anna", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&auto=format&fit=crop&crop=face", action: "Koncert" },
@@ -110,9 +132,15 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
     if (activeCountry === 'ALL') {
       countryFiltered = places;
     } else if (activeCountry === 'EUROPE') {
-      countryFiltered = places.filter(p => !p.country || EUROPE_CODES.includes(p.country));
+      countryFiltered = places.filter(p => EUROPE_CODES.includes(p.country));
+    } else if (activeCountry === 'ASIA') {
+      countryFiltered = places.filter(p => ASIA_CODES.includes(p.country));
+    } else if (activeCountry === 'AMERICAS') {
+      countryFiltered = places.filter(p => AMERICAS_CODES.includes(p.country));
+    } else if (activeCountry === 'AFRICA') {
+      countryFiltered = places.filter(p => AFRICA_CODES.includes(p.country));
     } else {
-      countryFiltered = places.filter(p => !p.country || p.country === activeCountry);
+      countryFiltered = places.filter(p => p.country === activeCountry);
     }
     if (!dbFilter) return countryFiltered;
     return countryFiltered.filter(p => {
@@ -241,9 +269,15 @@ export default function Udforsk() {
       if (activeCountry === 'ALL') {
         matchCountry = true;
       } else if (activeCountry === 'EUROPE') {
-        matchCountry = !e.country || EUROPE_CODES.includes(e.country);
+        matchCountry = EUROPE_CODES.includes(e.country);
+      } else if (activeCountry === 'ASIA') {
+        matchCountry = ASIA_CODES.includes(e.country);
+      } else if (activeCountry === 'AMERICAS') {
+        matchCountry = AMERICAS_CODES.includes(e.country);
+      } else if (activeCountry === 'AFRICA') {
+        matchCountry = AFRICA_CODES.includes(e.country);
       } else {
-        matchCountry = !e.country || e.country === activeCountry;
+        matchCountry = e.country === activeCountry;
       }
       return matchSearch && matchCat && matchCountry && matchUserTags;
     });
