@@ -7,6 +7,7 @@ const EVENT_QUERIES = [
   "concerts", "live music", "music festival", "jazz concert", "rock concert", "electronic music", "opera", "symphony", "rock koncert", "pop koncert", "koncert",
   "football match", "soccer game", "basketball game", "tennis tournament", "cycling race", "marathon", "triathlon", "boxing match", "MMA fight",
   "extreme sport", "surfing", "rock climbing", "skateboarding", "bmx competition", "skydiving", "bungee jumping", "paragliding", "motocross", "scuba diving",
+  "parkour competition", "downhill mtb race", "ironman triathlon", "ultra marathon", "wakeboarding", "kite surfing", "snowboarding competition", "freestyle skiing",
   "mountain bike race", "mountainbike rute", "trail running", "hiking event", "løberute", "vandrerute", "cykelrute", "mtb event",
   "museum exhibition", "art exhibition", "gallery opening", "theater", "comedy show", "stand-up comedy", "ballet", "dance performance",
   "food festival", "wine tasting", "beer festival", "street food market", "cooking class", "yoga class", "fitness event", "outdoor gym", "crossfit event",
@@ -23,25 +24,18 @@ const COUNTRY_CITIES: Record<string, string[]> = {
   AU: ["Sydney", "Melbourne"], NZ: ["Auckland"], AE: ["Dubai"], ZA: ["Cape Town"], TR: ["Istanbul"]
 };
 
-const COUNTRY_NAMES: Record<string, string> = {
-  DK: "Denmark", SE: "Sweden", NO: "Norway", FI: "Finland", DE: "Germany", NL: "Netherlands",
-  BE: "Belgium", AT: "Austria", CH: "Switzerland", ES: "Spain", FR: "France", IT: "Italy",
-  GB: "United Kingdom", IE: "Ireland", US: "United States", CA: "Canada", AU: "Australia",
-  NZ: "New Zealand", AE: "United Arab Emirates", ZA: "South Africa", TR: "Turkey"
-};
-
 function categorizeEvent(query: string, event: any) {
-  const combined = `${query} ${event.name} ${event.description}`.toLowerCase();
+  const combined = \`\${query} \${event.name} \${event.description}\`.toLowerCase();
   if (/concert|music|festival|koncert/i.test(combined)) return { category: "Musik & Koncerter", tags: ["musik", "koncert"], indoor_outdoor: "indoor" };
   if (/sport|match|game|tournament|race|marathon/i.test(combined)) return { category: "Sport", tags: ["sport"], indoor_outdoor: "outdoor" };
-  if (/extreme|surfing|climbing|skate|bmx|skydiv|bungee|paraglid|motocross/i.test(combined)) return { category: "Extreme Sport", tags: ["extreme", "action"], indoor_outdoor: "outdoor" };
+  if (/extreme|surfing|climbing|skate|bmx|skydiv|bungee|paraglid|motocross|parkour|wakeboard|kite|snowboard|freestyle/i.test(combined)) return { category: "Extreme Sport", tags: ["extreme", "action"], indoor_outdoor: "outdoor" };
   if (/mountain bike|mtb|trail run|hiking|rute|trail/i.test(combined)) return { category: "Natur & Ruter", tags: ["natur", "rute"], indoor_outdoor: "outdoor" };
   if (/fitness|gym|yoga|crossfit|workout/i.test(combined)) return { category: "Sundhed & Wellness", tags: ["fitness", "wellness"], indoor_outdoor: "indoor" };
   return { category: "Events", tags: ["event"], indoor_outdoor: "indoor" };
 }
 
 async function fetchRapidAPI(apiKey: string, query: string, date: string) {
-  const url = `https://real-time-events-search.p.rapidapi.com/search-events?query=\${encodeURIComponent(query)}&date=\${date}`;
+  const url = \`https://real-time-events-search.p.rapidapi.com/search-events?query=\${encodeURIComponent(query)}&date=\${date}\`;
   const resp = await fetch(url, { headers: { "x-rapidapi-key": apiKey, "x-rapidapi-host": RAPIDAPI_HOST } });
   const data = await resp.json();
   return data.data || [];
@@ -52,16 +46,19 @@ Deno.serve(async (req) => {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!);
-
+  
   const results = [];
   const plan = [];
+  
   for (const [cc, cities] of Object.entries(COUNTRY_CITIES)) {
     for (const city of cities) {
-      plan.push({ query: `\${EVENT_QUERIES[Math.floor(Math.random()*EVENT_QUERIES.length)]} in \${city}`, country: cc });
+      plan.push({ query: \`\${EVENT_QUERIES[Math.floor(Math.random()*EVENT_QUERIES.length)]} in \${city}\`, country: cc });
     }
   }
-
-  for (const item of plan.slice(0, 50)) { // Limit to 50 calls per run to avoid timeouts
+  
+  const shuffled = plan.sort(() => Math.random() - 0.5);
+  
+  for (const item of shuffled.slice(0, 50)) {
     try {
       const events = await fetchRapidAPI(RAPIDAPI_KEY!, item.query, "month");
       const toInsert = events.map((e: any) => {
