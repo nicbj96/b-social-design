@@ -1,8 +1,10 @@
-import { TrendingUp, Award, Flame, Target, MapPin, Loader2 } from "lucide-react";
+import { TrendingUp, Award, Flame, Target, MapPin, Loader2, Compass, MessageCircle, Calendar } from "lucide-react";
+import { Link } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces, fetchEvents, type Place, type Event as SupabaseEvent } from "@/lib/supabase";
 import { useFadeUp } from "@/lib/useFadeUp";
+import { MinSideSubNav } from "@/components/MinSideSubNav";
 import { pageBase } from "@/lib/pageCSSBase";
 
 const MONTHLY_DATA = [
@@ -182,6 +184,41 @@ ${pageBase("ov")}
   font-size: 13px; font-weight: 700; color: var(--teal);
 }
 .ov-db-val--amber { color: #fbbf24; }
+
+/* ── Quick actions ── */
+.ov-actions-title {
+  font-family: var(--sans);
+  font-size: 14px; font-weight: 600;
+  color: var(--pg-white); margin-bottom: 14px;
+}
+.ov-actions-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.ov-action-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--pg-white);
+  transition: border-color 0.3s, transform 0.3s;
+}
+.ov-action-link:hover {
+  border-color: rgba(78,205,196,0.3);
+  transform: translateY(-2px);
+}
+.ov-action-icon {
+  width: 36px; height: 36px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(78,205,196,0.12); color: #4ECDC4;
+  flex-shrink: 0;
+}
+.ov-action-label {
+  font-size: 13px; font-weight: 500;
+}
 `;
 
 /* ── Color helpers ── */
@@ -291,6 +328,31 @@ export default function Overblik() {
         </div>
 
         <div className="ov-body">
+          <MinSideSubNav />
+
+          {/* Quick actions */}
+          <div className="ov-fade-up">
+            <h3 className="ov-actions-title">Hurtige handlinger</h3>
+            <div className="ov-actions-grid">
+              <Link href="/udforsk" className="ov-action-link">
+                <div className="ov-action-icon"><Compass size={16} /></div>
+                <span className="ov-action-label">Udforsk</span>
+              </Link>
+              <Link href="/kort" className="ov-action-link">
+                <div className="ov-action-icon"><MapPin size={16} /></div>
+                <span className="ov-action-label">Kort</span>
+              </Link>
+              <Link href="/beskeder" className="ov-action-link">
+                <div className="ov-action-icon"><MessageCircle size={16} /></div>
+                <span className="ov-action-label">Beskeder</span>
+              </Link>
+              <Link href="/kalender" className="ov-action-link">
+                <div className="ov-action-icon"><Calendar size={16} /></div>
+                <span className="ov-action-label">Kalender</span>
+              </Link>
+            </div>
+          </div>
+
           {/* Stat cards */}
           <div className="ov-stat-grid ov-fade-up">
             <div className="ov-stat-card">

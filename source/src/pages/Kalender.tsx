@@ -1,8 +1,10 @@
 import { useState, useMemo, useRef } from "react";
+import { Link } from "wouter";
 import { ChevronLeft, ChevronRight, Loader2, Search, Share2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { fetchEvents, type Event as SupabaseEvent } from "@/lib/supabase";
+import { MinSideSubNav } from "@/components/MinSideSubNav";
 import { pageBase } from "@/lib/pageCSSBase";
 
 /* ─────────────────────────────────────────────
@@ -247,12 +249,12 @@ export default function Kalender() {
   });
 
   const EVENT_DATES = useMemo(() => {
-    const combined: Record<string, { title: string; emoji: string; type: string; fromDB?: boolean }[]> = { ...STATIC_EVENT_DATES };
+    const combined: Record<string, { title: string; emoji: string; type: string; fromDB?: boolean; eventId?: string }[]> = { ...STATIC_EVENT_DATES };
     (supabaseEvents || []).forEach(evt => {
       if (!evt.date) return;
       const dateStr = evt.date.split("T")[0];
       const emoji = CAT_EMOJI[(evt.category || "").toLowerCase()] || "📅";
-      const entry = { title: evt.title, emoji, type: "event", fromDB: true };
+      const entry = { title: evt.title, emoji, type: "event", fromDB: true, eventId: evt.id };
       if (!combined[dateStr]) combined[dateStr] = [];
       combined[dateStr].push(entry);
     });
@@ -304,6 +306,8 @@ export default function Kalender() {
             <p className="ka-identity-sub">{t(MONTH_NAME_KEYS[month])} {year}</p>
           </div>
         </div>
+
+        <MinSideSubNav />
 
         {/* ── TWO-COLUMN LAYOUT ── */}
         <div className="ka-layout">
@@ -389,17 +393,29 @@ export default function Kalender() {
               </div>
             )}
 
-            {(selectedDate ? selectedEvents.map((e, i) => ({ ...e, date: selectedDate, _key: i })) : upcomingEvents.map((e, i) => ({ ...e, _key: i }))).map((event) => (
-              <div key={event._key} className="ka-event-item">
-                <div className="ka-event-avatar">{event.emoji}</div>
-                <div className="ka-event-info">
-                  <div className={`ka-event-name ${(event as any).fromDB ? 'ka-teal' : ''}`}>
-                    {event.title}
+            {(selectedDate ? selectedEvents.map((e, i) => ({ ...e, date: selectedDate, _key: i })) : upcomingEvents.map((e, i) => ({ ...e, _key: i }))).map((event) => {
+              const eventId = (event as any).eventId;
+              const inner = (
+                <>
+                  <div className="ka-event-avatar">{event.emoji}</div>
+                  <div className="ka-event-info">
+                    <div className={`ka-event-name ${(event as any).fromDB ? 'ka-teal' : ''}`}>
+                      {event.title}
+                    </div>
+                    <div className="ka-event-date-label">{formatEventDate(event.date)}</div>
                   </div>
-                  <div className="ka-event-date-label">{formatEventDate(event.date)}</div>
+                </>
+              );
+              return eventId ? (
+                <Link key={event._key} href={`/event/${eventId}`} className="ka-event-item" style={{ textDecoration: "none", color: "inherit" }}>
+                  {inner}
+                </Link>
+              ) : (
+                <div key={event._key} className="ka-event-item">
+                  {inner}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

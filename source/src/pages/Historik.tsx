@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
+import { Link } from "wouter";
 import { MapPin, Calendar, Music, Star } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { MinSideSubNav } from "@/components/MinSideSubNav";
 import { pageBase } from "@/lib/pageCSSBase";
 
 
@@ -255,6 +257,8 @@ export default function Historik() {
           <p className="hi-subtitle">Dine minder</p>
         </div>
 
+        <MinSideSubNav />
+
         {/* Filters */}
         <div className="hi-filters">
           {YEARS.map((y) => (
@@ -319,9 +323,11 @@ export default function Historik() {
             }
 
             items.push(
-              <div
+              <Link
                 key={event.id}
+                href={`/event/${event.id}`}
                 className={`hi-card hi-glass${event.span === "tall" ? " hi-tall" : ""}${event.span === "wide" ? " hi-wide" : ""}`}
+                style={{ textDecoration: "none", color: "inherit" }}
               >
                 <div className="hi-card-photo">
                   {event.emoji}
@@ -335,7 +341,7 @@ export default function Historik() {
                   </div>
                   <div className="hi-card-date">{event.date}</div>
                 </div>
-              </div>
+              </Link>
             );
 
             return items;

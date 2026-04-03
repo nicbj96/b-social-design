@@ -404,6 +404,13 @@ export default function StedDetail() {
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="sd-action-primary">
               <Navigation /> {t('place.show_route')}
             </a>
+            <button
+              className="sd-action-secondary"
+              onClick={() => setLocation(`/kort?lat=${place.latitude}&lng=${place.longitude}&zoom=14`)}
+              title="Vis på kort"
+            >
+              <MapPin />
+            </button>
             <button className="sd-action-secondary">
               <Bookmark />
             </button>

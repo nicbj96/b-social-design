@@ -1,378 +1,481 @@
-import { useState } from "react";
-import { ArrowLeft, Plus, Search, X } from "lucide-react";
-import { useLocation } from "wouter";
-import { useTranslation } from 'react-i18next';
-import { useFadeUp } from "@/lib/useFadeUp";
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/context/AuthContext";
+import { PenLine, Star, Clock, Tag } from "lucide-react";
+import { MinSideSubNav } from "@/components/MinSideSubNav";
 import { pageBase } from "@/lib/pageCSSBase";
 
+/* ─────────────────────────────────────────────
+   B-Social Noter — Design B: Journal / List
+   Scoped CSS prefix: nt-
+   ───────────────────────────────────────────── */
 
-interface Note {
+/* ── Types ── */
+interface PinnedNote {
   id: string;
   title: string;
-  content: string;
-  emoji: string;
-  type: "event" | "person" | "ide";
-  tag: string;
+  body: string;
+  time: string;
+  color: string;
 }
 
-const DEMO_NOTES: Note[] = [
+interface NoteEntry {
+  id: string;
+  title: string;
+  body: string;
+  time: string;
+  color: string;
+  tags: { label: string; color: string }[];
+}
+
+interface RecentNote {
+  id: string;
+  title: string;
+  time: string;
+}
+
+/* ── Mock data ── */
+const PINNED: PinnedNote[] = [
   {
-    id: "n1",
-    title: "Br\u00e6tspil-aften",
-    content: "Mads havde Settlers of Catan med \u2014 virkelig sjov aften. Husk at sp\u00f8rge om Ticket to Ride n\u00e6ste gang.",
-    emoji: "\uD83C\uDFB2",
-    type: "event",
-    tag: "Spil",
+    id: "p1",
+    title: "Projektideer",
+    body: "Brainstorm for ny app — undersøg marked for lokale events.",
+    time: "2t siden",
+    color: "#4ECDC4",
   },
   {
-    id: "n2",
-    title: "Anna fra g\u00e5turen",
-    content: "Arbejder p\u00e5 universitetet. Interesseret i vandring og fotografi. Vil gerne med p\u00e5 Rold Skov-turen.",
-    emoji: "\uD83D\uDC69",
-    type: "person",
-    tag: "Kontakt",
+    id: "p2",
+    title: "Mødenotater",
+    body: "Status fra fredag — næste sprint handler om notifikationer.",
+    time: "5t siden",
+    color: "#a78bfa",
   },
   {
-    id: "n3",
-    title: "Cykeltur til Nibe",
-    content: "Smuk rute langs fjorden. Husk vand og solcreme. Tager ca. 1.5 time i roligt tempo. God caf\u00e9 i Nibe havn.",
-    emoji: "\uD83D\uDEB4",
-    type: "event",
-    tag: "Sport",
-  },
-  {
-    id: "n4",
-    title: "Ide: F\u00e6llesspisning",
-    content: "T\u00e6nker vi kunne lave en f\u00e6llesspisning i Vestbyen. Evt. thai-mad. Sp\u00f8rg Sofie om hun vil hj\u00e6lpe med at arrangere.",
-    emoji: "\uD83D\uDCA1",
-    type: "ide",
-    tag: "Ide",
-  },
-  {
-    id: "n5",
-    title: "Emil \u2014 kaffe-m\u00f8de",
-    content: "Ny i Aalborg, flyttet fra K\u00f8benhavn. Arbejder som designer. God energi. Vil gerne med til br\u00e6tspil n\u00e6ste gang.",
-    emoji: "\u2615",
-    type: "person",
-    tag: "Kontakt",
-  },
-  {
-    id: "n6",
-    title: "Fodbold 5-mands",
-    content: "Kildeparken er perfekt. Vi var 5 i alt \u2014 alle niveauer. Jonas er den faste organisator. N\u00e6ste gang torsdag.",
-    emoji: "\u26BD",
-    type: "event",
-    tag: "Sport",
-  },
-  {
-    id: "n7",
-    title: "Fantastisk g\u00e5tur ved havnen",
-    content: "Gik fra Utzon Center til Vestre Fjordpark. Fantastisk udsigt over Limfjorden. M\u00f8dte Anna p\u00e5 vejen \u2014 vi snakkede om at g\u00f8re det igen n\u00e6ste weekend.",
-    emoji: "\uD83C\uDF0A",
-    type: "event",
-    tag: "G\u00e5tur",
-  },
-  {
-    id: "n8",
-    title: "Skal pr\u00f8ve MTB i Hammer Bakker",
-    content: "Mads anbefalede Hammer Bakker til mountainbike. Bl\u00e5 rute er god for begyndere, r\u00f8d rute er mere teknisk. Husk hjelm og ekstra slange.",
-    emoji: "\uD83D\uDEB5",
-    type: "ide",
-    tag: "Sport",
+    id: "p3",
+    title: "Madplan",
+    body: "Mandag: pasta. Tirsdag: kylling-wok. Onsdag: fisk.",
+    time: "1d siden",
+    color: "#f97316",
   },
 ];
 
-const TYPE_META: Record<string, { accent: string; glow: string; labelKey: string }> = {
-  event: { accent: "#4ECDC4", glow: "rgba(78,205,196,0.25)", labelKey: "notes.type_experience" },
-  person: { accent: "#60a5fa", glow: "rgba(96,165,250,0.25)", labelKey: "notes.type_person" },
-  ide: { accent: "#fbbf24", glow: "rgba(251,191,36,0.25)", labelKey: "notes.type_idea" },
-};
+const NOTES: NoteEntry[] = [
+  {
+    id: "n1",
+    title: "Ideer til blogindlæg",
+    body: "Udarbejdelse af content kalender — skriv om lokale initiativer og community-building i Nordjylland.",
+    time: "10m siden",
+    color: "#4ECDC4",
+    tags: [
+      { label: "Content", color: "#4ECDC4" },
+      { label: "Blog", color: "#60a5fa" },
+    ],
+  },
+  {
+    id: "n2",
+    title: "Boglæsning",
+    body: "Noter fra 'Sapiens' kap. 3 — landbrugsrevolutionen og dens sociale konsekvenser.",
+    time: "25m siden",
+    color: "#60a5fa",
+    tags: [
+      { label: "Litteratur", color: "#a78bfa" },
+      { label: "Historie", color: "#f59e0b" },
+    ],
+  },
+  {
+    id: "n3",
+    title: "Træningsprogram",
+    body: "Skema for 'Sapiens' kap. 3 — 4-split program med fokus på styrke og kondition.",
+    time: "1t siden",
+    color: "#ec4899",
+    tags: [
+      { label: "Sundhed", color: "#ec4899" },
+      { label: "Fitness", color: "#f97316" },
+    ],
+  },
+  {
+    id: "n4",
+    title: "Rejseplanlægning",
+    body: "Research til sommer i Norditalien — Como-søen, Cinque Terre, lokale restauranter.",
+    time: "3t siden",
+    color: "#f97316",
+    tags: [
+      { label: "Rejse", color: "#f97316" },
+      { label: "Planlægning", color: "#4ECDC4" },
+    ],
+  },
+  {
+    id: "n5",
+    title: "Podcast-noter",
+    body: "Episode om kreativitet og flow — vigtigt citat om daglige rutiner og morgenritualer.",
+    time: "5t siden",
+    color: "#a78bfa",
+    tags: [
+      { label: "Inspiration", color: "#a78bfa" },
+      { label: "Kreativitet", color: "#ec4899" },
+    ],
+  },
+];
+
+const RECENT: RecentNote[] = [
+  { id: "r1", title: "Nye funktioner i app", time: "2d siden" },
+  { id: "r2", title: "Feedback fra brugere", time: "3d siden" },
+  { id: "r3", title: "OpenIT-projekt", time: "5d siden" },
+];
 
 /* ── Scoped CSS ── */
 const noterCSS = `
 ${pageBase("nt")}
 
-/* ── Header bar ── */
+/* ── Header ── */
 .nt-header {
-  position: sticky; top: 0; z-index: 30;
-  padding: 48px 20px 12px;
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.97) 60%, transparent);
+  padding: 40px 20px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
 }
-.nt-back {
-  width: 36px; height: 36px; border-radius: 50%;
+.nt-header-icon {
+  width: 44px; height: 44px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  color: var(--pg-white); cursor: pointer; transition: all 0.3s;
+  background: rgba(78,205,196,0.12);
+  color: var(--teal);
   flex-shrink: 0;
 }
-.nt-back:hover { border-color: var(--teal); color: var(--teal); }
+.nt-header-text { flex: 1; }
 .nt-title {
-  flex: 1; font-family: var(--serif); font-size: 22px;
-  font-weight: 400; color: var(--pg-white);
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--pg-white);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
 }
-.nt-add {
-  width: 36px; height: 36px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--teal); border: none; color: var(--bg);
-  cursor: pointer; transition: all 0.3s; flex-shrink: 0;
-}
-.nt-add:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px var(--teal-glow);
+.nt-subtitle {
+  font-size: 13px;
+  color: var(--teal);
+  font-weight: 500;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
 }
 
-/* ── Content wrapper ── */
-.nt-body { padding: 8px 20px 96px; }
-
-/* ── Search bar ── */
-.nt-search-wrap {
-  position: relative; margin-bottom: 16px;
-}
-.nt-search-icon {
-  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-  color: rgba(255,255,255,0.35); pointer-events: none;
-}
-.nt-search {
-  width: 100%; padding: 12px 40px 12px 40px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px; color: var(--pg-white);
-  font-size: 14px; font-family: var(--sans);
-  outline: none; transition: border-color 0.3s, box-shadow 0.3s;
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-}
-.nt-search:focus {
-  border-color: rgba(78,205,196,0.45);
-  box-shadow: 0 0 0 3px rgba(78,205,196,0.08);
-}
-.nt-search::placeholder { color: rgba(255,255,255,0.28); }
-.nt-search-clear {
-  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; color: rgba(255,255,255,0.35);
-  cursor: pointer; padding: 0; display: flex; align-items: center;
+/* ── Back link ── */
+.nt-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 20px 20px 0;
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  font-family: var(--sans);
   transition: color 0.2s;
 }
-.nt-search-clear:hover { color: var(--teal); }
+.nt-back-link:hover { color: var(--teal); }
 
-/* ── Filter chips ── */
-.nt-filters {
-  display: flex; gap: 8px; margin-bottom: 20px;
-  overflow-x: auto; scrollbar-width: none;
+/* ── Section label ── */
+.nt-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 24px 20px 10px;
+  font-family: var(--sans);
+}
+
+/* ── Pinned row ── */
+.nt-pinned-row {
+  display: flex;
+  gap: 12px;
+  padding: 0 20px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.nt-filters::-webkit-scrollbar { display: none; }
-.nt-filter {
-  padding: 7px 16px; border-radius: 100px;
-  font-size: 12px; font-weight: 500; font-family: var(--sans);
-  white-space: nowrap; cursor: pointer; transition: all 0.25s;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.45);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-}
-.nt-filter:hover { color: var(--pg-white); border-color: rgba(255,255,255,0.15); }
-.nt-filter--active {
-  background: var(--teal); color: var(--bg);
-  border-color: var(--teal); font-weight: 600;
-}
+.nt-pinned-row::-webkit-scrollbar { display: none; }
 
-/* ── Notes grid ── */
-.nt-list { display: flex; flex-direction: column; gap: 12px; }
-
-/* ── Note card ── */
-.nt-card {
+.nt-pinned-card {
+  min-width: 155px;
+  max-width: 180px;
+  flex-shrink: 0;
   background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px; padding: 18px;
-  display: flex; align-items: flex-start; gap: 14px;
-  transition: background 0.3s, border-color 0.3s, transform 0.3s, box-shadow 0.3s;
-  cursor: default;
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+  position: relative;
+  overflow: hidden;
 }
-.nt-card:hover {
+.nt-pinned-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.nt-pinned-card:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+  transform: translateY(-2px);
+}
+.nt-pinned-star {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.nt-pinned-star svg {
+  flex-shrink: 0;
+}
+.nt-pinned-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pg-white);
+  font-family: var(--sans);
+}
+.nt-pinned-body {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.4;
+  margin-top: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--sans);
+}
+.nt-pinned-time {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 8px;
+  font-family: var(--sans);
+}
+
+/* ── Note list entries ── */
+.nt-body { padding: 0 20px 96px; }
+
+.nt-list { display: flex; flex-direction: column; gap: 10px; }
+
+.nt-entry {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.nt-entry:hover {
   background: rgba(255,255,255,0.08);
   border-color: rgba(255,255,255,0.14);
   transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
 
-/* ── Note emoji icon ── */
-.nt-icon {
-  width: 44px; height: 44px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; font-size: 20px;
-  transition: box-shadow 0.3s;
+/* Left color bar */
+.nt-entry-bar {
+  width: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  align-self: stretch;
 }
 
-/* ── Note content ── */
-.nt-card-body { flex: 1; min-width: 0; }
-.nt-card-head {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 4px; flex-wrap: wrap;
+.nt-entry-content { flex: 1; min-width: 0; }
+
+.nt-entry-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pg-white);
+  font-family: var(--sans);
+  line-height: 1.3;
 }
-.nt-card-title {
-  font-size: 14px; font-weight: 600; color: var(--pg-white);
+.nt-entry-body {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-family: var(--sans);
 }
-.nt-card-badge {
-  padding: 2px 8px; border-radius: 100px;
-  font-size: 10px; font-weight: 700; font-family: var(--sans);
-  text-transform: uppercase; letter-spacing: 0.5px;
+.nt-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
 }
-.nt-card-text {
-  font-size: 13px; color: rgba(255,255,255,0.5);
-  line-height: 1.55; font-family: var(--sans);
-}
-.nt-card-tag {
-  display: block; margin-top: 8px;
-  font-size: 11px; color: rgba(255,255,255,0.2);
-  font-family: var(--sans); letter-spacing: 0.3px;
-}
-
-/* ── Empty state ── */
-.nt-empty {
-  text-align: center; padding: 48px 20px;
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 18px;
-}
-.nt-empty-icon { font-size: 36px; margin-bottom: 8px; }
-.nt-empty-text {
-  font-size: 14px; color: rgba(255,255,255,0.45);
+.nt-entry-time {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-family: var(--sans);
 }
 
-/* ── Stagger delays for cards ── */
-.nt-d0 { transition-delay: 0.04s; }
-.nt-d1 { transition-delay: 0.08s; }
-.nt-d2 { transition-delay: 0.12s; }
-.nt-d3 { transition-delay: 0.16s; }
-.nt-d4 { transition-delay: 0.20s; }
-.nt-d5 { transition-delay: 0.24s; }
-.nt-d6 { transition-delay: 0.28s; }
-.nt-d7 { transition-delay: 0.32s; }
+/* Tags area on the right */
+.nt-entry-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.nt-tag-pill {
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--sans);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* ── Recent notes section ── */
+.nt-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 20px 32px;
+}
+.nt-recent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.nt-recent-row:last-child { border-bottom: none; }
+.nt-recent-row:hover { opacity: 0.8; }
+.nt-recent-title {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  font-family: var(--sans);
+}
+.nt-recent-time {
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+  font-family: var(--sans);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .nt-header { padding: 32px 16px 0; }
+  .nt-section-label { padding-left: 16px; padding-right: 16px; }
+  .nt-pinned-row { padding: 0 16px 8px; }
+  .nt-body { padding: 0 16px 96px; }
+  .nt-back-link { margin-left: 16px; margin-right: 16px; }
+  .nt-recent-list { padding: 0 16px 32px; }
+  .nt-title { font-size: 24px; }
+}
 `;
 
 export default function Noter() {
   const { t } = useTranslation();
-  const [, setLocation] = useLocation();
-  const [search, setSearch] = useState("");
-  const [activeType, setActiveType] = useState<string | null>(null);
-  const containerRef = useFadeUp("nt");
-
-  const filtered = DEMO_NOTES.filter((n) => {
-    const matchType = !activeType || n.type === activeType;
-    const matchSearch = !search ||
-      n.title.toLowerCase().includes(search.toLowerCase()) ||
-      n.content.toLowerCase().includes(search.toLowerCase());
-    return matchType && matchSearch;
-  });
+  const { profile } = useAuth();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
       <style>{noterCSS}</style>
       <div
-        className="nt-root"
         ref={containerRef}
+        className="nt-root"
         data-testid="noter-page"
       >
+        <MinSideSubNav />
+
         {/* ── Header ── */}
-        <div className="nt-header nt-fade-up">
-          <button onClick={() => setLocation("/min-side")} className="nt-back">
-            <ArrowLeft size={18} />
-          </button>
-          <h1 className="nt-title">{t('notes.title')}</h1>
-          <button className="nt-add">
-            <Plus size={18} />
-          </button>
+        <div className="nt-header">
+          <div className="nt-header-icon">
+            <PenLine size={22} />
+          </div>
+          <div className="nt-header-text">
+            <h1 className="nt-title">{t("notes.title", "Noter")}</h1>
+            <p className="nt-subtitle">{t("notes.subtitle", "Personlig journal")}</p>
+          </div>
         </div>
 
+        {/* ── Pinned notes ── */}
+        <div className="nt-section-label">{t("notes.pinned", "Pinned noter")}</div>
+        <div className="nt-pinned-row">
+          {PINNED.map((pin) => (
+            <div
+              key={pin.id}
+              className="nt-pinned-card"
+              style={{ borderTop: `3px solid ${pin.color}` } as React.CSSProperties}
+            >
+              <div className="nt-pinned-star">
+                <Star size={12} style={{ color: pin.color }} fill={pin.color} />
+                <span className="nt-pinned-title">{pin.title}</span>
+              </div>
+              <p className="nt-pinned-body">{pin.body}</p>
+              <span className="nt-pinned-time">{pin.time}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Main note entries ── */}
+        <div className="nt-section-label">{t("notes.all_notes", "Alle noter")}</div>
         <div className="nt-body">
-          {/* ── Search ── */}
-          <div className="nt-search-wrap nt-fade-up nt-d1">
-            <span className="nt-search-icon"><Search size={15} /></span>
-            <input
-              type="text"
-              placeholder={t('notes.search_placeholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="nt-search"
-              data-testid="input-search-notes"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="nt-search-clear">
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          {/* ── Type filters ── */}
-          <div className="nt-filters nt-fade-up nt-d2">
-            {[
-              { key: null, labelKey: "notes.filter_all", count: DEMO_NOTES.length },
-              { key: "event", labelKey: "notes.filter_experiences", count: DEMO_NOTES.filter(n => n.type === "event").length },
-              { key: "person", labelKey: "notes.filter_persons", count: DEMO_NOTES.filter(n => n.type === "person").length },
-              { key: "ide", labelKey: "notes.filter_ideas", count: DEMO_NOTES.filter(n => n.type === "ide").length },
-            ].map((f) => (
-              <button
-                key={f.key || "alle"}
-                onClick={() => setActiveType(f.key)}
-                className={`nt-filter${activeType === f.key ? " nt-filter--active" : ""}`}
-              >
-                {t(f.labelKey)} ({f.count})
-              </button>
-            ))}
-          </div>
-
-          {/* ── Notes list ── */}
           <div className="nt-list">
-            {filtered.map((note, i) => {
-              const meta = TYPE_META[note.type];
-              return (
+            {NOTES.map((note) => (
+              <div key={note.id} className="nt-entry">
                 <div
-                  key={note.id}
-                  className={`nt-card nt-fade-up nt-d${Math.min(i, 7)}`}
-                  style={{ borderLeft: `3px solid ${meta.accent}` }}
-                >
-                  <div
-                    className="nt-icon"
-                    style={{
-                      background: `${meta.accent}15`,
-                      boxShadow: `0 0 20px ${meta.glow}`,
-                    }}
-                  >
-                    {note.emoji}
-                  </div>
-                  <div className="nt-card-body">
-                    <div className="nt-card-head">
-                      <span className="nt-card-title">{note.title}</span>
-                      <span
-                        className="nt-card-badge"
-                        style={{
-                          background: `${meta.accent}18`,
-                          color: meta.accent,
-                        }}
-                      >
-                        {t(meta.labelKey)}
-                      </span>
-                    </div>
-                    <p className="nt-card-text">{note.content}</p>
-                    <span className="nt-card-tag">{note.tag}</span>
+                  className="nt-entry-bar"
+                  style={{ background: note.color }}
+                />
+                <div className="nt-entry-content">
+                  <div className="nt-entry-title">{note.title}</div>
+                  <p className="nt-entry-body">{note.body}</p>
+                  <div className="nt-entry-meta">
+                    <span className="nt-entry-time">
+                      <Clock size={10} />
+                      {note.time}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
-
-            {filtered.length === 0 && (
-              <div className="nt-empty nt-fade-up">
-                <div className="nt-empty-icon">{"\uD83D\uDCDD"}</div>
-                <p className="nt-empty-text">{t('notes.no_notes_found')}</p>
+                <div className="nt-entry-tags">
+                  {note.tags.map((tag) => (
+                    <span
+                      key={tag.label}
+                      className="nt-tag-pill"
+                      style={{
+                        background: `${tag.color}18`,
+                        color: tag.color,
+                      }}
+                    >
+                      {tag.label}
+                    </span>
+                  ))}
+                </div>
               </div>
-            )}
+            ))}
           </div>
+        </div>
+
+        {/* ── Seneste noter ── */}
+        <div className="nt-section-label">{t("notes.recent", "Seneste noter")}</div>
+        <div className="nt-recent-list">
+          {RECENT.map((r) => (
+            <div key={r.id} className="nt-recent-row">
+              <span className="nt-recent-title">{r.title}</span>
+              <span className="nt-recent-time">{r.time}</span>
+            </div>
+          ))}
         </div>
       </div>
     </>

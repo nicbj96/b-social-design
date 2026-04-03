@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { ArrowLeft, Share2, Heart, MapPin, Users, Calendar, ExternalLink, Ticket, BedDouble, Star, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -285,6 +285,30 @@ ${pageBase("ed")}
 }
 .ed-not-found-emoji { font-size: 56px; margin-bottom: 16px; }
 .ed-not-found-text { font-size: 15px; color: var(--pg-white-dim); margin-bottom: 20px; }
+.ed-not-found-links {
+  display: flex; gap: 16px; margin-top: 12px;
+}
+.ed-not-found-links a {
+  font-size: 13px; color: var(--pg-white-muted);
+  text-decoration: none; transition: color 0.25s;
+}
+.ed-not-found-links a:hover { color: var(--teal); }
+
+/* ── Related navigation ── */
+.ed-related-nav {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.ed-related-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 100px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  font-size: 13px; font-weight: 500; color: var(--pg-white-dim);
+  text-decoration: none; transition: all 0.25s;
+}
+.ed-related-link:hover {
+  border-color: rgba(78,205,196,0.3); color: var(--teal);
+}
 
 /* ── Responsive ── */
 @media (min-width: 600px) {
@@ -367,6 +391,10 @@ export default function EventDetail() {
           <button className="ed-btn" onClick={() => setLocation("/feed")}>
             {t('events.back_to_feed')}
           </button>
+          <div className="ed-not-found-links">
+            <Link href="/udforsk">Udforsk events</Link>
+            <Link href="/kort">Se kort</Link>
+          </div>
         </div>
       </>
     );
@@ -463,6 +491,13 @@ export default function EventDetail() {
               ))}
             </div>
           )}
+
+          {/* Related navigation */}
+          <div className="ed-related-nav ed-fade-up ed-d3">
+            <Link href="/feed" className="ed-related-link">Tilbage til feed</Link>
+            <Link href="/udforsk" className="ed-related-link">Udforsk events</Link>
+            <Link href="/kort" className="ed-related-link">Se kort</Link>
+          </div>
 
           {/* Affiliate ticket links */}
           {event.source && ['ticketmaster', 'seatgeek'].includes(event.source) && (

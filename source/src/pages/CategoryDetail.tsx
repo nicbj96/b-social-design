@@ -1013,6 +1013,7 @@ function SupabasePlaceCard({ place }: { place: Place }) {
   const { t } = useTranslation();
   const isFree = place.smart_tags?.includes("gratis");
   return (
+    <Link href={`/sted/sb-${place.id}`} style={{ textDecoration: "none" }}>
     <div className="cd-supa-card">
       <div className="cd-supa-body">
         <div className="cd-supa-header">
@@ -1047,6 +1048,7 @@ function SupabasePlaceCard({ place }: { place: Place }) {
         )}
       </div>
     </div>
+    </Link>
   );
 }
 

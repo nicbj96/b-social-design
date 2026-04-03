@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { getEvents } from "@/lib/data";
 import { getEventImage, formatDanishDate } from "@/lib/eventHelpers";
 import { Settings, Heart, MapPin, TrendingUp, Award, Users, Pencil } from "lucide-react";
+import { MinSideSubNav } from "@/components/MinSideSubNav";
 import { useAuth } from "@/context/AuthContext";
 import { useTags } from "@/context/TagContext";
 import { FeedTagEditor } from "@/components/FeedTagEditor";
@@ -285,6 +286,8 @@ export default function TestMinSide() {
           <div className="ms-stat-pill"><strong>{friendCount !== null ? friendCount : (profile?.connections ?? 0)}</strong> {t('profile.friends_count')}</div>
           <div className="ms-stat-pill"><strong>{selectedTags.length || uniqueCategories}</strong> {t('profile.tags_count')}</div>
         </div>
+
+        <MinSideSubNav />
 
         {/* ── TWO-COLUMN CONTENT ── */}
         <div className="ms-cols">

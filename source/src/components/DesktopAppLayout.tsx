@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings } from "lucide-react";
+import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings, Calendar, BarChart3, Clock, StickyNote } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNotifications } from "@/context/NotificationContext";
@@ -15,6 +15,8 @@ const NAV_MAIN = [
   { key: "nav.beskeder", icon: MessageCircle, href: "/beskeder" },
   { key: "nav.min_side", icon: User, href: "/min-side" },
 ];
+
+const MIN_SIDE_SUBS = ["/indstillinger", "/kalender", "/overblik", "/noter", "/historik"];
 
 export default function DesktopAppLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -200,7 +202,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
         </Link>
 
         {/* Main navigation */}
-        <nav className="flex-1 px-3" style={{ position: "relative", zIndex: 1 }}>
+        <nav className="flex-1 px-3 overflow-y-auto" style={{ position: "relative", zIndex: 1, scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
           {NAV_MAIN.map((item) => navLink(item.href, item.icon, t(item.key), item.key === "nav.beskeder" ? { badge: unreadMessages } : undefined))}
           {/* Invitér — right under Beskeder/Min Side */}
           {navLink("/inviter", UserPlus, "Invitér")}
@@ -216,7 +218,19 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
 
           {/* Firma / Kunde */}
           {navLink("/firma", Building2, t("nav.firma") || "Firma")}
+
+          {/* Separator */}
+          <div className="h-px bg-white/[0.06] my-3 mx-2" />
+
+          {/* Værktøjer section */}
+          <p className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/25 font-semibold">{t("nav.tools_section")}</p>
+          {navLink("/kalender", Calendar, t("nav.kalender") || "Kalender")}
+          {navLink("/overblik", BarChart3, t("nav.overblik") || "Overblik")}
+          {navLink("/historik", Clock, t("nav.historik") || "Historik")}
+          {navLink("/noter", StickyNote, t("nav.noter") || "Noter")}
         </nav>
+        {/* Hide scrollbar for webkit browsers */}
+        <style>{`nav::-webkit-scrollbar { display: none; }`}</style>
 
         {/* Bottom section: Auth + Language + Version */}
         <div className="px-3 space-y-2 pb-2" style={{ position: "relative", zIndex: 1 }}>
@@ -301,7 +315,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
             const Icon = item.icon;
             const isActive = item.href === "/feed"
               ? (location === "/" || location === "/feed" || location === "/test")
-              : location.startsWith(item.href);
+              : location.startsWith(item.href) || (item.href === "/min-side" && MIN_SIDE_SUBS.some(s => location === s || location.startsWith(s + "/")));
             return (
               <Link
                 key={item.href}

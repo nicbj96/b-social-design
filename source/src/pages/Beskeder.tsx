@@ -420,6 +420,15 @@ ${pageBase("bk")}
   color: var(--pg-white);
   background: rgba(255,255,255,0.05);
 }
+.bk-call-btn {
+  color: rgba(78,205,196,0.55);
+  transition: all 0.2s;
+}
+.bk-call-btn:hover {
+  color: #4ECDC4;
+  background: rgba(78,205,196,0.12);
+  box-shadow: 0 0 12px rgba(78,205,196,0.2);
+}
 
 /* Chat menu dropdown */
 .bk-chat-menu-wrap { position: relative; }
@@ -1973,14 +1982,14 @@ export default function Beskeder() {
                 <div className="bk-chat-header-actions">
                   <button
                     onClick={() => { setIsVideoCall(false); webrtc.startCall(false); }}
-                    className="bk-icon-btn"
+                    className="bk-icon-btn bk-call-btn"
                     title="Starte opkald"
                   >
                     <Phone size={16} />
                   </button>
                   <button
                     onClick={() => { setIsVideoCall(true); webrtc.startCall(true); }}
-                    className="bk-icon-btn"
+                    className="bk-icon-btn bk-call-btn"
                     title="Starte videoopkald"
                   >
                     <Video size={16} />

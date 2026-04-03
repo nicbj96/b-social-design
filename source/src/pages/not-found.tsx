@@ -144,6 +144,19 @@ ${pageBase("e4")}
 .e4-cta:hover .e4-arrow {
   transform: translateX(3px);
 }
+
+/* ── Extra nav links ── */
+.e4-nav-links {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  justify-content: center; margin-top: 4px;
+}
+.e4-nav-link {
+  font-size: 13px; font-weight: 500;
+  color: var(--pg-white-muted);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+.e4-nav-link:hover { color: var(--teal); }
 `;
 
 export default function NotFound() {
@@ -183,6 +196,13 @@ export default function NotFound() {
             Ga til forsiden
             <span className="e4-arrow">&rarr;</span>
           </Link>
+
+          {/* Extra navigation */}
+          <div className="e4-fade-up e4-d4 e4-nav-links">
+            <Link href="/udforsk" className="e4-nav-link">Udforsk</Link>
+            <Link href="/kort" className="e4-nav-link">Kort</Link>
+            <Link href="/kalender" className="e4-nav-link">Kalender</Link>
+          </div>
         </div>
       </div>
     </>

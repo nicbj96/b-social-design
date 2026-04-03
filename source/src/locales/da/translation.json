@@ -8,7 +8,12 @@
     "firma": "Firma",
     "notifications": "Notifikationer",
     "kunde": "Kunde",
-    "henvisning": "Henvisning"
+    "henvisning": "Henvisning",
+    "kalender": "Kalender",
+    "overblik": "Overblik",
+    "historik": "Historik",
+    "noter": "Noter",
+    "tools_section": "Værktøjer"
   },
   "greeting": {
     "morning": "God morgen",

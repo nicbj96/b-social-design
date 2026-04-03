@@ -1,20 +1,27 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useState } from "react";
+import { useLocation, Link } from "wouter";
 import {
-  Copy,
-  Check,
-  Users,
-  LogIn,
+  Award,
+  MessageSquare,
   Link2,
+  CheckCircle,
+  Users,
   ArrowLeft,
-  Share2,
-  UserPlus,
+  LogIn,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
-import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
+
+/* ── Mock data ─────────────────────────────────────────────── */
+const INVITED_COUNT = 12;
+const NEXT_MILESTONE = 20;
+const MOCK_FRIENDS = [
+  { name: "Anna L.", avatar: "AL", time: "2 minutter siden" },
+  { name: "Peter B.", avatar: "PB", time: "1 time siden" },
+  { name: "Maria K.", avatar: "MK", time: "3 timer siden" },
+  { name: "Jonas H.", avatar: "JH", time: "1 dag siden" },
+];
 
 /* ── Scoped CSS ─────────────────────────────────────────────── */
 const inviterCSS = `${pageBase("iv")}
@@ -48,150 +55,149 @@ const inviterCSS = `${pageBase("iv")}
 /* ── Content wrapper ── */
 .iv-content {
   max-width: 640px; margin: 0 auto;
-  padding: 32px 24px; display: flex; flex-direction: column; gap: 24px;
+  padding: 32px 24px 48px; display: flex; flex-direction: column; gap: 24px;
 }
 
-/* ── Hero section ── */
-.iv-hero { text-align: center; padding: 16px 0 8px; }
-.iv-hero-emoji { font-size: 56px; margin-bottom: 12px; }
-.iv-hero-title {
-  font-family: var(--serif); font-size: clamp(28px, 4vw, 40px);
-  font-weight: 400; line-height: 1.1; margin-bottom: 8px;
-}
-.iv-hero-title em { font-style: italic; color: var(--teal); }
-.iv-hero-sub {
-  font-size: 14px; color: var(--pg-white-dim); line-height: 1.65;
-  max-width: 380px; margin: 0 auto;
-}
-
-/* ── Referral link card ── */
-.iv-link-card {
+/* ── Achievement card ── */
+.iv-achievement {
   background: var(--glass-bg); backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border); border-radius: 16px;
-  padding: 24px; transition: border-color 0.3s;
+  border: 1px solid var(--glass-border); border-radius: 20px;
+  padding: 32px 24px 28px; text-align: center;
+  position: relative; overflow: hidden;
 }
-.iv-link-card:hover { border-color: rgba(78,205,196,0.25); }
-.iv-link-label {
-  font-size: 11px; font-weight: 600; color: var(--teal);
-  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px;
+.iv-achievement::before {
+  content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 3px; border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, transparent, #4ECDC4, transparent);
 }
-.iv-link-row {
-  display: flex; align-items: center; gap: 10px;
+.iv-laurel {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 72px; height: 72px; border-radius: 50%; margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(78,205,196,0.18), rgba(78,205,196,0.06));
+  border: 1px solid rgba(78,205,196,0.2);
+  position: relative;
 }
-.iv-link-url {
-  flex: 1; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px; padding: 12px 14px;
-  color: var(--pg-white-dim); font-size: 13px; font-family: 'JetBrains Mono', monospace;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.iv-laurel-icon { color: #4ECDC4; }
+.iv-laurel-left, .iv-laurel-right {
+  position: absolute; font-size: 28px; top: 50%; transform: translateY(-50%);
 }
-.iv-copy-btn {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 20px; border-radius: 12px;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  transition: all 0.25s; border: none; white-space: nowrap;
-  font-family: var(--sans);
+.iv-laurel-left { left: -18px; }
+.iv-laurel-right { right: -18px; }
+.iv-achievement-title {
+  font-family: var(--serif); font-size: clamp(22px, 3.5vw, 28px);
+  font-weight: 400; color: var(--pg-white); line-height: 1.2;
+  margin-bottom: 20px;
 }
-.iv-copy-btn--default {
-  background: var(--teal); color: var(--bg);
+.iv-achievement-title strong { color: #4ECDC4; font-weight: 600; }
+
+/* ── Progress bar ── */
+.iv-progress-wrap { padding: 0 8px; margin-bottom: 12px; }
+.iv-progress-labels {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
 }
-.iv-copy-btn--default:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px var(--teal-glow);
+.iv-progress-current {
+  font-size: 13px; font-weight: 600; color: #4ECDC4;
 }
-.iv-copy-btn--copied {
-  background: rgba(52,211,153,0.15); color: #34d399;
-  border: 1px solid rgba(52,211,153,0.3);
+.iv-progress-goal {
+  font-size: 13px; color: var(--pg-white-muted);
+}
+.iv-progress-bar {
+  width: 100%; height: 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.iv-progress-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #4ECDC4, #38b2ac);
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 12px rgba(78,205,196,0.4);
+}
+.iv-reward-text {
+  font-size: 12px; color: var(--pg-white-muted); margin-top: 10px;
+}
+.iv-reward-text span { color: #4ECDC4; font-weight: 600; }
+
+/* ── QR code card ── */
+.iv-qr-card {
+  background: var(--glass-bg); backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(78,205,196,0.15); border-radius: 20px;
+  padding: 28px 24px; text-align: center;
+  box-shadow: 0 0 40px rgba(78,205,196,0.06), inset 0 0 40px rgba(78,205,196,0.03);
+}
+.iv-qr-title {
+  font-size: 15px; font-weight: 600; color: var(--pg-white);
+  margin-bottom: 20px; letter-spacing: 0.3px;
+}
+.iv-qr-frame {
+  display: inline-block; padding: 16px; border-radius: 16px;
+  background: #fff; position: relative;
+}
+.iv-qr-frame::after {
+  content: ''; position: absolute; inset: -2px; border-radius: 18px;
+  border: 2px solid rgba(78,205,196,0.3);
+  box-shadow: 0 0 20px rgba(78,205,196,0.15);
+  pointer-events: none;
 }
 
-/* ── Share buttons ── */
-.iv-share-grid {
+/* ── QR SVG pattern ── */
+.iv-qr-svg { display: block; }
+
+/* ── CTA buttons ── */
+.iv-cta-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
 }
-.iv-share-btn {
+.iv-cta-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 14px 0; border-radius: 14px;
-  font-size: 13px; font-weight: 500; cursor: pointer;
+  padding: 16px 12px; border-radius: 14px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
   transition: all 0.3s; border: none;
-  background: var(--glass-bg); backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font-family: var(--sans);
+  background: linear-gradient(135deg, #4ECDC4, #38b2ac);
+  color: #060a0f; font-family: var(--sans);
 }
-.iv-share-btn--fb {
-  color: #6cb2ff; border: 1px solid rgba(24,119,242,0.25);
+.iv-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(78,205,196,0.35);
 }
-.iv-share-btn--fb:hover {
-  background: rgba(24,119,242,0.18); border-color: rgba(24,119,242,0.4);
-  transform: translateY(-1px);
-}
-.iv-share-btn--x {
-  color: var(--pg-white-dim); border: 1px solid rgba(255,255,255,0.08);
-}
-.iv-share-btn--x:hover {
-  background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);
-  transform: translateY(-1px);
-}
+.iv-cta-btn:active { transform: translateY(0); }
 
-/* ── How-it-works card ── */
-.iv-how-card {
+/* ── Recent friends feed ── */
+.iv-feed-card {
   background: var(--glass-bg); backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border); border-radius: 16px;
+  border: 1px solid var(--glass-border); border-radius: 20px;
   padding: 24px;
 }
-.iv-how-title {
-  font-size: 11px; font-weight: 600; color: var(--pg-white-muted);
-  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;
+.iv-feed-title {
+  font-size: 15px; font-weight: 600; color: var(--pg-white);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
 }
-.iv-how-list { display: flex; flex-direction: column; gap: 18px; }
-.iv-step { display: flex; gap: 14px; }
-.iv-step-icon {
-  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06);
+.iv-feed-title-icon { color: var(--pg-white-muted); }
+.iv-feed-list { display: flex; flex-direction: column; gap: 0; }
+.iv-feed-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.iv-feed-item:last-child { border-bottom: none; padding-bottom: 0; }
+.iv-feed-item:first-child { padding-top: 0; }
+.iv-feed-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(78,205,196,0.2), rgba(78,205,196,0.08));
+  border: 1px solid rgba(78,205,196,0.15);
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
+  font-size: 13px; font-weight: 600; color: #4ECDC4;
 }
-.iv-step-title { font-size: 14px; font-weight: 600; color: var(--pg-white); }
-.iv-step-desc {
-  font-size: 12px; color: var(--pg-white-muted); line-height: 1.5; margin-top: 2px;
-}
-
-/* ── Friend count card ── */
-.iv-friends-card {
-  background: var(--glass-bg); backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border); border-radius: 16px;
-  padding: 22px 24px;
-  display: flex; align-items: center; gap: 16px;
-}
-.iv-friends-icon {
-  width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-  background: rgba(78,205,196,0.12); border: 1px solid rgba(78,205,196,0.15);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--teal);
-}
-.iv-friends-num {
-  font-family: var(--serif); font-size: 28px; font-weight: 400;
-  color: var(--pg-white); line-height: 1;
-}
-.iv-friends-label { font-size: 13px; color: var(--pg-white-dim); margin-top: 2px; }
-.iv-friends-action { margin-left: auto; }
-.iv-friends-link {
+.iv-feed-info { flex: 1; min-width: 0; }
+.iv-feed-name {
   display: flex; align-items: center; gap: 6px;
-  padding: 8px 16px; border-radius: 10px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-  color: var(--pg-white-dim); font-size: 12px; font-weight: 500;
-  cursor: pointer; transition: all 0.25s; font-family: var(--sans);
+  font-size: 14px; font-weight: 600; color: var(--pg-white);
 }
-.iv-friends-link:hover {
-  background: rgba(78,205,196,0.12); border-color: rgba(78,205,196,0.25);
-  color: var(--teal);
-}
-
-/* ── CTA footer ── */
-.iv-footer {
-  text-align: center; padding: 8px 0 4px;
-  font-size: 12px; color: var(--pg-white-muted);
+.iv-feed-check { color: #34d399; flex-shrink: 0; }
+.iv-feed-time {
+  font-size: 12px; color: var(--pg-white-muted); margin-top: 2px;
 }
 
 /* ── Anonymous view ── */
@@ -249,56 +255,138 @@ const inviterCSS = `${pageBase("iv")}
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .iv-back-link:hover { background: rgba(255,255,255,0.08); }
+
+/* ── Henvisning link ── */
+.iv-ref-link {
+  text-align: center; padding: 4px 0;
+}
+.iv-ref-link a {
+  font-size: 13px; color: var(--pg-white-muted);
+  text-decoration: none; transition: color 0.2s;
+}
+.iv-ref-link a:hover { color: #4ECDC4; }
+.iv-ref-link a span { text-decoration: underline; }
 `;
+
+/* ── Decorative QR SVG (placeholder pattern) ── */
+function PlaceholderQR() {
+  // Generate a decorative QR-like pattern (7x7 modules + alignment)
+  const size = 180;
+  const modules = 21;
+  const cellSize = size / modules;
+
+  // Seed a deterministic pattern that looks QR-like
+  const filled = new Set<string>();
+  // Finder patterns (top-left, top-right, bottom-left)
+  const addFinder = (ox: number, oy: number) => {
+    for (let y = 0; y < 7; y++)
+      for (let x = 0; x < 7; x++) {
+        if (
+          y === 0 || y === 6 || x === 0 || x === 6 ||
+          (y >= 2 && y <= 4 && x >= 2 && x <= 4)
+        ) {
+          filled.add(`${ox + x},${oy + y}`);
+        }
+      }
+  };
+  addFinder(0, 0);
+  addFinder(14, 0);
+  addFinder(0, 14);
+
+  // Timing patterns
+  for (let i = 8; i < 13; i++) {
+    if (i % 2 === 0) {
+      filled.add(`${i},6`);
+      filled.add(`6,${i}`);
+    }
+  }
+
+  // Pseudo-random data modules
+  const dataPattern = [
+    0x3a, 0x7c, 0x1f, 0x55, 0xaa, 0x6d, 0xb3, 0x4e, 0x91, 0xd8,
+    0x27, 0xf0, 0x69, 0xc5, 0x3b, 0x8e, 0x42, 0xa7, 0x5c, 0xe1,
+  ];
+  let byteIdx = 0;
+  let bitIdx = 0;
+  for (let y = 8; y < modules; y++) {
+    for (let x = 8; x < modules; x++) {
+      if (y < 13 && x < 13) continue; // skip alignment area overlap
+      if (filled.has(`${x},${y}`)) continue;
+      const byte = dataPattern[byteIdx % dataPattern.length];
+      if ((byte >> (7 - bitIdx)) & 1) {
+        filled.add(`${x},${y}`);
+      }
+      bitIdx++;
+      if (bitIdx >= 8) { bitIdx = 0; byteIdx++; }
+    }
+  }
+
+  const rects: JSX.Element[] = [];
+  filled.forEach((key) => {
+    const [cx, cy] = key.split(",").map(Number);
+    rects.push(
+      <rect
+        key={key}
+        x={cx * cellSize}
+        y={cy * cellSize}
+        width={cellSize}
+        height={cellSize}
+        fill="#060a0f"
+        rx={0.5}
+      />
+    );
+  });
+
+  return (
+    <svg
+      className="iv-qr-svg"
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width={size} height={size} fill="#ffffff" rx={4} />
+      {rects}
+    </svg>
+  );
+}
 
 export default function InviterVenner() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const [copied, setCopied] = useState(false);
-  const [friendCount, setFriendCount] = useState<number | null>(null);
-  const containerRef = useFadeUp("iv");
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const referralLink = user ? `https://b-social.net/?ref=${user.id}` : "";
+  const progressPct = Math.round((INVITED_COUNT / NEXT_MILESTONE) * 100);
 
-  useEffect(() => {
-    if (!user) return;
-    // my_friends is a view of accepted friendships for the current user
-    supabase
-      .from("my_friends")
-      .select("friend_id", { count: "exact", head: true })
-      .then(({ count }) => {
-        setFriendCount(count ?? 0);
-      });
-  }, [user]);
+  function shareSMS() {
+    const body = encodeURIComponent(
+      `Hej! Kom med p\u00e5 B-Social \u2014 find events og m\u00f8d nye folk: ${referralLink}`
+    );
+    window.open(`sms:?body=${body}`, "_self");
+  }
 
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      // fallback: select the text
-      const el = document.createElement("textarea");
-      el.value = referralLink;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+  async function shareLink() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "B-Social",
+          text: "Kom med p\u00e5 B-Social \u2014 find events og m\u00f8d nye folk!",
+          url: referralLink,
+        });
+      } catch {
+        /* user cancelled */
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(referralLink);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2500);
+      } catch {
+        /* fallback */
+      }
     }
-  }
-
-  function shareOnFacebook() {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`;
-    window.open(url, "_blank", "width=600,height=400");
-  }
-
-  function shareOnX() {
-    const text = encodeURIComponent("Kom med på B-Social — find events og mød nye folk 🎉");
-    const url = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(referralLink)}`;
-    window.open(url, "_blank", "width=600,height=400");
   }
 
   // ─── Anonymous view ───────────────────────────────────────────────────────
@@ -306,26 +394,25 @@ export default function InviterVenner() {
     return (
       <>
         <style>{inviterCSS}</style>
-        <div ref={containerRef} className="iv-root iv-anon">
+        <div className="iv-root iv-anon">
           <div className="iv-anon-wrap">
-            <div className="iv-anon-center iv-fade-up">
+            <div className="iv-anon-center">
               <div className="iv-anon-icon">
-                <Link2 size={36} />
+                <Award size={36} />
               </div>
               <h1 className="iv-anon-title">
-                Del <em>B-Social</em>
+                Inviter <em>venner</em>
               </h1>
               <p className="iv-anon-sub">
-                Log ind for at få dit personlige link og inviter venner direkte.
+                Log ind for at f\u00e5 dit personlige link og inviter venner direkte.
               </p>
             </div>
 
-            {/* Steps preview */}
-            <div className="iv-anon-steps iv-fade-up iv-d1">
+            <div className="iv-anon-steps">
               {[
-                { icon: "📤", text: "Del dit link med venner" },
-                { icon: "👤", text: "De opretter en konto" },
-                { icon: "🎉", text: "I bliver venner automatisk" },
+                { icon: "\ud83d\udce4", text: "Del dit link med venner" },
+                { icon: "\ud83d\udc64", text: "De opretter en konto" },
+                { icon: "\ud83c\udf89", text: "Optjen badges og bel\u00f8nninger" },
               ].map((step, i) => (
                 <div key={i} className="iv-anon-step">
                   <span className="iv-anon-step-emoji">{step.icon}</span>
@@ -334,13 +421,13 @@ export default function InviterVenner() {
               ))}
             </div>
 
-            <div className="iv-fade-up iv-d2">
+            <div>
               <button
                 onClick={() => setLocation("/auth")}
                 className="iv-login-btn"
               >
                 <LogIn size={18} />
-                Log ind for at få dit link
+                Log ind for at f\u00e5 dit link
               </button>
               <button
                 onClick={() => setLocation("/feed")}
@@ -356,11 +443,11 @@ export default function InviterVenner() {
     );
   }
 
-  // ─── Logged-in view ───────────────────────────────────────────────────────
+  // ─── Logged-in view (Design C - Gamified Invite) ────────────────────────
   return (
     <>
       <style>{inviterCSS}</style>
-      <div ref={containerRef} className="iv-root">
+      <div className="iv-root">
         {/* Header */}
         <div className="iv-header">
           <div className="iv-header-inner">
@@ -371,121 +458,87 @@ export default function InviterVenner() {
               <ArrowLeft size={18} />
             </button>
             <div className="iv-header-title">
-              <Link2 size={20} className="iv-header-icon" />
+              <Users size={20} className="iv-header-icon" />
               <span>Inviter venner</span>
             </div>
           </div>
         </div>
 
         <div className="iv-content">
-          {/* Hero */}
-          <div className="iv-hero iv-fade-up">
-            <div className="iv-hero-emoji">🎉</div>
-            <h2 className="iv-hero-title">
-              Del <em>B-Social</em>
+          {/* Achievement card */}
+          <div className="iv-achievement">
+            <div className="iv-laurel">
+              <span className="iv-laurel-left">{"\ud83c\udf3f"}</span>
+              <Award size={32} className="iv-laurel-icon" />
+              <span className="iv-laurel-right">{"\ud83c\udf3f"}</span>
+            </div>
+            <h2 className="iv-achievement-title">
+              Du har inviteret <strong>{INVITED_COUNT} venner!</strong>
             </h2>
-            <p className="iv-hero-sub">
-              Send dit link til venner — når de opretter en konto via dit link,
-              bliver I venner automatisk.
-            </p>
-          </div>
-
-          {/* Referral link card */}
-          <div className="iv-link-card iv-fade-up iv-d1">
-            <p className="iv-link-label">Dit personlige link</p>
-            <div className="iv-link-row">
-              <div className="iv-link-url">{referralLink}</div>
-              <button
-                onClick={copyLink}
-                className={`iv-copy-btn ${
-                  copied ? "iv-copy-btn--copied" : "iv-copy-btn--default"
-                }`}
-              >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? "Kopieret!" : "Kopier link"}
-              </button>
+            <div className="iv-progress-wrap">
+              <div className="iv-progress-labels">
+                <span className="iv-progress-current">{INVITED_COUNT}</span>
+                <span className="iv-progress-goal">{NEXT_MILESTONE}</span>
+              </div>
+              <div className="iv-progress-bar">
+                <div
+                  className="iv-progress-fill"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <p className="iv-reward-text">
+                N\u00e6ste bel\u00f8nning: <span>Premium badge</span>
+              </p>
             </div>
           </div>
 
-          {/* Share buttons */}
-          <div className="iv-share-grid iv-fade-up iv-d2">
-            <button
-              onClick={shareOnFacebook}
-              className="iv-share-btn iv-share-btn--fb"
-            >
-              <Share2 size={16} />
-              Del på Facebook
+          {/* QR code card */}
+          <div className="iv-qr-card">
+            <p className="iv-qr-title">Scan for at tilmelde</p>
+            <div className="iv-qr-frame">
+              <PlaceholderQR />
+            </div>
+          </div>
+
+          {/* CTA buttons */}
+          <div className="iv-cta-row">
+            <button onClick={shareSMS} className="iv-cta-btn">
+              <MessageSquare size={18} />
+              Del via SMS
             </button>
-            <button
-              onClick={shareOnX}
-              className="iv-share-btn iv-share-btn--x"
-            >
-              <Share2 size={16} />
-              Del på X
+            <button onClick={shareLink} className="iv-cta-btn">
+              <Link2 size={18} />
+              {copiedLink ? "Link kopieret!" : "Del via link"}
             </button>
           </div>
 
-          {/* How it works */}
-          <div className="iv-how-card iv-fade-up iv-d2">
-            <h3 className="iv-how-title">Sådan virker det</h3>
-            <div className="iv-how-list">
-              {[
-                {
-                  icon: "📤",
-                  title: "Del dit link med venner",
-                  desc: "Kopier linket og send det på beskeder, sociale medier eller direkte.",
-                },
-                {
-                  icon: "👤",
-                  title: "De opretter en konto",
-                  desc: "Din ven klikker på linket og opretter en profil på B-Social.",
-                },
-                {
-                  icon: "🎉",
-                  title: "I bliver venner automatisk",
-                  desc: "Når de er klar, dukker de op i din venneliste med det samme.",
-                },
-              ].map((step, i) => (
-                <div key={i} className="iv-step">
-                  <div className="iv-step-icon">
-                    <span>{step.icon}</span>
-                  </div>
-                  <div>
-                    <p className="iv-step-title">{step.title}</p>
-                    <p className="iv-step-desc">{step.desc}</p>
+          {/* Recent friends feed */}
+          <div className="iv-feed-card">
+            <h3 className="iv-feed-title">
+              <Users size={16} className="iv-feed-title-icon" />
+              Seneste tilmeldte
+            </h3>
+            <div className="iv-feed-list">
+              {MOCK_FRIENDS.map((friend, i) => (
+                <div key={i} className="iv-feed-item">
+                  <div className="iv-feed-avatar">{friend.avatar}</div>
+                  <div className="iv-feed-info">
+                    <p className="iv-feed-name">
+                      {friend.name}
+                      <CheckCircle size={14} className="iv-feed-check" />
+                    </p>
+                    <p className="iv-feed-time">{friend.time}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Friend count */}
-          <div className="iv-friends-card iv-fade-up iv-d3">
-            <div className="iv-friends-icon">
-              <Users size={22} />
-            </div>
-            <div>
-              <p className="iv-friends-num">
-                {friendCount === null ? "–" : friendCount}
-              </p>
-              <p className="iv-friends-label">
-                {friendCount === 1 ? "ven på B-Social" : "venner på B-Social"}
-              </p>
-            </div>
-            <div className="iv-friends-action">
-              <button
-                onClick={() => setLocation("/venner")}
-                className="iv-friends-link"
-              >
-                <UserPlus size={14} />
-                Se venner
-              </button>
-            </div>
-          </div>
-
-          {/* CTA bottom */}
-          <div className="iv-footer iv-fade-up iv-d4">
-            Del B-Social — find events og mød folk med de samme interesser 🎊
+          {/* Henvisning link */}
+          <div className="iv-ref-link">
+            <Link href="/henvisning">
+              Se dine <span>henvisningsindtjening</span>
+            </Link>
           </div>
         </div>
       </div>
