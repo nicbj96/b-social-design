@@ -2,6 +2,31 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RAPIDAPI_HOST = "real-time-events-search.p.rapidapi.com";
+const SUPABASE_URL_ENV = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_KEY_ENV = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+async function startRun(functionName: string): Promise<string | null> {
+  const runId = crypto.randomUUID();
+  try {
+    await fetch(`${SUPABASE_URL_ENV}/rest/v1/import_runs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY_ENV, "Authorization": `Bearer ${SUPABASE_KEY_ENV}`, "Prefer": "return=minimal" },
+      body: JSON.stringify({ id: runId, function_name: functionName, started_at: new Date().toISOString(), status: "running" }),
+    });
+  } catch { /* non-fatal */ }
+  return runId;
+}
+
+async function completeRun(runId: string | null, inserted: number, errors: string[]): Promise<void> {
+  if (!runId) return;
+  try {
+    await fetch(`${SUPABASE_URL_ENV}/rest/v1/import_runs?id=eq.${runId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY_ENV, "Authorization": `Bearer ${SUPABASE_KEY_ENV}`, "Prefer": "return=minimal" },
+      body: JSON.stringify({ completed_at: new Date().toISOString(), status: "completed", inserted_count: inserted, error_count: errors.length, errors: errors.length > 0 ? errors : null }),
+    });
+  } catch { /* non-fatal */ }
+}
 
 const EVENT_QUERIES = [
   "concerts", "live music", "music festival", "jazz concert", "rock concert", "electronic music", "opera", "symphony", "rock koncert", "pop koncert", "koncert",
@@ -47,10 +72,10 @@ async function fetchRapidAPI(apiKey: string, query: string, date: string) {
 
 Deno.serve(async (req) => {
   const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-  const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!);
-  
+  const supabase = createClient(SUPABASE_URL_ENV, SUPABASE_KEY_ENV);
+  const runId = await startRun("import-rapidapi-events");
+  const errors: string[] = [];
+
   const results = [];
   const plan = [];
   
@@ -95,7 +120,9 @@ Deno.serve(async (req) => {
       if (toInsert.length > 0) await supabase.from("events").upsert(toInsert, { onConflict: "title,date,location", ignoreDuplicates: true });
       results.push({ query: item.query, count: events.length });
       await new Promise(r => setTimeout(r, 250));
-    } catch (err) { console.error(err); }
+    } catch (err: any) { console.error(err); errors.push(String(err?.message ?? err)); }
   }
+  const totalInserted = results.reduce((s, r) => s + r.count, 0);
+  await completeRun(runId, totalInserted, errors);
   return new Response(JSON.stringify({ success: true, results }));
 });

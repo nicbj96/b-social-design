@@ -79,13 +79,6 @@ const ROUTE_SOURCES: RouteSource[] = [
     smart_tags: ["AKTIV_SPORT", "MTB", "CYCLING", "RUTE"],
   },
   {
-    name: "running",
-    baseUrl: "https://running.waymarkedtrails.org/api/v1",
-    main_categories: ["aktiv_sport"],
-    tags: ["løberute", "running", "jogging", "trail running"],
-    smart_tags: ["AKTIV_SPORT", "RUNNING", "LØBERUTE", "RUTE"],
-  },
-  {
     name: "skating",
     baseUrl: "https://skating.waymarkedtrails.org/api/v1",
     main_categories: ["aktiv_sport"],
