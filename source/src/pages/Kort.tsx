@@ -19,41 +19,13 @@ L.Icon.Default.mergeOptions({ iconUrl: '', iconRetinaUrl: '', shadowUrl: '' });
 import { Search, X, Plus, Minus, Navigation, Star, ExternalLink, Users, MapPin as MapPinIcon } from "lucide-react";
 
 import { lazyLoadTagFunctions } from "@/lib/lazyDataLoader";
-import { type PinCategory, type MapPin, HARDCODED_PINS, MAP_EUROPE_CODES } from "@/data/kortPins";
-import { useJoin } from "@/context/JoinContext";
+import { type PinCategory, type MapPin, HARDCODED_PINS } from "@/data/kortPins";
 import { useTags } from "@/context/TagContext";
 import { Link } from "wouter";
 
 /* ══════════════════════════════════════════════
    KORT v3 — Dyb opdatering
    ══════════════════════════════════════════════ */
-
-/* ── Country filter config ── */
-const MAP_REGIONS: Record<string, { flag: string; label: string }> = {
-  'DK': { flag: '🇩🇰', label: 'Danmark' },
-  'SE': { flag: '🇸🇪', label: 'Sverige' },
-  'NO': { flag: '🇳🇴', label: 'Norge' },
-  'DE': { flag: '🇩🇪', label: 'Tyskland' },
-  'GB': { flag: '🇬🇧', label: 'UK' },
-  'FR': { flag: '🇫🇷', label: 'Frankrig' },
-  'EUROPE': { flag: '🌍', label: 'Europa' },
-  'ALL': { flag: '🌎', label: 'Hele verden' },
-};
-
-const MAP_COUNTRY_CHIPS = ['DK', 'SE', 'NO', 'DE', 'GB', 'FR', 'EUROPE', 'ALL'] as const;
-
-const COUNTRY_CENTERS: Record<string, { lat: number; lng: number; zoom: number }> = {
-  'DK': { lat: 56.26, lng: 9.50, zoom: 7 },
-  'SE': { lat: 62.0, lng: 15.0, zoom: 5 },
-  'NO': { lat: 64.0, lng: 12.0, zoom: 5 },
-  'DE': { lat: 51.16, lng: 10.45, zoom: 6 },
-  'GB': { lat: 54.0, lng: -2.0, zoom: 6 },
-  'FR': { lat: 46.6, lng: 2.2, zoom: 6 },
-  'ES': { lat: 40.0, lng: -3.7, zoom: 6 },
-  'IT': { lat: 42.5, lng: 12.5, zoom: 6 },
-  'EUROPE': { lat: 50.0, lng: 10.0, zoom: 4 },
-  'ALL': { lat: 30.0, lng: 10.0, zoom: 2 },
-};
 
 /* ── Category config ── */
 const CATEGORY_META: Record<string, { labelKey: string; emoji: string; hex: string }> = {
@@ -490,44 +462,55 @@ function PinDetail({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
 }
 
 /* ── Scoped CSS ── */
+const SIDEBAR_CATEGORIES = [
+  { key: "alle", label: "Alle" },
+  { key: "mad", label: "Mad" },
+  { key: "musik", label: "Musik" },
+  { key: "sport", label: "Sport" },
+  { key: "kunst", label: "Kunst" },
+] as const;
+
 const kortCSS = `${pageBase("kt")}
 
-/* ── Kort wrapper (NOT the map itself) ── */
+/* ── Kort wrapper — full bleed ── */
 .kt-wrapper {
   position: relative;
   width: 100%;
   height: 100svh;
-  padding-bottom: 0;
   font-family: var(--sans);
   overflow: hidden;
   background: var(--bg, #060a0f);
 }
 
-/* ══════════ SEARCH BAR OVERLAY ══════════ */
-.kt-search-overlay {
+/* ══════════ PAGE TITLE ══════════ */
+.kt-title {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 18px; left: 20px;
   z-index: 1000;
-  padding: 0 16px 8px;
-  padding-top: max(env(safe-area-inset-top, 12px), 48px);
-  background: linear-gradient(to bottom, rgba(6,10,15,0.94) 60%, rgba(6,10,15,0.6) 85%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--pg-white);
+  letter-spacing: -0.5px;
+  pointer-events: none;
 }
 
-.kt-search-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+/* ══════════ CENTERED SEARCH BAR ══════════ */
+.kt-search-float {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(440px, calc(100% - 160px));
 }
-
 .kt-search-wrap {
   position: relative;
-  flex: 1;
+  width: 100%;
 }
 .kt-search-icon {
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: rgba(255,255,255,0.35);
@@ -535,24 +518,32 @@ const kortCSS = `${pageBase("kt")}
 }
 .kt-search-input {
   width: 100%;
-  padding: 11px 36px 11px 42px;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
+  padding: 13px 40px 13px 46px;
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
   color: var(--pg-white);
   font-size: 14px;
   font-family: var(--sans);
   outline: none;
   transition: border-color 0.25s, background 0.25s;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 .kt-search-input:focus {
-  border-color: rgba(78,205,196,0.4);
-  background: rgba(255,255,255,0.09);
+  border-color: rgba(78,205,196,0.45);
+  background: rgba(255,255,255,0.1);
 }
 .kt-search-input::placeholder { color: rgba(255,255,255,0.3); }
-
+.kt-search-trail {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.3);
+  pointer-events: none;
+}
 .kt-search-clear {
   position: absolute;
   right: 12px;
@@ -565,145 +556,52 @@ const kortCSS = `${pageBase("kt")}
 }
 .kt-search-clear:hover { color: var(--pg-white); }
 
-/* ── Price filter pills ── */
-.kt-price-btn {
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: var(--sans);
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all 0.25s;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: rgba(255,255,255,0.55);
+/* ══════════ LEFT SIDEBAR CATEGORY FILTERS ══════════ */
+.kt-sidebar-cats {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-.kt-price-btn:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.08); }
-.kt-price-btn.active-gratis {
-  background: var(--teal);
-  color: var(--bg);
-  border-color: var(--teal);
-  box-shadow: 0 4px 20px var(--teal-glow);
-}
-.kt-price-btn.active-premium {
-  background: #f59e0b;
-  color: #fff;
-  border-color: #f59e0b;
-  box-shadow: 0 4px 20px rgba(245,158,11,0.3);
-}
-
-/* ══════════ LAYER TOGGLES ══════════ */
-.kt-layer-row {
-  margin-top: 10px;
-  padding: 0 4px;
+.kt-cat-pill {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-.kt-layer-group { display: flex; gap: 6px; }
-
-.kt-layer-btn {
-  padding: 8px 14px;
-  border-radius: 100px;
+  justify-content: center;
   font-size: 12px;
   font-weight: 600;
   font-family: var(--sans);
-  transition: all 0.25s;
-  min-height: 40px;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: rgba(255,255,255,0.4);
-  white-space: nowrap;
-}
-.kt-layer-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
-.kt-layer-btn.active {
-  background: var(--teal);
-  color: var(--bg);
-  border-color: var(--teal);
-  box-shadow: 0 2px 14px var(--teal-glow);
-}
-.kt-layer-btn.active-event {
-  background: #f97316;
-  color: #fff;
-  border-color: #f97316;
-  box-shadow: 0 2px 14px rgba(249,115,22,0.35);
-}
-.kt-layer-btn.active-hotel {
-  background: #003580;
-  color: #fff;
-  border-color: #003580;
-  box-shadow: 0 2px 14px rgba(0,53,128,0.35);
-}
-.kt-layer-btn.hotel-inactive {
-  background: rgba(0,53,128,0.35);
-  color: rgba(255,255,255,0.65);
-  border-color: rgba(0,53,128,0.3);
-}
-.kt-layer-btn.hotel-inactive:hover { background: rgba(0,53,128,0.55); }
-
-.kt-pin-count {
-  color: rgba(255,255,255,0.3);
-  font-size: 12px;
-  font-family: var(--sans);
-  white-space: nowrap;
-}
-
-/* ══════════ COUNTRY CHIPS ══════════ */
-.kt-country-row {
-  margin-top: 10px;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.kt-country-row::-webkit-scrollbar { display: none; }
-
-.kt-country-chip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 14px;
-  border-radius: 100px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--sans);
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-height: 40px;
   cursor: pointer;
   transition: all 0.25s;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(6,10,15,0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: rgba(255,255,255,0.55);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
-.kt-country-chip:hover {
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.75);
+.kt-cat-pill:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--pg-white);
 }
-.kt-country-chip.active {
-  background: var(--teal);
-  color: var(--bg);
+.kt-cat-pill.active {
+  background: transparent;
   border-color: var(--teal);
-  box-shadow: 0 3px 16px var(--teal-glow);
-  font-weight: 700;
+  color: var(--teal);
+  box-shadow: 0 0 16px var(--teal-glow);
 }
 
 /* ══════════ ZOOM / FAB BUTTONS ══════════ */
 .kt-zoom-group {
   position: absolute;
-  bottom: 112px;
-  right: 12px;
+  bottom: 140px;
+  right: 14px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -732,8 +630,8 @@ const kortCSS = `${pageBase("kt")}
 
 .kt-recenter-btn {
   position: absolute;
-  bottom: 112px;
-  left: 12px;
+  bottom: 140px;
+  left: 14px;
   z-index: 1000;
   width: 42px;
   height: 42px;
@@ -758,7 +656,7 @@ const kortCSS = `${pageBase("kt")}
 /* ══════════ LOADING INDICATOR ══════════ */
 .kt-loading {
   position: absolute;
-  top: 80px;
+  top: 72px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
@@ -789,6 +687,78 @@ const kortCSS = `${pageBase("kt")}
 @keyframes kt-pulse {
   0%, 100% { opacity: 0.4; transform: scale(0.85); }
   50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ══════════ BOTTOM CAROUSEL ══════════ */
+.kt-carousel {
+  position: absolute;
+  bottom: 16px;
+  left: 0; right: 0;
+  z-index: 1000;
+  padding: 0 16px;
+}
+.kt-carousel-track {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 12px 16px;
+  background: rgba(6,10,15,0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.kt-carousel-track::-webkit-scrollbar { display: none; }
+
+.kt-carousel-card {
+  flex-shrink: 0;
+  width: 130px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.kt-carousel-card:hover { transform: translateY(-2px); }
+
+.kt-carousel-thumb {
+  width: 130px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+}
+.kt-carousel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kt-carousel-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: rgba(255,255,255,0.04);
+}
+.kt-carousel-name {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  font-family: var(--sans);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.3;
+}
+.kt-carousel-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+  font-family: var(--sans);
 }
 
 /* ══════════ PIN DETAIL BOTTOM SHEET ══════════ */
@@ -1117,418 +1087,37 @@ const kortCSS = `${pageBase("kt")}
   100% { box-shadow: 0 0 14px rgba(249,115,22,0.6), 0 2px 8px rgba(0,0,0,0.4); }
 }
 
-/* ══════════ SPLIT-VIEW LAYOUT ══════════ */
-.kt-split {
-  display: flex;
-  height: calc(100vh - 60px);
-  width: 100%;
-  position: relative;
-}
-.kt-map-pane {
-  flex: 0 0 60%;
-  position: relative;
-  height: 100%;
-  min-width: 0;
-}
-.kt-list-pane {
-  flex: 0 0 40%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--glass-bg, rgba(255,255,255,0.04));
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-left: 1px solid var(--glass-border, rgba(255,255,255,0.08));
-  overflow: hidden;
-}
-
-/* ── List pane header ── */
-.kt-lp-header {
-  padding: 20px 20px 0;
-  flex-shrink: 0;
-}
-.kt-lp-search-wrap {
-  position: relative;
-  margin-bottom: 14px;
-}
-.kt-lp-search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(255,255,255,0.3);
-  pointer-events: none;
-}
-.kt-lp-search {
-  width: 100%;
-  padding: 12px 40px 12px 42px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  color: var(--pg-white);
-  font-size: 14px;
-  font-family: var(--sans);
-  outline: none;
-  transition: border-color 0.25s;
-}
-.kt-lp-search:focus {
-  border-color: rgba(78,205,196,0.4);
-}
-.kt-lp-search::placeholder { color: rgba(255,255,255,0.3); }
-.kt-lp-search-clear {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none; border: none; padding: 4px;
-  color: rgba(255,255,255,0.35);
-  cursor: pointer;
-}
-.kt-lp-search-clear:hover { color: var(--pg-white); }
-
-/* ── Filter toggle buttons ── */
-.kt-lp-filters {
-  display: flex;
-  gap: 8px;
-  padding-bottom: 14px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.kt-lp-filters::-webkit-scrollbar { display: none; }
-
-.kt-lp-filter-btn {
-  padding: 8px 16px;
-  border-radius: 100px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--sans);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.25s;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.5);
-  flex-shrink: 0;
-}
-.kt-lp-filter-btn:hover {
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.75);
-}
-.kt-lp-filter-btn.active {
-  background: var(--teal);
-  color: var(--bg);
-  border-color: var(--teal);
-  box-shadow: 0 2px 12px var(--teal-glow);
-}
-.kt-lp-filter-btn.active-event {
-  background: #f97316;
-  color: #fff;
-  border-color: #f97316;
-  box-shadow: 0 2px 12px rgba(249,115,22,0.3);
-}
-
-.kt-lp-count {
-  padding: 0 20px 10px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.3);
-  font-family: var(--sans);
-  flex-shrink: 0;
-}
-
-/* ── Scrollable venue list ── */
-.kt-lp-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 12px 20px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.08) transparent;
-}
-.kt-lp-list::-webkit-scrollbar { width: 6px; }
-.kt-lp-list::-webkit-scrollbar-track { background: transparent; }
-.kt-lp-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-
-.kt-lp-item {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: background 0.2s;
-  border: 1px solid transparent;
-  margin-bottom: 4px;
-}
-.kt-lp-item:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.06);
-}
-.kt-lp-item.active {
-  background: rgba(78,205,196,0.08);
-  border-color: rgba(78,205,196,0.18);
-}
-
-/* Thumbnail */
-.kt-lp-thumb {
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: rgba(255,255,255,0.06);
-}
-.kt-lp-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.kt-lp-thumb-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  background: rgba(255,255,255,0.04);
-}
-
-/* Item info */
-.kt-lp-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-.kt-lp-name {
-  font-family: var(--serif);
-  font-size: 15px;
-  color: var(--pg-white);
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.kt-lp-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-}
-.kt-lp-dist {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 8px;
-  border-radius: 100px;
-  background: rgba(78,205,196,0.12);
-  color: var(--teal);
-  font-weight: 600;
-  font-family: var(--sans);
-  font-size: 10px;
-}
-.kt-lp-cat {
-  padding: 2px 8px;
-  border-radius: 100px;
-  font-size: 10px;
-  font-weight: 600;
-  font-family: var(--sans);
-  color: #fff;
-}
-.kt-lp-city {
-  color: rgba(255,255,255,0.3);
-  font-size: 11px;
-  font-family: var(--sans);
-}
-.kt-lp-rating {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  color: rgba(255,255,255,0.45);
-  font-size: 11px;
-}
-.kt-lp-rating svg { color: #fbbf24; fill: #fbbf24; }
-.kt-lp-event-date {
-  color: #f97316;
-  font-weight: 500;
-  font-size: 11px;
-  font-family: var(--sans);
-}
-
-/* ── Empty state ── */
-.kt-lp-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: rgba(255,255,255,0.25);
-  font-size: 14px;
-  font-family: var(--sans);
-  text-align: center;
-  gap: 8px;
-}
-.kt-lp-empty-icon { font-size: 32px; opacity: 0.4; }
-
-/* ── Mobile toggle for split view ── */
-.kt-mobile-toggle {
-  display: none;
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1200;
-  padding: 10px 24px;
-  border-radius: 100px;
-  background: rgba(6,10,15,0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(78,205,196,0.3);
-  color: var(--teal);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--sans);
-  cursor: pointer;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-  transition: all 0.25s;
-}
-.kt-mobile-toggle:hover {
-  background: rgba(78,205,196,0.12);
-  border-color: var(--teal);
-}
-
-/* ── Mobile: stack vertically ── */
+/* ══════════ MOBILE ADJUSTMENTS ══════════ */
 @media (max-width: 768px) {
-  .kt-split {
-    flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 60px);
+  .kt-title { top: 12px; left: 14px; font-size: 22px; }
+  .kt-search-float {
+    top: 12px;
+    width: min(320px, calc(100% - 120px));
   }
-  .kt-map-pane {
-    flex: none;
-    height: 55vh;
-    width: 100%;
-  }
-  .kt-map-pane.kt-hidden { display: none; }
-  .kt-list-pane {
-    flex: 1;
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--glass-border, rgba(255,255,255,0.08));
-    max-height: 45vh;
-  }
-  .kt-list-pane.kt-hidden { display: none; }
-  .kt-mobile-toggle { display: block; }
-
-  /* Adjust search overlay for split view mobile */
-  .kt-search-overlay {
-    padding-top: max(env(safe-area-inset-top, 8px), 12px);
-  }
-}
-
-/* ── Desktop: hide mobile toggle ── */
-@media (min-width: 769px) {
-  .kt-mobile-toggle { display: none; }
-
-  /* Move search overlay into map pane context */
-  .kt-map-pane .kt-search-overlay {
-    padding-top: max(env(safe-area-inset-top, 12px), 12px);
-  }
-
-  /* Adjust detail sheet to be within map pane */
-  .kt-map-pane .kt-detail {
-    left: 12px;
-    right: 12px;
-    bottom: 20px;
-    max-width: 400px;
-  }
-
-  /* Adjust zoom/recenter buttons for map pane */
-  .kt-map-pane .kt-zoom-group {
-    bottom: 24px;
-    right: 12px;
-  }
-  .kt-map-pane .kt-recenter-btn {
-    bottom: 24px;
-    left: 12px;
-  }
+  .kt-search-input { padding: 10px 36px 10px 40px; font-size: 13px; }
+  .kt-sidebar-cats { left: 10px; gap: 6px; }
+  .kt-cat-pill { width: 44px; height: 44px; font-size: 10px; }
+  .kt-carousel { bottom: 72px; padding: 0 10px; }
+  .kt-carousel-card { width: 110px; }
+  .kt-carousel-thumb { width: 110px; height: 68px; }
+  .kt-zoom-group { bottom: 160px; right: 10px; }
+  .kt-recenter-btn { bottom: 160px; left: 10px; }
+  .kt-detail { bottom: 72px; }
 }
 `;
-
-/* ── List panel filter categories ── */
-const LIST_FILTERS = [
-  { key: "alle", label: "Alle", emoji: "📍" },
-  { key: "steder", label: "Steder", emoji: "🏛️" },
-  { key: "events", label: "Events", emoji: "🎉" },
-  { key: "mad", label: "Mad", emoji: "🍽️" },
-  { key: "kultur", label: "Kultur", emoji: "🎭" },
-  { key: "natur", label: "Natur", emoji: "🌿" },
-  { key: "aktiv", label: "Aktiv", emoji: "⚽" },
-] as const;
-
-/* ── List panel item component ── */
-function ListPanelItem({
-  pin, isActive, userLat, userLng, onClick
-}: {
-  pin: MapPin; isActive: boolean; userLat: number; userLng: number; onClick: () => void;
-}) {
-  const meta = CATEGORY_META[pin.category] || CATEGORY_META["natur"];
-  const dist = distanceKm(userLat, userLng, pin.lat, pin.lng);
-  const distText = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
-  const headerImg = pin.image || PIN_HEADER_IMAGES[pin.category] || null;
-
-  return (
-    <div className={`kt-lp-item ${isActive ? "active" : ""}`} onClick={onClick}>
-      <div className="kt-lp-thumb">
-        {headerImg ? (
-          <img src={headerImg} alt={pin.name} loading="lazy" />
-        ) : (
-          <div className="kt-lp-thumb-placeholder">{meta.emoji}</div>
-        )}
-      </div>
-      <div className="kt-lp-info">
-        <div className="kt-lp-name">{pin.name}</div>
-        <div className="kt-lp-meta">
-          <span className="kt-lp-dist">
-            <MapPinIcon size={9} />{distText}
-          </span>
-          <span className="kt-lp-cat" style={{ background: pin.isSupabaseEvent ? "#f97316" : meta.hex }}>
-            {pin.isSupabaseEvent ? "Event" : (meta.labelKey.split('.').pop() || pin.category)}
-          </span>
-          {pin.city && <span className="kt-lp-city">{pin.city}</span>}
-        </div>
-        <div className="kt-lp-meta">
-          {pin.rating > 0 && (
-            <span className="kt-lp-rating">
-              <Star size={10} />{pin.rating.toFixed(1)}
-            </span>
-          )}
-          {pin.isSupabaseEvent && pin.date && (
-            <span className="kt-lp-event-date">
-              {new Date(pin.date).toLocaleDateString("da-DK", { day: "numeric", month: "short" })}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ═══════════════════ KORT PAGE ═══════════════════ */
 export default function Kort() {
   const { t } = useTranslation();
   const { city } = useTags();
-  const [priceFilter, setPriceFilter] = useState<"alle" | "gratis" | "premium">("alle");
   const [search, setSearch] = useState("");
   const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
   const [flyTo, setFlyTo] = useState<{ center: [number, number]; zoom: number } | null>(null);
-  const [showLayer, setShowLayer] = useState<"alle" | "steder" | "events" | "hoteller">("alle");
+  const [sidebarCat, setSidebarCat] = useState<string>("alle");
   const [tagSearchCache, setTagSearchCache] = useState<{ [query: string]: any[] }>({});
-  const [mapCountry, setMapCountry] = useState<string>('DK');
-  const [mobileView, setMobileView] = useState<"map" | "list">("map");
-  const [listFilter, setListFilter] = useState<string>("alle");
+  const [mapCountry] = useState<string>('DK');
   const searchRef = useRef<HTMLInputElement>(null);
-  const listSearchRef = useRef<HTMLInputElement>(null);
-
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // Lazy load tag search function on demand
   useEffect(() => {
@@ -1542,6 +1131,7 @@ export default function Kort() {
       });
     }
   }, [search, tagSearchCache]);
+
   // Dynamic user location from profile city
   const [USER_LAT, USER_LNG] = CITY_COORDS[city] || [DEFAULT_LAT, DEFAULT_LNG];
 
@@ -1552,7 +1142,6 @@ export default function Kort() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const cachedPlaceIdsRef = useRef<Set<string>>(new Set());
 
-  // Fetch places within current viewport bounds with debounce
   const isMobile = useIsMobile();
 
   const fetchViewportPlaces = async (bounds: MapBounds) => {
@@ -1563,15 +1152,11 @@ export default function Kort() {
         mapCountry && mapCountry !== 'ALL' ? (mapCountry === 'DK' ? 'Denmark' : mapCountry) : undefined,
         isMobile
       );
-
-      // Merge with existing places, avoiding duplicates
       setSupabasePlaces((prevPlaces) => {
         const existingIds = new Set(prevPlaces.map(p => p.id));
         const newUnique = newPlaces.filter(p => !existingIds.has(p.id));
         return [...prevPlaces, ...newUnique];
       });
-
-      // Track cached place IDs to avoid re-fetching
       newPlaces.forEach(p => cachedPlaceIdsRef.current.add(p.id));
     } catch (error) {
       console.error("Error fetching viewport places:", error);
@@ -1580,79 +1165,49 @@ export default function Kort() {
     }
   };
 
-  // Handle map movement with debounce (500ms)
   const handleMapBoundsChange = (bounds: MapBounds) => {
     setMapBounds(bounds);
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      fetchViewportPlaces(bounds);
-    }, 500);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => fetchViewportPlaces(bounds), 500);
   };
 
-  // Cleanup debounce on unmount
   useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
+    return () => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); };
   }, []);
 
   // Fetch Supabase events
   const { data: supabaseEvents } = useQuery<SupabaseEvent[]>({
     queryKey: ["supabase-events-map"],
     queryFn: fetchEvents,
-    staleTime: 2 * 60 * 1000, // 2 min — events change often
+    staleTime: 2 * 60 * 1000,
   });
 
-  // Convert events to pins
   const eventPins = useMemo(() => {
-    return (supabaseEvents || [])
-      .map(supabaseEventToPin)
-      .filter((p): p is MapPin => p !== null);
+    return (supabaseEvents || []).map(supabaseEventToPin).filter((p): p is MapPin => p !== null);
   }, [supabaseEvents]);
 
-  // Merge pins
   const allPins = useMemo(() => {
-    const sbPinsRaw = (supabasePlaces || []).map(placeToPin);
-    // Filter out places with invalid coordinates (placeToPin returns null for those)
-    const sbPins = sbPinsRaw.filter((p): p is MapPin => p !== null);
+    const sbPins = (supabasePlaces || []).map(placeToPin).filter((p): p is MapPin => p !== null);
     const sbNames = new Set(sbPins.map(p => p.name.toLowerCase()));
     const hardcodedFiltered = HARDCODED_PINS.filter(p => !sbNames.has(p.name.toLowerCase()));
-    const placePins = [...sbPins, ...hardcodedFiltered];
-    return [...placePins, ...eventPins];
+    return [...sbPins, ...hardcodedFiltered, ...eventPins];
   }, [supabasePlaces, eventPins]);
 
-  const PREMIUM_CATS = useMemo(() => new Set(["kultur", "mad", "mad_hangout", "musik", "events", "karriere", "tech", "rejser", "logi"]), []);
-  const GRATIS_CATS = useMemo(() => new Set(["natur", "vandring", "mtb", "loeb", "hund", "fiskeri", "badning", "shelter", "dyrespot", "outdoor", "sport", "aktiv_sport", "aktiv", "fitness", "socialt", "spil", "kreativt", "ture", "communities", "wellness"]), []);
-
+  // Sidebar category → filter pins
   const filteredPins = useMemo(() => {
     return allPins.filter((p) => {
-      // Guard: skip pins with invalid coordinates
       if (!isFinite(p.lat) || !isFinite(p.lng)) return false;
-      // Layer toggle: events vs places
-      if (showLayer === "events" && !p.isSupabaseEvent) return false;
-      if (showLayer === "steder" && p.isSupabaseEvent) return false;
-      if (showLayer === "hoteller") {
-        // Filter to only show accommodation/hotel places from Supabase
-        if (p.isSupabaseEvent) return false;
-        const cats = (p.tags || []).join(',').toLowerCase() + ',' + (p.category || '').toLowerCase();
-        if (!cats.includes('hotel') && !cats.includes('accommodation') && !cats.includes('logi') && !cats.includes('hostel') && !cats.includes('motel') && !cats.includes('resort')) return false;
+      // Sidebar category filter
+      if (sidebarCat !== "alle") {
+        const pCat = p.category.toLowerCase();
+        if (sidebarCat === "mad" && pCat !== "mad" && pCat !== "mad_hangout") return false;
+        if (sidebarCat === "musik" && pCat !== "musik") return false;
+        if (sidebarCat === "sport" && pCat !== "sport" && pCat !== "aktiv_sport" && pCat !== "aktiv" && pCat !== "fitness" && pCat !== "loeb" && pCat !== "mtb") return false;
+        if (sidebarCat === "kunst" && pCat !== "kultur" && pCat !== "kreativt") return false;
       }
-      if (priceFilter === "gratis" && PREMIUM_CATS.has(p.category)) return false;
-      if (priceFilter === "premium" && GRATIS_CATS.has(p.category)) return false;
+      // Text search
       const q = search.toLowerCase();
-      if (!q) {
-        // Country filter applied when no search query
-        // Note: hardcoded pins don't have a country field — treat them as DK
-        // Supabase events may have a country field via the event's country
-        return true; // all pins are shown (hardcoded pins are all DK-based)
-      }
-      // Tag-tree-aware search (lazy loaded on demand)
+      if (!q) return true;
       const tagResults = tagSearchCache[q] || [];
       const expandedTerms = [q, ...tagResults.map(item => item.tag.toLowerCase()), ...tagResults.map(item => item.label.toLowerCase())];
       const desc = p.descriptionKey && typeof p.descriptionKey === 'string' ? (typeof t(p.descriptionKey) === 'string' ? t(p.descriptionKey) as string : (p.description || '')) : (p.description || "");
@@ -1663,39 +1218,14 @@ export default function Kort() {
         (p.tags && p.tags.some(tag => tag.toLowerCase().includes(term)))
       );
     });
-  }, [priceFilter, search, allPins, showLayer, t, PREMIUM_CATS, GRATIS_CATS]);
+  }, [search, allPins, sidebarCat, t, tagSearchCache]);
 
-  // Note: country filtering on map pins will be extended once MapPin gains a `country` field.
-  // For now, selecting a country chips flies the map to that country's center viewport.
-
-  // List panel: further filter by list panel category and sort by distance
-  const listPanelPins = useMemo(() => {
-    let pins = filteredPins;
-    if (listFilter === "events") {
-      pins = pins.filter(p => p.isSupabaseEvent);
-    } else if (listFilter === "steder") {
-      pins = pins.filter(p => !p.isSupabaseEvent);
-    } else if (listFilter !== "alle") {
-      // Category-specific filter (mad, kultur, natur, aktiv)
-      const catKey = listFilter.toLowerCase();
-      pins = pins.filter(p => {
-        const pCat = p.category.toLowerCase();
-        // Include sub-categories
-        if (catKey === "mad") return pCat === "mad" || pCat === "mad_hangout";
-        if (catKey === "kultur") return pCat === "kultur" || pCat === "kreativt" || pCat === "musik";
-        if (catKey === "natur") return pCat === "natur" || pCat === "vandring" || pCat === "outdoor" || pCat === "dyrespot" || pCat === "shelter" || pCat === "fiskeri" || pCat === "badning";
-        if (catKey === "aktiv") return pCat === "aktiv" || pCat === "aktiv_sport" || pCat === "sport" || pCat === "mtb" || pCat === "loeb" || pCat === "fitness";
-        return pCat.includes(catKey);
-      });
-    }
-    // Sort by distance from user
-    return [...pins].sort((a, b) => {
-      const distA = distanceKm(USER_LAT, USER_LNG, a.lat, a.lng);
-      const distB = distanceKm(USER_LAT, USER_LNG, b.lat, b.lng);
-      return distA - distB;
-    }).slice(0, 100); // Cap at 100 for performance
-  }, [filteredPins, listFilter, USER_LAT, USER_LNG]);
-
+  // Carousel: nearest pins sorted by distance
+  const carouselPins = useMemo(() => {
+    return [...filteredPins]
+      .sort((a, b) => distanceKm(USER_LAT, USER_LNG, a.lat, a.lng) - distanceKm(USER_LAT, USER_LNG, b.lat, b.lng))
+      .slice(0, 20);
+  }, [filteredPins, USER_LAT, USER_LNG]);
 
   // Pre-create emoji icons for each category
   const categoryIcons = useMemo(() => {
@@ -1706,7 +1236,6 @@ export default function Kort() {
     return icons;
   }, []);
 
-  // Distinct pulsing icon for Supabase events (orange/coral)
   const supabaseEventIcon = useMemo(() => L.divIcon({
     className: "b-pin",
     html: `<div style="width:36px;height:36px;border-radius:50%;background:#f97316;border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 14px rgba(249,115,22,0.6),0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;animation:b-event-pulse 2s ease-out infinite;">🎉</div>`,
@@ -1720,15 +1249,6 @@ export default function Kort() {
     setSelectedPin(null);
   }
 
-  function handleCountrySelect(code: string) {
-    setMapCountry(code);
-    setSelectedPin(null);
-    const center = COUNTRY_CENTERS[code];
-    if (center) {
-      setFlyTo({ center: [center.lat, center.lng], zoom: center.zoom });
-    }
-  }
-
   function handlePinClick(pin: MapPin) {
     setSelectedPin(pin);
     setFlyTo({ center: [pin.lat, pin.lng], zoom: 15 });
@@ -1737,250 +1257,139 @@ export default function Kort() {
   return (
     <>
       <style>{kortCSS}</style>
-      <div className="kt-wrapper" data-testid="kort-page">
-        <div className="kt-split">
+      <div className="kt-wrapper" ref={rootRef} data-testid="kort-page">
 
-          {/* ════════ LEFT: MAP PANE (60%) ════════ */}
-          <div className={`kt-map-pane ${isMobile && mobileView === "list" ? "kt-hidden" : ""}`}>
-            {/* ── Search bar + Gratis / Premium ── */}
-            <div className="kt-search-overlay">
-              <div className="kt-search-row">
-                <div className="kt-search-wrap">
-                  <Search size={15} className="kt-search-icon" />
-                  <input
-                    ref={searchRef}
-                    type="search"
-                    placeholder={t('map.search_places')}
-                    value={search}
-                    onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
-                    className="kt-search-input"
-                    data-testid="input-search-map"
-                  />
-                  {search && (
-                    <button onClick={() => { setSearch(""); searchRef.current?.blur(); }} className="kt-search-clear">
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-                <button
-                  onClick={() => { setPriceFilter(priceFilter === "gratis" ? "alle" : "gratis"); setSelectedPin(null); }}
-                  className={`kt-price-btn ${priceFilter === "gratis" ? "active-gratis" : ""}`}
-                  data-testid="filter-gratis"
-                >
-                  {t('map.free')}
-                </button>
-                <button
-                  onClick={() => { setPriceFilter(priceFilter === "premium" ? "alle" : "premium"); setSelectedPin(null); }}
-                  className={`kt-price-btn ${priceFilter === "premium" ? "active-premium" : ""}`}
-                  data-testid="filter-premium"
-                >
-                  {t('map.premium')}
-                </button>
-              </div>
-
-              {/* Layer toggle + pin count */}
-              <div className="kt-layer-row">
-                <div className="kt-layer-group">
-                  {(["alle", "steder", "events"] as const).map(layer => (
-                    <button
-                      key={layer}
-                      onClick={() => { setShowLayer(layer); setSelectedPin(null); }}
-                      className={`kt-layer-btn ${
-                        showLayer === layer
-                          ? layer === "events" ? "active-event" : "active"
-                          : ""
-                      }`}
-                      data-testid={`filter-layer-${layer}`}
-                    >
-                      {layer === "alle" ? `📍 ${typeof t('map.all') === 'string' ? t('map.all') : 'Alle'}` : layer === "steder" ? `🏛️ ${typeof t('map.places') === 'string' ? t('map.places') : 'Steder'}` : `🎉 ${typeof t('map.events') === 'string' ? t('map.events') : 'Events'}`}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => { setShowLayer(showLayer === "hoteller" ? "alle" : "hoteller"); setSelectedPin(null); }}
-                    className={`kt-layer-btn ${
-                      showLayer === "hoteller" ? "active-hotel" : "hotel-inactive"
-                    }`}
-                  >
-                    🏨 Hoteller
-                  </button>
-                </div>
-                <span className="kt-pin-count">
-                  {filteredPins.length} {showLayer === "events" ? t('map.events') : showLayer === "steder" ? t('map.places') : t('map.places')}
-                  {showLayer === "alle" && eventPins.length > 0 && ` (${eventPins.length} ${t('map.events')})`}
-                </span>
-              </div>
-
-              {/* Country / Region chip bar */}
-              <div className="kt-country-row">
-                {MAP_COUNTRY_CHIPS.map((code) => {
-                  const region = MAP_REGIONS[code];
-                  if (!region) return null;
-                  const isActive = mapCountry === code;
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => handleCountrySelect(code)}
-                      className={`kt-country-chip ${isActive ? "active" : ""}`}
-                      data-testid={`map-country-${code}`}
-                    >
-                      <span>{region.flag}</span>
-                      {region.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ── Leaflet Map ── */}
-            <MapContainer
-              center={[USER_LAT, USER_LNG]}
-              zoom={12}
-              zoomControl={false}
-              attributionControl={false}
-              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#060a0f" }}
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-              />
-              <MapResizeFix />
-
-              {/* Map event listener for viewport-based loading */}
-              <MapEventListener onBoundsChange={handleMapBoundsChange} />
-
-              {/* User location pulse */}
-              <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
-              <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
-
-              {/* Clustered pins — mobile optimized */}
-              <MarkerClusterGroup
-                chunkedLoading
-                chunkInterval={100}
-                chunkDelay={50}
-                maxClusterRadius={isMobile ? 60 : 80}
-                disableClusteringAtZoom={isMobile ? 17 : 18}
-                spiderfyOnMaxZoom
-                showCoverageOnHover={false}
-                iconCreateFunction={(cluster: any) => {
-                  const count = cluster.getChildCount();
-                  const size = count > 50 ? 48 : count > 20 ? 42 : 36;
-                  return L.divIcon({
-                    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(16,185,129,0.85);border:2.5px solid rgba(255,255,255,0.8);box-shadow:0 2px 12px rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:${size > 42 ? 14 : 12}px;font-weight:700;color:white;">${count}</div>`,
-                    className: "b-pin",
-                    iconSize: L.point(size, size),
-                  });
-                }}
-              >
-                {filteredPins.map((pin) => (
-                  <Marker
-                    key={pin.id}
-                    position={[pin.lat, pin.lng]}
-                    icon={pin.isSupabaseEvent ? supabaseEventIcon : (categoryIcons[pin.category] || createEmojiIcon("📍", "#4ECDC4", 34))}
-                    eventHandlers={{ click: () => handlePinClick(pin) }}
-                  />
-                ))}
-              </MarkerClusterGroup>
-
-              <ZoomControls />
-              {flyTo && <MapRecenter center={flyTo.center} zoom={flyTo.zoom} />}
-            </MapContainer>
-
-            {/* ── Recenter button ── */}
-            <button
-              onClick={handleRecenter}
-              className="kt-recenter-btn"
-              data-testid="button-near-me"
-            >
-              <Navigation size={18} />
-            </button>
-
-            {/* ── Loading Indicator for Viewport Loading ── */}
-            {isLoadingViewport && (
-              <div className="kt-loading" data-testid="loading-viewport">
-                <div className="kt-loading-dot" />
-                <span className="kt-loading-text">Loading places...</span>
-              </div>
-            )}
-
-            {/* ── Pin Detail ── */}
-            {selectedPin && <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />}
-          </div>
-
-          {/* ════════ RIGHT: LIST PANE (40%) ════════ */}
-          <div className={`kt-list-pane ${isMobile && mobileView === "map" ? "kt-hidden" : ""}`}>
-            {/* List header with search + filters */}
-            <div className="kt-lp-header">
-              <div className="kt-lp-search-wrap">
-                <Search size={15} className="kt-lp-search-icon" />
-                <input
-                  ref={listSearchRef}
-                  type="search"
-                  placeholder="Sog steder og events..."
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
-                  className="kt-lp-search"
-                />
-                {search && (
-                  <button onClick={() => { setSearch(""); listSearchRef.current?.blur(); }} className="kt-lp-search-clear">
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-
-              {/* Filter toggle buttons */}
-              <div className="kt-lp-filters">
-                {LIST_FILTERS.map(f => (
-                  <button
-                    key={f.key}
-                    onClick={() => setListFilter(f.key)}
-                    className={`kt-lp-filter-btn ${
-                      listFilter === f.key
-                        ? f.key === "events" ? "active-event" : "active"
-                        : ""
-                    }`}
-                  >
-                    {f.emoji} {f.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Result count */}
-            <div className="kt-lp-count">
-              {listPanelPins.length} resultater {listFilter !== "alle" ? `i ${LIST_FILTERS.find(f => f.key === listFilter)?.label || listFilter}` : ""}
-            </div>
-
-            {/* Scrollable venue/event list */}
-            <div className="kt-lp-list">
-              {listPanelPins.length === 0 ? (
-                <div className="kt-lp-empty">
-                  <div className="kt-lp-empty-icon">🔍</div>
-                  <div>Ingen resultater fundet</div>
-                </div>
-              ) : (
-                listPanelPins.map(pin => (
-                  <ListPanelItem
-                    key={pin.id}
-                    pin={pin}
-                    isActive={selectedPin?.id === pin.id}
-                    userLat={USER_LAT}
-                    userLng={USER_LNG}
-                    onClick={() => handlePinClick(pin)}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-
-        </div>{/* end kt-split */}
-
-        {/* ── Mobile toggle button ── */}
-        <button
-          className="kt-mobile-toggle"
-          onClick={() => setMobileView(mobileView === "map" ? "list" : "map")}
+        {/* ── Full-bleed Leaflet Map ── */}
+        <MapContainer
+          center={[USER_LAT, USER_LNG]}
+          zoom={12}
+          zoomControl={false}
+          attributionControl={false}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "#060a0f" }}
         >
-          {mobileView === "map" ? "📋 Vis liste" : "🗺️ Vis kort"}
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          />
+          <MapResizeFix />
+          <MapEventListener onBoundsChange={handleMapBoundsChange} />
+
+          {/* User location pulse */}
+          <CircleMarker center={[USER_LAT, USER_LNG]} radius={7} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 1, weight: 3, opacity: 0.4 }} />
+          <CircleMarker center={[USER_LAT, USER_LNG]} radius={18} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.12, weight: 1, opacity: 0.2 }} />
+
+          {/* Clustered pins */}
+          <MarkerClusterGroup
+            chunkedLoading
+            chunkInterval={100}
+            chunkDelay={50}
+            maxClusterRadius={isMobile ? 60 : 80}
+            disableClusteringAtZoom={isMobile ? 17 : 18}
+            spiderfyOnMaxZoom
+            showCoverageOnHover={false}
+            iconCreateFunction={(cluster: any) => {
+              const count = cluster.getChildCount();
+              const size = count > 50 ? 48 : count > 20 ? 42 : 36;
+              return L.divIcon({
+                html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(16,185,129,0.85);border:2.5px solid rgba(255,255,255,0.8);box-shadow:0 2px 12px rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:${size > 42 ? 14 : 12}px;font-weight:700;color:white;">${count}</div>`,
+                className: "b-pin",
+                iconSize: L.point(size, size),
+              });
+            }}
+          >
+            {filteredPins.map((pin) => (
+              <Marker
+                key={pin.id}
+                position={[pin.lat, pin.lng]}
+                icon={pin.isSupabaseEvent ? supabaseEventIcon : (categoryIcons[pin.category] || createEmojiIcon("📍", "#4ECDC4", 34))}
+                eventHandlers={{ click: () => handlePinClick(pin) }}
+              />
+            ))}
+          </MarkerClusterGroup>
+
+          <ZoomControls />
+          {flyTo && <MapRecenter center={flyTo.center} zoom={flyTo.zoom} />}
+        </MapContainer>
+
+        {/* ── Page title ── */}
+        <h1 className="kt-title">Kort</h1>
+
+        {/* ── Floating centered search bar ── */}
+        <div className="kt-search-float">
+          <div className="kt-search-wrap">
+            <MapPinIcon size={15} className="kt-search-icon" />
+            <input
+              ref={searchRef}
+              type="search"
+              placeholder="Søg på Kort..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setSelectedPin(null); }}
+              className="kt-search-input"
+              data-testid="input-search-map"
+            />
+            {search ? (
+              <button onClick={() => { setSearch(""); searchRef.current?.blur(); }} className="kt-search-clear">
+                <X size={14} />
+              </button>
+            ) : (
+              <Search size={15} className="kt-search-trail" />
+            )}
+          </div>
+        </div>
+
+        {/* ── Left sidebar category filters ── */}
+        <div className="kt-sidebar-cats">
+          {SIDEBAR_CATEGORIES.map(cat => (
+            <button
+              key={cat.key}
+              onClick={() => { setSidebarCat(sidebarCat === cat.key ? "alle" : cat.key); setSelectedPin(null); }}
+              className={`kt-cat-pill ${sidebarCat === cat.key ? "active" : ""}`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Recenter button ── */}
+        <button onClick={handleRecenter} className="kt-recenter-btn" data-testid="button-near-me">
+          <Navigation size={18} />
         </button>
+
+        {/* ── Loading indicator ── */}
+        {isLoadingViewport && (
+          <div className="kt-loading" data-testid="loading-viewport">
+            <div className="kt-loading-dot" />
+            <span className="kt-loading-text">Loading places...</span>
+          </div>
+        )}
+
+        {/* ── Pin detail bottom sheet ── */}
+        {selectedPin && <PinDetail pin={selectedPin} onClose={() => setSelectedPin(null)} />}
+
+        {/* ── Bottom carousel of nearby places ── */}
+        {!selectedPin && carouselPins.length > 0 && (
+          <div className="kt-carousel">
+            <div className="kt-carousel-track">
+              {carouselPins.map(pin => {
+                const meta = CATEGORY_META[pin.category] || CATEGORY_META["natur"];
+                const headerImg = pin.image || PIN_HEADER_IMAGES[pin.category] || null;
+                return (
+                  <div key={pin.id} className="kt-carousel-card" onClick={() => handlePinClick(pin)}>
+                    <div className="kt-carousel-thumb">
+                      {headerImg ? (
+                        <img src={headerImg} alt={pin.name} loading="lazy" />
+                      ) : (
+                        <div className="kt-carousel-thumb-placeholder">{meta.emoji}</div>
+                      )}
+                    </div>
+                    <div className="kt-carousel-name">{pin.name}</div>
+                    <div className="kt-carousel-sub">{pin.city || (meta.labelKey.split('.').pop() || '')}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
