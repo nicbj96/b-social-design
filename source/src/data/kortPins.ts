@@ -41,9 +41,23 @@ export interface MapPin {
   eventId?: string;
 }
 
-// European country codes
+// All supported country codes (ISO 2-letter)
 export const MAP_EUROPE_CODES = [
-  'DK','SE','NO','DE','NL','BE','AT','CH','ES','FR','IT','GB','IE','PL','CZ','FI',
+  // Europe
+  'DK','SE','NO','FI','DE','NL','BE','AT','CH','ES','FR','IT','GB','IE','PL','CZ',
+  'PT','GR','HU','RO','HR','SK','SI','LT','LV','EE','BG','RS','UA','BY','LU','MT',
+  'CY','LI','IS','AL','MK','BA','ME','MD','AM','GE','AZ',
+  // Americas
+  'US','CA','MX','BR','AR','CL','CO','PE','VE','EC','BO','PY','UY','GY',
+  'CR','PA','GT','HN','SV','NI','CU','JM','DO','HT','TT',
+  // Asia & Middle East
+  'JP','KR','CN','TW','TH','VN','ID','MY','PH','SG','MM','KH','LA',
+  'IN','BD','PK','LK','NP','KZ','UZ','KG','TJ','TM','MN','AF','TR',
+  'IR','IQ','SA','AE','QA','KW','BH','OM','YE','JO','IL','LB','SY',
+  // Africa & Oceania
+  'ZA','EG','MA','DZ','TN','LY','NG','GH','SN','CI','CM','ET','KE','TZ',
+  'UG','RW','SD','CD','AO','MZ','ZM','ZW','BW','NA','MG',
+  'AU','NZ','FJ','PG',
 ];
 
 /* ── All hardcoded map pins ── */
