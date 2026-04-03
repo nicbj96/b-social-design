@@ -434,10 +434,11 @@ export default function Udforsk() {
           {/* ──── ROW 1: Featured Event + Right sidebar ──── */}
           {featuredEvent && (
             <Link href={`/event/${featuredEvent.id}`} className="ud-feat ud-fade-up">
-              <div className="ud-feat-img-side">
-                <img src={getEventImage(featuredEvent)} alt={featuredEvent.title} className="ud-feat-img" loading="lazy" />
-                <div className="ud-feat-img-gradient" />
+              {/* Inset image with rounded corners */}
+              <div className="ud-feat-thumb">
+                <img src={getEventImage(featuredEvent)} alt={featuredEvent.title} className="ud-feat-thumb-img" loading="lazy" />
               </div>
+              {/* Event details */}
               <div className="ud-feat-info">
                 <div className="ud-feat-header">
                   <div className="ud-feat-logo">B</div>
@@ -459,11 +460,14 @@ export default function Udforsk() {
                     </div>
                   )}
                 </div>
-                <div className="ud-feat-social">
-                  {BRUGERE.slice(0, 5).map((b, i) => (
-                    <img key={b.name} src={b.avatar} alt={b.name} className="ud-feat-avatar" style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }} loading="lazy" />
-                  ))}
-                  <span className="ud-feat-social-txt">Socialhot</span>
+                {/* Platform icons row */}
+                <div className="ud-feat-icons">
+                  <div className="ud-feat-icon" style={{ background: '#3b82f6' }}>🎫</div>
+                  <div className="ud-feat-icon" style={{ background: '#ef4444' }}>TiV</div>
+                  <div className="ud-feat-icon" style={{ background: '#f59e0b' }}>🎵</div>
+                  <div className="ud-feat-icon" style={{ background: '#8b5cf6' }}>🎪</div>
+                  <div className="ud-feat-icon" style={{ background: '#ec4899' }}>❤️</div>
+                  <span className="ud-feat-icons-label">Smukfest</span>
                 </div>
               </div>
             </Link>
@@ -585,19 +589,20 @@ ${pageBase("ud")}
 .ud-root { position: relative; padding-bottom: 96px; }
 
 /* ═══════════════════════════════════════════
-   HERO — panoramic cover with overlaid text
+   HERO — panoramic cover with glass frame
    ═══════════════════════════════════════════ */
 .ud-hero {
   position: relative; width: 100%; height: 190px; overflow: hidden;
-  border-radius: 18px; margin: 0 0 14px;
+  border-radius: 16px; margin: 0 0 14px;
+  border: 1px solid rgba(255,255,255,0.12);
 }
 .ud-hero-img {
   width: 100%; height: 100%; object-fit: cover; object-position: center 40%;
-  filter: brightness(0.6);
+  filter: brightness(0.65);
 }
 .ud-hero-gradient {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.15) 0%, rgba(6,10,15,0.8) 100%);
+  background: linear-gradient(to bottom, rgba(6,10,15,0.1) 0%, rgba(6,10,15,0.75) 100%);
 }
 .ud-hero-text {
   position: absolute; bottom: 22px; left: 26px; z-index: 2;
@@ -694,70 +699,72 @@ ${pageBase("ud")}
    GLASS CARD (shared)
    ═══════════════════════════════════════════ */
 .ud-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px;
-  padding: 18px;
+  padding: 20px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 .ud-card-title {
   display: flex; align-items: center; gap: 6px;
-  font-size: 14px; font-weight: 600; color: var(--pg-white);
-  margin: 0 0 12px; font-family: var(--sans);
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 18px; font-weight: 400; color: var(--pg-white);
+  margin: 0 0 14px; letter-spacing: -0.3px;
 }
 .ud-teal-icon { color: var(--teal); }
 
 /* ═══════════════════════════════════════════
-   FEATURED EVENT — left column, row 1
+   FEATURED EVENT — inset image + details
    ═══════════════════════════════════════════ */
 .ud-feat {
-  display: flex; overflow: hidden; text-decoration: none; color: var(--pg-white);
+  display: flex; gap: 0; text-decoration: none; color: var(--pg-white);
   cursor: pointer; transition: all 0.35s ease;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  padding: 16px;
+  overflow: hidden;
 }
 .ud-feat:hover {
   transform: translateY(-2px);
-  border-color: rgba(78,205,196,0.3);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  border-color: rgba(255,255,255,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
-.ud-feat-img-side {
-  position: relative; width: 40%; flex-shrink: 0; overflow: hidden;
+/* Inset thumbnail */
+.ud-feat-thumb {
+  width: 38%; flex-shrink: 0; border-radius: 12px; overflow: hidden;
+  aspect-ratio: 4/3;
 }
-.ud-feat-img {
+.ud-feat-thumb-img {
   width: 100%; height: 100%; object-fit: cover;
   transition: transform 0.5s ease;
 }
-.ud-feat:hover .ud-feat-img { transform: scale(1.04); }
-.ud-feat-img-gradient {
-  position: absolute; inset: 0;
-  background: linear-gradient(to right, transparent 50%, rgba(6,10,15,0.4) 100%);
-}
+.ud-feat:hover .ud-feat-thumb-img { transform: scale(1.04); }
+/* Info side */
 .ud-feat-info {
   display: flex; flex-direction: column; justify-content: center;
-  padding: 20px; flex: 1; min-width: 0; gap: 8px;
+  padding: 0 0 0 18px; flex: 1; min-width: 0; gap: 6px;
 }
 .ud-feat-header {
   display: flex; align-items: center; gap: 8px;
 }
 .ud-feat-logo {
-  width: 26px; height: 26px; border-radius: 7px;
-  background: var(--teal); color: var(--bg);
+  width: 24px; height: 24px; border-radius: 6px;
+  background: rgba(255,255,255,0.1); color: var(--pg-white);
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; font-family: var(--sans);
+  font-size: 12px; font-weight: 800; font-family: var(--sans);
 }
 .ud-feat-accent {
   font-size: 10px; color: var(--teal); font-family: monospace; opacity: 0.5;
 }
 .ud-feat-title {
-  font-size: 18px; font-weight: 700; line-height: 1.2; margin: 0;
+  font-size: 17px; font-weight: 700; line-height: 1.2; margin: 0;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.ud-feat-rows { display: flex; flex-direction: column; gap: 3px; }
+.ud-feat-rows { display: flex; flex-direction: column; gap: 2px; }
 .ud-feat-row {
   display: flex; align-items: center; justify-content: space-between;
   font-size: 11px; color: var(--pg-white-muted);
@@ -767,15 +774,18 @@ ${pageBase("ud")}
   display: flex; align-items: center; gap: 4px;
   font-size: 11px; color: rgba(78,205,196,0.7);
 }
-.ud-feat-social {
-  display: flex; align-items: center; margin-top: 4px;
+/* Platform icons row */
+.ud-feat-icons {
+  display: flex; align-items: center; gap: 6px; margin-top: 4px;
 }
-.ud-feat-avatar {
-  width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
-  border: 2px solid var(--bg); position: relative;
+.ud-feat-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: white; font-weight: 700;
+  font-family: var(--sans);
 }
-.ud-feat-social-txt {
-  font-size: 10px; color: var(--pg-white-muted); margin-left: 8px;
+.ud-feat-icons-label {
+  font-size: 11px; color: var(--pg-white-muted); margin-left: 4px;
 }
 
 /* ═══════════════════════════════════════════
@@ -851,14 +861,19 @@ ${pageBase("ud")}
 }
 
 /* ═══════════════════════════════════════════
-   REDAKTØRENS VALG — 2 image tiles
+   REDAKTØRENS VALG — 2 image tiles with glow
    ═══════════════════════════════════════════ */
+.ud-editor {
+  border-color: rgba(78,205,196,0.15);
+  box-shadow: 0 0 20px rgba(78,205,196,0.06), inset 0 0 20px rgba(78,205,196,0.03);
+}
 .ud-editor-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
 }
 .ud-editor-tile {
   position: relative; border-radius: 10px; overflow: hidden;
-  height: 130px; display: block; text-decoration: none; color: white; cursor: pointer;
+  height: 140px; display: block; text-decoration: none; color: white; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 .ud-editor-tile img {
   width: 100%; height: 100%; object-fit: cover;
@@ -866,8 +881,8 @@ ${pageBase("ud")}
 }
 .ud-editor-tile:hover img { transform: scale(1.06); }
 .ud-editor-tile-name {
-  position: absolute; bottom: 8px; left: 8px; right: 8px;
-  font-size: 11px; font-weight: 600; line-height: 1.2;
+  position: absolute; bottom: 8px; left: 10px; right: 10px;
+  font-size: 11px; font-weight: 600; line-height: 1.3;
   text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 
@@ -1001,31 +1016,17 @@ ${pageBase("ud")}
   }
   .ud-sidebar { order: -1; }
 
-  /* Featured card → image overlay card on mobile */
+  /* Featured card — stack on mobile */
   .ud-feat {
-    position: relative; flex-direction: column;
-    min-height: 200px; max-height: 240px;
-    min-width: 0; width: 100%; overflow: hidden;
+    flex-direction: column; padding: 14px;
+    min-width: 0; width: 100%;
   }
-  .ud-feat-img-side {
-    position: absolute; inset: 0; width: 100%; height: 100%;
+  .ud-feat-thumb {
+    width: 100%; aspect-ratio: 16/9;
+    margin-bottom: 12px;
   }
-  .ud-feat-img { filter: brightness(0.45); }
-  .ud-feat-img-gradient {
-    background: linear-gradient(to top, rgba(6,10,15,0.85) 0%, rgba(6,10,15,0.3) 50%, transparent 100%);
-  }
-  .ud-feat-info {
-    position: relative; z-index: 2;
-    justify-content: flex-end; padding: 16px 18px;
-    height: 100%;
-  }
-  .ud-feat-header { display: none; }
-  .ud-feat-title { font-size: 18px; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
-  .ud-feat-rows { gap: 2px; }
-  .ud-feat-row { font-size: 11px; color: rgba(255,255,255,0.7); }
-  .ud-feat-highlight { color: var(--teal); }
-  .ud-feat-venue { display: none; }
-  .ud-feat-social-txt { color: rgba(255,255,255,0.5); }
+  .ud-feat-info { padding: 0; }
+  .ud-feat-title { font-size: 16px; }
 
   .ud-pop-mosaic {
     grid-template-columns: 1fr 1fr;
@@ -1038,8 +1039,8 @@ ${pageBase("ud")}
   .ud-hero { height: 140px; border-radius: 14px; }
   .ud-hero-title { font-size: 32px; }
   .ud-hero-text { bottom: 14px; left: 16px; }
-  .ud-feat { min-height: 180px; max-height: 200px; }
-  .ud-feat-title { font-size: 16px; }
+  .ud-feat-title { font-size: 15px; }
+  .ud-feat-icons { flex-wrap: wrap; }
   .ud-pop-mosaic {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 110px 110px;
