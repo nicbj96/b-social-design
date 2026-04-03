@@ -158,11 +158,18 @@ const ROUTE_SOURCES: RouteSource[] = [
     smart_tags: ["NATUR", "AKTIV_SPORT", "HIKING", "RUTE"],
   },
   {
-    name: "cycling_mtb",
+    name: "cycling",
     baseUrl: "https://cycling.waymarkedtrails.org/api/v1",
     main_categories: ["aktiv_sport"],
-    tags: ["cykling", "mountainbike", "mtb", "cykelrute"],
-    smart_tags: ["AKTIV_SPORT", "MTB", "CYCLING", "RUTE"],
+    tags: ["cykling", "cykelrute", "landevejscykling", "gravel"],
+    smart_tags: ["AKTIV_SPORT", "CYCLING", "RUTE"],
+  },
+  {
+    name: "mtb",
+    baseUrl: "https://mtb.waymarkedtrails.org/api/v1",
+    main_categories: ["aktiv_sport"],
+    tags: ["mtb", "mountainbike", "singletrack", "trail"],
+    smart_tags: ["AKTIV_SPORT", "MTB", "RUTE"],
   },
   {
     name: "skating",
@@ -170,6 +177,20 @@ const ROUTE_SOURCES: RouteSource[] = [
     main_categories: ["aktiv_sport"],
     tags: ["skating", "skøjteløb", "inline skating"],
     smart_tags: ["AKTIV_SPORT", "SKATING", "RUTE"],
+  },
+  {
+    name: "slopes",
+    baseUrl: "https://slopes.waymarkedtrails.org/api/v1",
+    main_categories: ["aktiv_sport"],
+    tags: ["ski", "piste", "slopes", "winter sport", "snowboard"],
+    smart_tags: ["AKTIV_SPORT", "SKI", "RUTE"],
+  },
+  {
+    name: "riding",
+    baseUrl: "https://riding.waymarkedtrails.org/api/v1",
+    main_categories: ["aktiv_sport", "natur"],
+    tags: ["ridning", "horse riding", "hest", "ryttersti"],
+    smart_tags: ["AKTIV_SPORT", "RIDNING", "RUTE"],
   },
 ];
 
