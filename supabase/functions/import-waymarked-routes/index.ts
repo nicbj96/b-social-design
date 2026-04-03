@@ -155,6 +155,52 @@ async function upsertPlaces(rows: any[]): Promise<number> {
 }
 
 // ---------------------------------------------------------------------------
+// import_runs logging
+// ---------------------------------------------------------------------------
+async function startRun(functionName: string): Promise<string | null> {
+  if (!SUPABASE_KEY) return null;
+  const runId = crypto.randomUUID();
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/import_runs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify({ id: runId, function_name: functionName, started_at: new Date().toISOString(), status: "running" }),
+    });
+  } catch { /* non-fatal */ }
+  return runId;
+}
+
+async function completeRun(runId: string | null, summary: any): Promise<void> {
+  if (!SUPABASE_KEY || !runId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/import_runs?id=eq.${runId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify({
+        completed_at: new Date().toISOString(),
+        status: summary.timed_out ? "timed_out" : "completed",
+        fetched_count: summary.total_fetched,
+        inserted_count: summary.total_inserted,
+        skipped_count: summary.total_skipped_duplicate ?? 0,
+        error_count: summary.errors?.length ?? 0,
+        errors: summary.errors?.length > 0 ? summary.errors : null,
+        metadata: { by_source: summary.by_source, countries_processed: summary.countries_processed },
+      }),
+    });
+  } catch { /* non-fatal */ }
+}
+
+// ---------------------------------------------------------------------------
 // Edge Function
 // ---------------------------------------------------------------------------
 Deno.serve(async (req) => {
@@ -170,6 +216,8 @@ Deno.serve(async (req) => {
 
   let body: any = {};
   try { body = await req.json(); } catch { /* defaults */ }
+
+  const runId = await startRun("import-waymarked-routes");
 
   const allCodes = Object.keys(COUNTRY_BBOX);
   let targetCountries: string[] = body.countries?.filter((c: string) => allCodes.includes(c)) ?? [];
@@ -288,6 +336,8 @@ Deno.serve(async (req) => {
   }
 
   await flush();
+
+  await completeRun(runId, summary);
 
   console.log("import-waymarked-routes complete:", JSON.stringify(summary));
   return new Response(JSON.stringify(summary), {
