@@ -1,372 +1,229 @@
 import { useLocation } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-  Bell, BellRing, Calendar, MessageCircle, UserPlus, UserCheck, Tag, ChevronRight, CheckCheck, Inbox, Search, Check, X,
+  Bell, BellRing, Calendar, MessageCircle, UserPlus, UserCheck, Tag,
+  ChevronRight, Inbox, Search, Check, X,
 } from "lucide-react";
 import { useNotifications, type Notification, type NotificationType } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from 'react-i18next';
 import { supabase } from "@/lib/supabase";
 import UserSearch from "@/components/UserSearch";
-import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 
 /* ── Scoped CSS ── */
 const notifikationerCSS = `
-${pageBase("nf")}
+${pageBase("nt")}
 
-/* ── Action bar ── */
-.nf-action-bar {
-  display: flex; align-items: center; justify-content: flex-end;
-  padding: 0 16px 12px; gap: 8px;
+/* ── Stat pills row ── */
+.nt-pills {
+  display: flex; justify-content: center; gap: 10px;
+  padding: 0 20px 16px; flex-wrap: wrap;
 }
-.nf-icon-btn {
-  width: 40px; height: 40px; border-radius: 12px;
+.nt-pill {
+  padding: 9px 20px; border-radius: 100px;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font-size: 13px; color: var(--pg-white-dim); font-family: var(--sans);
+  white-space: nowrap;
+}
+.nt-pill strong { color: var(--pg-white); font-weight: 600; }
+
+/* ── Filter chips ── */
+.nt-filters {
+  display: flex; justify-content: center; gap: 8px;
+  padding: 0 20px 24px; flex-wrap: wrap;
+}
+
+/* ── Content ── */
+.nt-content { padding: 0 16px 32px; }
+
+/* ── Group label ── */
+.nt-group { margin-bottom: 8px; }
+.nt-group-label {
+  font-size: 11px; font-weight: 600; color: var(--pg-white-muted);
+  text-transform: uppercase; letter-spacing: 2px; padding: 0 8px;
+  margin-bottom: 8px; font-family: var(--sans);
+}
+
+/* ── Notification card ── */
+.nt-card {
+  width: 100%; display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; background: var(--glass-bg);
+  border: 1px solid var(--glass-border); border-radius: 16px;
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  cursor: pointer; transition: all 0.25s; font-family: var(--sans);
+  margin-bottom: 10px; text-align: left; border-left: none;
+}
+.nt-card:hover {
+  background: var(--glass-bg-hover); border-color: var(--glass-border-hover);
+}
+.nt-card--unread { border-left: 2px solid var(--teal); }
+.nt-card--read { opacity: 0.5; }
+.nt-card--read:hover { opacity: 0.75; }
+
+/* Avatar circle */
+.nt-card-avatar {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  color: var(--pg-white-dim); cursor: pointer; transition: all 0.25s;
-  backdrop-filter: blur(12px);
+  overflow: hidden;
 }
-.nf-icon-btn:hover { background: var(--glass-bg-hover); border-color: var(--glass-border-hover); color: var(--teal); }
-.nf-mark-all-btn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 14px; border-radius: 12px;
+.nt-card-avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.nt-card-avatar--icon {
+  background: rgba(78,205,196,0.12);
+}
+/* type-specific icon colors */
+.nt-card--event_invite .nt-card-avatar--icon   { background: rgba(78,205,196,0.12); color: #4ECDC4; }
+.nt-card--friend_request .nt-card-avatar--icon { background: rgba(192,132,252,0.12); color: #c084fc; }
+.nt-card--friend_accepted .nt-card-avatar--icon{ background: rgba(74,222,128,0.12); color: #4ade80; }
+.nt-card--new_message .nt-card-avatar--icon    { background: rgba(96,165,250,0.12); color: #60a5fa; }
+.nt-card--event_reminder .nt-card-avatar--icon { background: rgba(251,191,36,0.12); color: #fbbf24; }
+.nt-card--tag_match .nt-card-avatar--icon      { background: rgba(249,115,22,0.12); color: #f97316; }
+
+/* Card body */
+.nt-card-body { flex: 1; min-width: 0; }
+.nt-card-text {
+  font-size: 14px; color: var(--pg-white); line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.nt-card--read .nt-card-text { color: var(--pg-white-dim); }
+.nt-card-time {
+  font-size: 11px; color: rgba(255,255,255,0.18); margin-top: 3px;
+}
+
+/* Card action button */
+.nt-card-action {
+  padding: 8px 16px; border-radius: 100px; font-size: 12px; font-weight: 500;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
-  color: var(--pg-white-dim); font-size: 12px; font-family: var(--sans);
-  cursor: pointer; transition: all 0.25s; backdrop-filter: blur(12px);
+  color: var(--pg-white-dim); cursor: pointer; transition: all 0.25s;
+  font-family: var(--sans); white-space: nowrap; flex-shrink: 0;
 }
-.nf-mark-all-btn:hover { background: var(--teal-dim); border-color: rgba(78,205,196,0.25); color: var(--teal); }
-
-/* ── Content area ── */
-.nf-content {
-  padding: 0 16px 96px;
+.nt-card-action:hover {
+  background: var(--teal-dim); border-color: rgba(78,205,196,0.25);
+  color: var(--teal);
 }
 
-/* ── Section label ── */
-.nf-section-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--pg-white-muted);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  padding: 0 8px;
-  margin-bottom: 12px;
-  font-family: var(--sans);
+/* Card chevron */
+.nt-card-chevron {
+  color: rgba(255,255,255,0.15); flex-shrink: 0; transition: transform 0.2s;
+}
+.nt-card:hover .nt-card-chevron {
+  transform: translateX(2px); color: var(--pg-white-muted);
 }
 
-/* ── Group ── */
-.nf-group {
-  margin-bottom: 28px;
+/* ── Friend request card actions ── */
+.nt-fr-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.nt-fr-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer; transition: all 0.25s;
 }
-.nf-group-items {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-/* ── Notification row ── */
-.nf-row {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  text-align: left;
-  background: transparent;
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all 0.25s;
-  font-family: var(--sans);
-}
-.nf-row:hover {
-  background: var(--glass-bg);
-}
-.nf-row--read {
-  opacity: 0.5;
-}
-.nf-row--read:hover {
-  opacity: 0.75;
-}
-
-/* Type-specific icon containers */
-.nf-row-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: transform 0.25s;
-}
-.nf-row:hover .nf-row-icon {
-  transform: scale(1.05);
-}
-
-/* Type accents */
-.nf-type-event_invite .nf-row-icon    { background: rgba(78,205,196,0.12); color: #4ECDC4; }
-.nf-type-friend_request .nf-row-icon  { background: rgba(192,132,252,0.12); color: #c084fc; }
-.nf-type-friend_accepted .nf-row-icon { background: rgba(74,222,128,0.12); color: #4ade80; }
-.nf-type-new_message .nf-row-icon     { background: rgba(96,165,250,0.12); color: #60a5fa; }
-.nf-type-event_reminder .nf-row-icon  { background: rgba(251,191,36,0.12); color: #fbbf24; }
-.nf-type-tag_match .nf-row-icon       { background: rgba(249,115,22,0.12); color: #f97316; }
-
-/* Left accent bar on unread */
-.nf-type-event_invite.nf-row--unread    { border-left: 2px solid rgba(78,205,196,0.5); }
-.nf-type-friend_request.nf-row--unread  { border-left: 2px solid rgba(192,132,252,0.5); }
-.nf-type-friend_accepted.nf-row--unread { border-left: 2px solid rgba(74,222,128,0.5); }
-.nf-type-new_message.nf-row--unread     { border-left: 2px solid rgba(96,165,250,0.5); }
-.nf-type-event_reminder.nf-row--unread  { border-left: 2px solid rgba(251,191,36,0.5); }
-.nf-type-tag_match.nf-row--unread       { border-left: 2px solid rgba(249,115,22,0.5); }
-
-.nf-row-body {
-  flex: 1;
-  min-width: 0;
-}
-.nf-row-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.nf-row-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--pg-white);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nf-row--read .nf-row-title {
-  color: var(--pg-white-dim);
-}
-.nf-row-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--teal);
-  flex-shrink: 0;
-  box-shadow: 0 0 8px var(--teal-glow);
-}
-.nf-row-body-text {
-  font-size: 12px;
-  color: var(--pg-white-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-top: 2px;
-  line-height: 1.4;
-}
-.nf-row-time {
-  font-size: 11px;
-  color: rgba(255,255,255,0.18);
-  margin-top: 4px;
-}
-.nf-row-chevron {
-  color: rgba(255,255,255,0.15);
-  flex-shrink: 0;
-  margin-top: 12px;
-  transition: transform 0.2s;
-}
-.nf-row:hover .nf-row-chevron {
-  transform: translateX(2px);
-  color: var(--pg-white-muted);
-}
-
-/* ── Friend requests ── */
-.nf-fr-section {
-  margin-bottom: 32px;
-}
-.nf-fr-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.nf-fr-card {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  transition: all 0.25s;
-}
-.nf-fr-card:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-}
-.nf-fr-info {
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
-}
-.nf-fr-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--pg-white);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nf-fr-city {
-  font-size: 12px;
-  color: var(--pg-white-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nf-fr-time {
-  font-size: 11px;
-  color: rgba(255,255,255,0.18);
-  margin-top: 3px;
-}
-.nf-fr-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.nf-fr-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  transition: all 0.25s;
-}
-.nf-fr-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.nf-fr-btn--accept {
-  background: rgba(74,222,128,0.15);
-  color: #4ade80;
+.nt-fr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.nt-fr-btn--accept {
+  background: rgba(74,222,128,0.15); color: #4ade80;
   border: 1px solid rgba(74,222,128,0.2);
 }
-.nf-fr-btn--accept:hover:not(:disabled) {
-  background: rgba(74,222,128,0.25);
-  border-color: rgba(74,222,128,0.4);
-  box-shadow: 0 4px 16px rgba(74,222,128,0.2);
-  transform: translateY(-1px);
+.nt-fr-btn--accept:hover:not(:disabled) {
+  background: rgba(74,222,128,0.25); border-color: rgba(74,222,128,0.4);
+  box-shadow: 0 4px 16px rgba(74,222,128,0.2); transform: translateY(-1px);
 }
-.nf-fr-btn--decline {
-  background: rgba(248,113,113,0.15);
-  color: #f87171;
+.nt-fr-btn--decline {
+  background: rgba(248,113,113,0.15); color: #f87171;
   border: 1px solid rgba(248,113,113,0.2);
 }
-.nf-fr-btn--decline:hover:not(:disabled) {
-  background: rgba(248,113,113,0.25);
-  border-color: rgba(248,113,113,0.4);
-  box-shadow: 0 4px 16px rgba(248,113,113,0.2);
-  transform: translateY(-1px);
+.nt-fr-btn--decline:hover:not(:disabled) {
+  background: rgba(248,113,113,0.25); border-color: rgba(248,113,113,0.4);
+  box-shadow: 0 4px 16px rgba(248,113,113,0.2); transform: translateY(-1px);
+}
+
+/* ── Ryd alle button ── */
+.nt-clear-all {
+  display: flex; justify-content: center; padding: 16px 0 96px;
+}
+.nt-clear-btn {
+  padding: 10px 28px; border-radius: 100px; font-size: 13px; font-weight: 500;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--pg-white-dim); cursor: pointer; transition: all 0.25s;
+  font-family: var(--sans); backdrop-filter: blur(12px);
+}
+.nt-clear-btn:hover {
+  background: var(--glass-bg-hover); border-color: var(--glass-border-hover);
+  color: var(--pg-white);
 }
 
 /* ── Empty state ── */
-.nf-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 0;
+.nt-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 80px 0;
 }
-.nf-empty-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
+.nt-empty-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
 }
-.nf-empty-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--pg-white-dim);
-}
-.nf-empty-sub {
-  font-size: 12px;
-  color: var(--pg-white-muted);
-  margin-top: 4px;
-}
+.nt-empty-title { font-size: 14px; font-weight: 500; color: var(--pg-white-dim); }
+.nt-empty-sub { font-size: 12px; color: var(--pg-white-muted); margin-top: 4px; }
 
-/* ── Loading spinner ── */
-.nf-spinner-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 80px 0;
+/* ── Loading ── */
+.nt-spinner-wrap { display: flex; justify-content: center; padding: 80px 0; }
+.nt-spinner {
+  width: 24px; height: 24px; border: 2px solid rgba(78,205,196,0.2);
+  border-top-color: var(--teal); border-radius: 50%;
+  animation: nt-spin 0.75s linear infinite;
 }
-.nf-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(78,205,196,0.2);
-  border-top-color: var(--teal);
-  border-radius: 50%;
-  animation: nf-spin 0.75s linear infinite;
-}
-@keyframes nf-spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes nt-spin { to { transform: rotate(360deg); } }
 
-/* ── Auth states ── */
-.nf-center {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0 24px;
+/* ── Auth center ── */
+.nt-center {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 0 24px;
 }
-.nf-login-text {
-  font-size: 14px;
-  color: var(--pg-white-dim);
-  margin-top: 16px;
-}
+.nt-login-text { font-size: 14px; color: var(--pg-white-dim); margin-top: 16px; }
 
 /* ── Modal overlay ── */
-.nf-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-  padding: 16px;
+.nt-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px); display: flex; align-items: center;
+  justify-content: center; z-index: 50; padding: 16px;
 }
-.nf-modal-content {
-  background: var(--bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+.nt-modal-content {
+  background: var(--bg); border: 1px solid var(--glass-border);
+  border-radius: 20px; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;
 }
 
+/* ── Mobile adjustments ── */
+@media (max-width: 768px) {
+  .nt-pills { gap: 6px; padding: 0 12px 12px; }
+  .nt-pill { padding: 7px 14px; font-size: 12px; }
+  .nt-filters { gap: 6px; padding: 0 12px 20px; }
+  .nt-content { padding: 0 12px 32px; }
+  .nt-card { padding: 12px 14px; gap: 10px; }
+  .nt-card-avatar { width: 40px; height: 40px; }
+  .nt-card-action { padding: 6px 12px; font-size: 11px; }
+}
 `;
 
-/* ── Icon + color per notification type ── */
-const TYPE_META: Record<NotificationType, { icon: typeof Bell }> = {
-  event_invite:    { icon: Calendar },
-  friend_request:  { icon: UserPlus },
-  friend_accepted: { icon: UserCheck },
-  new_message:     { icon: MessageCircle },
-  event_reminder:  { icon: BellRing },
-  tag_match:       { icon: Tag },
+/* ── Icon per notification type ── */
+const TYPE_META: Record<NotificationType, { icon: typeof Bell; action: string }> = {
+  event_invite:    { icon: Calendar, action: "Accepter" },
+  friend_request:  { icon: UserPlus, action: "Se profil" },
+  friend_accepted: { icon: UserCheck, action: "Se profil" },
+  new_message:     { icon: MessageCircle, action: "Åbn chat" },
+  event_reminder:  { icon: BellRing, action: "Se event" },
+  tag_match:       { icon: Tag, action: "Se match" },
 };
+
+type FilterKey = "all" | "unread" | "friends" | "events";
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: "all", label: "Alle" },
+  { key: "unread", label: "Ulæste" },
+  { key: "friends", label: "Venner" },
+  { key: "events", label: "Events" },
+];
 
 /* ── Date grouping helpers ── */
 function startOfDay(d: Date): number {
@@ -406,10 +263,9 @@ type FriendRequest = {
   status: string;
   created_at: string;
   sender?: {
-    id: string;
-    name: string | null;
-    city: string | null;
-    avatar_url: string | null;
+    user_id: string;
+    display_name: string | null;
+    home_city: string | null;
   };
 };
 
@@ -423,104 +279,13 @@ function groupNotifications(notifications: Notification[], t: (key: string) => s
   return order.filter(l => groups[l]?.length).map(label => ({ label, items: groups[label] }));
 }
 
-/* ── Single notification row ── */
-function NotificationRow({ n, onClick }: { n: Notification; onClick: () => void }) {
-  const { t } = useTranslation();
-  const meta = TYPE_META[n.type] || TYPE_META.event_invite;
-  const Icon = meta.icon;
-
-  return (
-    <button
-      onClick={onClick}
-      className={`nf-row nf-type-${n.type} ${n.is_read ? "nf-row--read" : "nf-row--unread"}`}
-    >
-      <div className="nf-row-icon">
-        <Icon size={18} />
-      </div>
-      <div className="nf-row-body">
-        <div className="nf-row-title-row">
-          <p className="nf-row-title">{n.title}</p>
-          {!n.is_read && <span className="nf-row-dot" />}
-        </div>
-        <p className="nf-row-body-text">{n.body}</p>
-        <p className="nf-row-time">{timeAgo(n.created_at, t)}</p>
-      </div>
-      <ChevronRight size={14} className="nf-row-chevron" />
-    </button>
-  );
-}
-
-/* ── Friend request card ── */
-function FriendRequestCard({ req, onUpdate }: { req: FriendRequest; onUpdate: () => void }) {
-  const { t } = useTranslation();
-  const [, setLocation] = useLocation();
-  const [updating, setUpdating] = useState(false);
-
-  const displayName = req.sender?.display_name || "Ukendt bruger";
-  const displayCity = req.sender?.home_city || "";
-
-  async function handleAccept() {
-    setUpdating(true);
-    try {
-      const { error } = await supabase
-        .from("friend_requests")
-        .update({ status: "accepted" })
-        .eq("id", req.id);
-      if (!error) {
-        onUpdate();
-      }
-    } catch (e) {
-      console.error("Error accepting friend request:", e);
-    }
-    setUpdating(false);
+function filterNotifications(notifications: Notification[], filter: FilterKey): Notification[] {
+  switch (filter) {
+    case "unread": return notifications.filter(n => !n.is_read);
+    case "friends": return notifications.filter(n => n.type === "friend_request" || n.type === "friend_accepted");
+    case "events": return notifications.filter(n => n.type === "event_invite" || n.type === "event_reminder");
+    default: return notifications;
   }
-
-  async function handleDecline() {
-    setUpdating(true);
-    try {
-      const { error } = await supabase
-        .from("friend_requests")
-        .update({ status: "declined" })
-        .eq("id", req.id);
-      if (!error) {
-        onUpdate();
-      }
-    } catch (e) {
-      console.error("Error declining friend request:", e);
-    }
-    setUpdating(false);
-  }
-
-  return (
-    <div className="nf-fr-card">
-      <div
-        className="nf-fr-info"
-        onClick={() => setLocation(`/profil/${req.sender_id}`)}
-      >
-        <p className="nf-fr-name">{displayName}</p>
-        {displayCity && <p className="nf-fr-city">{displayCity}</p>}
-        <p className="nf-fr-time">{timeAgo(req.created_at, t)}</p>
-      </div>
-      <div className="nf-fr-actions">
-        <button
-          onClick={handleAccept}
-          disabled={updating}
-          className="nf-fr-btn nf-fr-btn--accept"
-          title={t('notifications.accept') || 'Accepter'}
-        >
-          <Check size={16} />
-        </button>
-        <button
-          onClick={handleDecline}
-          disabled={updating}
-          className="nf-fr-btn nf-fr-btn--decline"
-          title={t('notifications.decline') || 'Afvis'}
-        >
-          <X size={16} />
-        </button>
-      </div>
-    </div>
-  );
 }
 
 /* ── Page ── */
@@ -532,9 +297,17 @@ export default function Notifikationer() {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [loadingFriendRequests, setLoadingFriendRequests] = useState(false);
   const [showUserSearch, setShowUserSearch] = useState(false);
-  const containerRef = useFadeUp("nf");
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const grouped = groupNotifications(notifications, t);
+  const filtered = filterNotifications(notifications, activeFilter);
+  const grouped = groupNotifications(filtered, t);
+
+  // Count today's notifications
+  const todayCount = notifications.filter(n => {
+    const diff = startOfDay(new Date()) - startOfDay(new Date(n.created_at));
+    return diff <= 0;
+  }).length;
 
   // Fetch pending friend requests
   useEffect(() => {
@@ -546,7 +319,7 @@ export default function Notifikationer() {
         const { data: requests, error } = await supabase
           .from("friend_requests")
           .select("id, sender_id, receiver_id, status, created_at")
-          .eq("receiver_id", user.id)
+          .eq("receiver_id", user!.id)
           .eq("status", "pending")
           .order("created_at", { ascending: false });
 
@@ -561,7 +334,6 @@ export default function Notifikationer() {
           return;
         }
 
-        // Fetch sender profiles
         const requestsWithProfiles = await Promise.all(
           requests.map(async (req) => {
             const { data: profile } = await supabase
@@ -577,7 +349,7 @@ export default function Notifikationer() {
           })
         );
 
-        setFriendRequests(requestsWithProfiles);
+        setFriendRequests(requestsWithProfiles as FriendRequest[]);
       } catch (e) {
         console.error("Error in fetchPendingRequests:", e);
         setFriendRequests([]);
@@ -594,24 +366,48 @@ export default function Notifikationer() {
     if (link) setLocation(link);
   }
 
+  async function handleAcceptFriend(reqId: string) {
+    try {
+      const { error } = await supabase
+        .from("friend_requests")
+        .update({ status: "accepted" })
+        .eq("id", reqId);
+      if (!error) setFriendRequests(prev => prev.filter(r => r.id !== reqId));
+    } catch (e) {
+      console.error("Error accepting friend request:", e);
+    }
+  }
+
+  async function handleDeclineFriend(reqId: string) {
+    try {
+      const { error } = await supabase
+        .from("friend_requests")
+        .update({ status: "declined" })
+        .eq("id", reqId);
+      if (!error) setFriendRequests(prev => prev.filter(r => r.id !== reqId));
+    } catch (e) {
+      console.error("Error declining friend request:", e);
+    }
+  }
+
   if (authLoading) {
     return (
-      <div className="nf-root nf-center">
+      <div className="nt-root nt-center">
         <style>{notifikationerCSS}</style>
-        <div className="nf-spinner" />
+        <div className="nt-spinner" />
       </div>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <div className="nf-root nf-center">
+      <div className="nt-root nt-center">
         <style>{notifikationerCSS}</style>
         <Inbox size={48} style={{ color: "rgba(255,255,255,0.15)" }} />
-        <p className="nf-login-text">{t('notifications.login_to_see')}</p>
+        <p className="nt-login-text">{t('notifications.login_to_see')}</p>
         <button
           onClick={() => setLocation("/auth")}
-          className="nf-btn"
+          className="nt-btn"
           style={{ marginTop: 16 }}
         >
           {t('notifications.log_in')}
@@ -621,109 +417,137 @@ export default function Notifikationer() {
   }
 
   return (
-    <div className="nf-root" ref={containerRef}>
+    <div className="nt-root" ref={containerRef}>
       <style>{notifikationerCSS}</style>
 
-      {/* Cover */}
-      <div className="nf-cover">
+      {/* Cover hero */}
+      <div className="nt-cover">
         <img src="/notifikationer-hero.png" alt="" />
-        <div className="nf-cover-overlay" />
+        <div className="nt-cover-overlay" />
       </div>
 
       {/* Identity */}
-      <div className="nf-identity nf-fade-up">
-        <div className="nf-avatar">🔔</div>
-        <h1 className="nf-identity-title">Notifika<em>tioner</em></h1>
-        <p className="nf-identity-sub">{unreadCount > 0 ? `${unreadCount} ulæste beskeder` : 'Alt er opdateret'}</p>
+      <div className="nt-identity">
+        <div className="nt-avatar">
+          <Bell size={32} style={{ color: "rgba(255,255,255,0.7)" }} />
+        </div>
+        <h1 className="nt-identity-title"><em>Notifkationer</em></h1>
       </div>
 
-      {/* Stats */}
-      <div className="nf-stats nf-fade-up nf-d1">
-        <div className="nf-stat-card">
-          <div className="nf-stat-val">{notifications.length}</div>
-          <div className="nf-stat-lbl">I alt</div>
-        </div>
-        <div className="nf-stat-card">
-          <div className="nf-stat-val">{unreadCount}</div>
-          <div className="nf-stat-lbl">Ulæste</div>
-        </div>
-        <div className="nf-stat-card">
-          <div className="nf-stat-val">{friendRequests.length}</div>
-          <div className="nf-stat-lbl">Venneanm.</div>
-        </div>
+      {/* Stat pills */}
+      <div className="nt-pills">
+        <div className="nt-pill">Ulæste: <strong>{unreadCount}</strong></div>
+        <div className="nt-pill">I dag: <strong>{todayCount}</strong></div>
+        <div className="nt-pill">Venneforespørgsler: <strong>{friendRequests.length}</strong></div>
       </div>
 
-      {/* Action bar */}
-      <div className="nf-action-bar">
-        <button
-          onClick={() => setShowUserSearch(true)}
-          className="nf-icon-btn"
-          title={t('notifications.search_users') || 'Søg brugere'}
-        >
-          <Search size={18} />
-        </button>
-        {unreadCount > 0 && (
-          <button onClick={markAllAsRead} className="nf-mark-all-btn">
-            <CheckCheck size={14} />
-            {t('notifications.mark_all_read')}
+      {/* Filter chips */}
+      <div className="nt-filters">
+        {FILTERS.map(f => (
+          <button
+            key={f.key}
+            className={`nt-chip${activeFilter === f.key ? " active" : ""}`}
+            onClick={() => setActiveFilter(f.key)}
+          >
+            {f.label}
           </button>
-        )}
+        ))}
       </div>
 
       {/* Content */}
-      <div className="nf-content">
-        {/* Friend Requests Section */}
-        {!loadingFriendRequests && friendRequests.length > 0 && (
-          <div className="nf-fr-section nf-fade-up nf-d2">
-            <h2 className="nf-section-label">
-              {t('notifications.friend_requests') || 'Venneanmodninger'}
-            </h2>
-            <div className="nf-fr-list">
-              {friendRequests.map(req => (
-                <FriendRequestCard
+      <div className="nt-content">
+        {/* Friend request cards (shown in "all" or "friends" filter) */}
+        {(activeFilter === "all" || activeFilter === "friends") &&
+          !loadingFriendRequests && friendRequests.length > 0 && (
+          <>
+            {friendRequests.map(req => {
+              const displayName = req.sender?.display_name || "Ukendt bruger";
+              return (
+                <button
                   key={req.id}
-                  req={req}
-                  onUpdate={() => {
-                    setFriendRequests(prev => prev.filter(r => r.id !== req.id));
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+                  className="nt-card nt-card--unread nt-card--friend_request"
+                  onClick={() => setLocation(`/profil/${req.sender_id}`)}
+                >
+                  <div className="nt-card-avatar nt-card-avatar--icon">
+                    <UserPlus size={20} />
+                  </div>
+                  <div className="nt-card-body">
+                    <p className="nt-card-text">{displayName} vil gerne være din ven.</p>
+                    <p className="nt-card-time">{timeAgo(req.created_at, t)}</p>
+                  </div>
+                  <div className="nt-fr-actions" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleAcceptFriend(req.id)}
+                      className="nt-card-action"
+                      style={{ background: "rgba(74,222,128,0.1)", borderColor: "rgba(74,222,128,0.2)", color: "#4ade80" }}
+                    >
+                      Accepter
+                    </button>
+                  </div>
+                  <ChevronRight size={14} className="nt-card-chevron" />
+                </button>
+              );
+            })}
+          </>
         )}
 
-        {/* Notifications Section */}
+        {/* Notifications */}
         {loading ? (
-          <div className="nf-spinner-wrap">
-            <div className="nf-spinner" />
+          <div className="nt-spinner-wrap">
+            <div className="nt-spinner" />
           </div>
-        ) : notifications.length === 0 && friendRequests.length === 0 ? (
-          <div className="nf-empty nf-fade-up nf-d2">
-            <div className="nf-empty-icon">
+        ) : filtered.length === 0 && friendRequests.length === 0 ? (
+          <div className="nt-empty">
+            <div className="nt-empty-icon">
               <Bell size={28} style={{ color: "rgba(255,255,255,0.15)" }} />
             </div>
-            <p className="nf-empty-title">{t('notifications.no_notifications')}</p>
-            <p className="nf-empty-sub">{t('notifications.we_will_notify')}</p>
+            <p className="nt-empty-title">{t('notifications.no_notifications')}</p>
+            <p className="nt-empty-sub">{t('notifications.we_will_notify')}</p>
           </div>
         ) : (
-          grouped.map((group, gi) => (
-            <div key={group.label} className={`nf-group nf-fade-up nf-d${Math.min(gi + 2, 4)}`}>
-              <h2 className="nf-section-label">{group.label}</h2>
-              <div className="nf-group-items">
-                {group.items.map(n => (
-                  <NotificationRow key={n.id} n={n} onClick={() => handleClick(n)} />
-                ))}
-              </div>
+          grouped.map(group => (
+            <div key={group.label} className="nt-group">
+              <h2 className="nt-group-label">{group.label}</h2>
+              {group.items.map(n => {
+                const meta = TYPE_META[n.type] || TYPE_META.event_invite;
+                const Icon = meta.icon;
+                return (
+                  <button
+                    key={n.id}
+                    className={`nt-card nt-card--${n.type} ${n.is_read ? "nt-card--read" : "nt-card--unread"}`}
+                    onClick={() => handleClick(n)}
+                  >
+                    <div className="nt-card-avatar nt-card-avatar--icon">
+                      <Icon size={20} />
+                    </div>
+                    <div className="nt-card-body">
+                      <p className="nt-card-text">{n.title}{n.body ? `: ${n.body}` : ""}</p>
+                      <p className="nt-card-time">{timeAgo(n.created_at, t)}</p>
+                    </div>
+                    <span className="nt-card-action">{meta.action}</span>
+                    <ChevronRight size={14} className="nt-card-chevron" />
+                  </button>
+                );
+              })}
             </div>
           ))
         )}
       </div>
 
+      {/* Ryd alle button */}
+      {notifications.length > 0 && (
+        <div className="nt-clear-all">
+          <button onClick={markAllAsRead} className="nt-clear-btn">
+            Ryd alle
+          </button>
+        </div>
+      )}
+
       {/* User Search Modal */}
       {showUserSearch && (
-        <div className="nf-modal-overlay">
-          <div className="nf-modal-content">
-            <UserSearch onClose={() => setShowUserSearch(false)} />
+        <div className="nt-modal-overlay">
+          <div className="nt-modal-content">
+            <UserSearch open={showUserSearch} onClose={() => setShowUserSearch(false)} />
           </div>
         </div>
       )}
