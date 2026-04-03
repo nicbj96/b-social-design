@@ -685,6 +685,7 @@ ${pageBase("ud")}
   display: grid;
   grid-template-columns: 1fr 300px;
   gap: 12px;
+  width: 100%;
   max-width: 1100px;
 }
 .ud-full { grid-column: 1 / -1; }
@@ -995,14 +996,37 @@ ${pageBase("ud")}
    ═══════════════════════════════════════════ */
 @media (max-width: 860px) {
   .ud-bento {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 100%;
   }
   .ud-sidebar { order: -1; }
-  .ud-feat { flex-direction: column; }
-  .ud-feat-img-side { width: 100%; height: 160px; }
-  .ud-feat-img-gradient {
-    background: linear-gradient(to top, rgba(6,10,15,0.6) 0%, transparent 60%);
+
+  /* Featured card → image overlay card on mobile */
+  .ud-feat {
+    position: relative; flex-direction: column;
+    min-height: 200px; max-height: 240px;
+    min-width: 0; width: 100%; overflow: hidden;
   }
+  .ud-feat-img-side {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  .ud-feat-img { filter: brightness(0.45); }
+  .ud-feat-img-gradient {
+    background: linear-gradient(to top, rgba(6,10,15,0.85) 0%, rgba(6,10,15,0.3) 50%, transparent 100%);
+  }
+  .ud-feat-info {
+    position: relative; z-index: 2;
+    justify-content: flex-end; padding: 16px 18px;
+    height: 100%;
+  }
+  .ud-feat-header { display: none; }
+  .ud-feat-title { font-size: 18px; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
+  .ud-feat-rows { gap: 2px; }
+  .ud-feat-row { font-size: 11px; color: rgba(255,255,255,0.7); }
+  .ud-feat-highlight { color: var(--teal); }
+  .ud-feat-venue { display: none; }
+  .ud-feat-social-txt { color: rgba(255,255,255,0.5); }
+
   .ud-pop-mosaic {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 130px 130px;
@@ -1011,9 +1035,11 @@ ${pageBase("ud")}
   .ud-places-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 480px) {
-  .ud-hero { height: 150px; border-radius: 14px; }
-  .ud-hero-title { font-size: 34px; }
-  .ud-hero-text { bottom: 16px; left: 18px; }
+  .ud-hero { height: 140px; border-radius: 14px; }
+  .ud-hero-title { font-size: 32px; }
+  .ud-hero-text { bottom: 14px; left: 16px; }
+  .ud-feat { min-height: 180px; max-height: 200px; }
+  .ud-feat-title { font-size: 16px; }
   .ud-pop-mosaic {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 110px 110px;
