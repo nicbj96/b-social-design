@@ -857,13 +857,7 @@ async function insertEvents(
         continue;
       }
 
-      const exists = await checkExists(supabase, event.title, event.date, event.country || country);
-      if (exists) {
-        result.skipped++;
-        continue;
-      }
-
-      const { error } = await supabase.from("events").insert({
+      const { error, data: upserted } = await supabase.from("events").upsert({
         title: event.title,
         description: event.description,
         location: event.location,
@@ -884,13 +878,13 @@ async function insertEvents(
         source: event.source,
         status: event.status,
         country: event.country || country,
-      });
+        url: event.url || null,
+      }, { onConflict: "title,date,location", ignoreDuplicates: false });
 
       if (error) {
-        result.errors.push(`Insert error for "${event.title}": ${error.message}`);
+        result.errors.push(`Upsert error for "${event.title}": ${error.message}`);
       } else {
         result.inserted++;
-        console.log(`[import-events] Inserted: ${event.title} (${event.country || country})`);
       }
     } catch (err) {
       result.errors.push(`Error processing "${event.title}": ${err}`);
