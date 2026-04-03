@@ -13,33 +13,75 @@ const SPARQL_ENDPOINT = "https://query.wikidata.org/sparql";
 // Country → Wikidata QID
 // ---------------------------------------------------------------------------
 const COUNTRY_QID: Record<string, string> = {
-  DK: "Q35",  SE: "Q34",  NO: "Q20",  FI: "Q33",  DE: "Q183",
-  NL: "Q55",  BE: "Q31",  AT: "Q40",  CH: "Q39",  ES: "Q29",
-  FR: "Q142", IT: "Q38",  GB: "Q145", IE: "Q27",  PL: "Q36",
-  CZ: "Q213", US: "Q30",  CA: "Q16",  AU: "Q408", NZ: "Q664",
-  AE: "Q878", ZA: "Q258", TR: "Q43",  MX: "Q96",  BR: "Q155",
-  CL: "Q298", PE: "Q419",
-  PT: "Q45",  GR: "Q41",  HU: "Q28",  RO: "Q218", HR: "Q224",
-  SK: "Q214", SI: "Q215", LT: "Q37",  LV: "Q211", EE: "Q191",
-  BG: "Q219", RS: "Q403", UA: "Q212", BY: "Q184", LU: "Q32",
-  MT: "Q233", CY: "Q229", LI: "Q347", IS: "Q189", AL: "Q8",
-  MK: "Q221", BA: "Q225", ME: "Q236", MD: "Q217", AM: "Q399",
-  GE: "Q230", AZ: "Q227",
+  // Europe (existing)
+  DK:"Q35", SE:"Q34", NO:"Q20", FI:"Q33", DE:"Q183", NL:"Q55", BE:"Q31", AT:"Q40", CH:"Q39",
+  ES:"Q29", FR:"Q142", IT:"Q38", GB:"Q145", IE:"Q27", PL:"Q36", CZ:"Q213", PT:"Q45", GR:"Q41",
+  HU:"Q28", RO:"Q218", HR:"Q224", SK:"Q214", SI:"Q215", LT:"Q37", LV:"Q211", EE:"Q191",
+  BG:"Q219", RS:"Q403", UA:"Q212", BY:"Q184", LU:"Q32", MT:"Q233", CY:"Q229", LI:"Q347",
+  IS:"Q189", AL:"Q8", MK:"Q221", BA:"Q225", ME:"Q236", MD:"Q217", AM:"Q399", GE:"Q230", AZ:"Q227",
+  // Non-Europe (existing)
+  US:"Q30", CA:"Q16", AU:"Q408", NZ:"Q664", AE:"Q878", ZA:"Q258", TR:"Q43",
+  MX:"Q96", BR:"Q155", CL:"Q298", PE:"Q419",
+  // Asia - East
+  JP:"Q17", KR:"Q884", CN:"Q148", TW:"Q865",
+  // Asia - Southeast
+  TH:"Q869", VN:"Q881", ID:"Q252", MY:"Q833", PH:"Q928", SG:"Q334", MM:"Q836", KH:"Q424", LA:"Q819",
+  // Asia - South
+  IN:"Q668", BD:"Q902", PK:"Q843", LK:"Q854", NP:"Q837",
+  // Asia - Central
+  KZ:"Q232", UZ:"Q265", KG:"Q813", TJ:"Q863", TM:"Q874", MN:"Q711", AF:"Q889",
+  // Middle East
+  IR:"Q794", IQ:"Q796", SA:"Q851", QA:"Q846", KW:"Q817", BH:"Q398", OM:"Q842",
+  YE:"Q805", JO:"Q810", IL:"Q801", LB:"Q822", SY:"Q858",
+  // Africa - North
+  EG:"Q79", MA:"Q1028", DZ:"Q262", TN:"Q948", LY:"Q1016",
+  // Africa - West
+  NG:"Q1033", GH:"Q117", SN:"Q1041", CI:"Q1008", CM:"Q1009",
+  // Africa - East
+  ET:"Q115", KE:"Q114", TZ:"Q924", UG:"Q1036", RW:"Q1037", SD:"Q1049",
+  // Africa - Central & Southern
+  CD:"Q974", AO:"Q916", MZ:"Q1029", ZM:"Q953", ZW:"Q954", BW:"Q963", NA:"Q1030", MG:"Q1019",
+  // Americas - South
+  AR:"Q414", CO:"Q739", VE:"Q717", EC:"Q736", BO:"Q750", PY:"Q733", UY:"Q77", GY:"Q734",
+  // Americas - Central & Caribbean
+  CR:"Q800", PA:"Q804", GT:"Q774", HN:"Q783", SV:"Q792", NI:"Q811",
+  CU:"Q241", JM:"Q766", DO:"Q786", HT:"Q790", TT:"Q754",
+  // Oceania
+  FJ:"Q712", PG:"Q691",
 };
 
 const COUNTRY_NAMES: Record<string, string> = {
   DK:"Denmark", SE:"Sweden", NO:"Norway", FI:"Finland", DE:"Germany",
   NL:"Netherlands", BE:"Belgium", AT:"Austria", CH:"Switzerland", ES:"Spain",
   FR:"France", IT:"Italy", GB:"United Kingdom", IE:"Ireland", PL:"Poland",
-  CZ:"Czech Republic", US:"United States", CA:"Canada", AU:"Australia",
-  NZ:"New Zealand", AE:"United Arab Emirates", ZA:"South Africa", TR:"Turkey",
-  MX:"Mexico", BR:"Brazil", CL:"Chile", PE:"Peru",
-  PT:"Portugal", GR:"Greece", HU:"Hungary", RO:"Romania", HR:"Croatia",
-  SK:"Slovakia", SI:"Slovenia", LT:"Lithuania", LV:"Latvia", EE:"Estonia",
+  CZ:"Czech Republic", PT:"Portugal", GR:"Greece", HU:"Hungary", RO:"Romania",
+  HR:"Croatia", SK:"Slovakia", SI:"Slovenia", LT:"Lithuania", LV:"Latvia", EE:"Estonia",
   BG:"Bulgaria", RS:"Serbia", UA:"Ukraine", BY:"Belarus", LU:"Luxembourg",
   MT:"Malta", CY:"Cyprus", LI:"Liechtenstein", IS:"Iceland", AL:"Albania",
   MK:"North Macedonia", BA:"Bosnia and Herzegovina", ME:"Montenegro", MD:"Moldova",
   AM:"Armenia", GE:"Georgia", AZ:"Azerbaijan",
+  US:"United States", CA:"Canada", AU:"Australia", NZ:"New Zealand",
+  AE:"United Arab Emirates", ZA:"South Africa", TR:"Turkey",
+  MX:"Mexico", BR:"Brazil", CL:"Chile", PE:"Peru",
+  JP:"Japan", KR:"South Korea", CN:"China", TW:"Taiwan",
+  TH:"Thailand", VN:"Vietnam", ID:"Indonesia", MY:"Malaysia", PH:"Philippines",
+  SG:"Singapore", MM:"Myanmar", KH:"Cambodia", LA:"Laos",
+  IN:"India", BD:"Bangladesh", PK:"Pakistan", LK:"Sri Lanka", NP:"Nepal",
+  KZ:"Kazakhstan", UZ:"Uzbekistan", KG:"Kyrgyzstan", TJ:"Tajikistan",
+  TM:"Turkmenistan", MN:"Mongolia", AF:"Afghanistan",
+  IR:"Iran", IQ:"Iraq", SA:"Saudi Arabia", QA:"Qatar", KW:"Kuwait",
+  BH:"Bahrain", OM:"Oman", YE:"Yemen", JO:"Jordan", IL:"Israel", LB:"Lebanon", SY:"Syria",
+  EG:"Egypt", MA:"Morocco", DZ:"Algeria", TN:"Tunisia", LY:"Libya",
+  NG:"Nigeria", GH:"Ghana", SN:"Senegal", CI:"Côte d'Ivoire", CM:"Cameroon",
+  ET:"Ethiopia", KE:"Kenya", TZ:"Tanzania", UG:"Uganda", RW:"Rwanda", SD:"Sudan",
+  CD:"DR Congo", AO:"Angola", MZ:"Mozambique", ZM:"Zambia", ZW:"Zimbabwe",
+  BW:"Botswana", NA:"Namibia", MG:"Madagascar",
+  AR:"Argentina", CO:"Colombia", VE:"Venezuela", EC:"Ecuador", BO:"Bolivia",
+  PY:"Paraguay", UY:"Uruguay", GY:"Guyana",
+  CR:"Costa Rica", PA:"Panama", GT:"Guatemala", HN:"Honduras",
+  SV:"El Salvador", NI:"Nicaragua", CU:"Cuba", JM:"Jamaica",
+  DO:"Dominican Republic", HT:"Haiti", TT:"Trinidad and Tobago",
+  FJ:"Fiji", PG:"Papua New Guinea",
 };
 
 // ---------------------------------------------------------------------------
