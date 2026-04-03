@@ -19,6 +19,12 @@ const COUNTRY_QID: Record<string, string> = {
   CZ: "Q213", US: "Q30",  CA: "Q16",  AU: "Q408", NZ: "Q664",
   AE: "Q878", ZA: "Q258", TR: "Q43",  MX: "Q96",  BR: "Q155",
   CL: "Q298", PE: "Q419",
+  PT: "Q45",  GR: "Q41",  HU: "Q28",  RO: "Q218", HR: "Q224",
+  SK: "Q214", SI: "Q215", LT: "Q37",  LV: "Q211", EE: "Q191",
+  BG: "Q219", RS: "Q403", UA: "Q212", BY: "Q184", LU: "Q32",
+  MT: "Q233", CY: "Q229", LI: "Q347", IS: "Q189", AL: "Q8",
+  MK: "Q221", BA: "Q225", ME: "Q236", MD: "Q217", AM: "Q399",
+  GE: "Q230", AZ: "Q227",
 };
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -28,6 +34,12 @@ const COUNTRY_NAMES: Record<string, string> = {
   CZ:"Czech Republic", US:"United States", CA:"Canada", AU:"Australia",
   NZ:"New Zealand", AE:"United Arab Emirates", ZA:"South Africa", TR:"Turkey",
   MX:"Mexico", BR:"Brazil", CL:"Chile", PE:"Peru",
+  PT:"Portugal", GR:"Greece", HU:"Hungary", RO:"Romania", HR:"Croatia",
+  SK:"Slovakia", SI:"Slovenia", LT:"Lithuania", LV:"Latvia", EE:"Estonia",
+  BG:"Bulgaria", RS:"Serbia", UA:"Ukraine", BY:"Belarus", LU:"Luxembourg",
+  MT:"Malta", CY:"Cyprus", LI:"Liechtenstein", IS:"Iceland", AL:"Albania",
+  MK:"North Macedonia", BA:"Bosnia and Herzegovina", ME:"Montenegro", MD:"Moldova",
+  AM:"Armenia", GE:"Georgia", AZ:"Azerbaijan",
 };
 
 // ---------------------------------------------------------------------------
