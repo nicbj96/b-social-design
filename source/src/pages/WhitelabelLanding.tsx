@@ -8,9 +8,9 @@ import { pageBase } from "@/lib/pageCSSBase";
    ───────────────────────────────────────────── */
 
 const STATS = [
-  { value: "95.000+", label: "Steder i databasen" },
-  { value: "6.400+", label: "Aktive events" },
-  { value: "100+", label: "Lande dækket" },
+  { value: "188.000+", label: "Steder i databasen" },
+  { value: "9.400+", label: "Aktive events" },
+  { value: "144", label: "Lande dækket" },
   { value: "10+", label: "Kategorier" },
 ];
 
@@ -23,7 +23,7 @@ const FEATURES = [
   {
     icon: "🗺️",
     title: "Interaktivt verdenskort",
-    desc: "Live kortvisning med geo-clustering af 95.000+ steder fordelt over hele verden — filtreret efter land, kategori og tags.",
+    desc: "Live kortvisning med geo-clustering af 188.000+ steder fordelt over hele verden — filtreret efter land, kategori og tags.",
   },
   {
     icon: "📡",

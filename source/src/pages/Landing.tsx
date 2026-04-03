@@ -76,10 +76,10 @@ export default function Landing() {
   ];
 
   const categories = [
-    { img: "/concert.jpg", tag: "Musik", title: "Koncerter\n& Festivaler", count: "2.400+ events", route: "/udforsk" },
-    { img: "/sport.jpg", tag: "Sport", title: "Sport\n& Fitness", count: "1.800+ events", route: "/udforsk" },
-    { img: "/dining.jpg", tag: "Mad", title: "Mad\n& Drikke", count: "940+ events", route: "/udforsk" },
-    { img: "/fjord.jpg", tag: "Natur", title: "Natur\n& Eventyr", count: "3.200+ steder", route: "/kort" },
+    { img: "/concert.jpg", tag: "Musik", title: "Koncerter\n& Festivaler", count: "3.800+ events", route: "/udforsk" },
+    { img: "/sport.jpg", tag: "Sport", title: "Sport\n& Fitness", count: "37.000+ steder", route: "/kort" },
+    { img: "/dining.jpg", tag: "Mad", title: "Mad\n& Drikke", count: "11.900+ steder", route: "/kort" },
+    { img: "/fjord.jpg", tag: "Natur", title: "Natur\n& Eventyr", count: "90.500+ steder", route: "/kort" },
   ];
 
   return (
@@ -228,9 +228,9 @@ export default function Landing() {
           </form>
           <p className="lp-cta-note lp-fade-up lp-delay-3">Ingen spam. Afmeld når som helst.</p>
           <div className="lp-trust-row lp-fade-up lp-delay-4">
-            <div className="lp-trust-item"><div className="lp-trust-dot" />95K+ steder</div>
-            <div className="lp-trust-item"><div className="lp-trust-dot" />6.400+ events</div>
-            <div className="lp-trust-item"><div className="lp-trust-dot" />117 lande</div>
+            <div className="lp-trust-item"><div className="lp-trust-dot" />188K+ steder</div>
+            <div className="lp-trust-item"><div className="lp-trust-dot" />9.400+ events</div>
+            <div className="lp-trust-item"><div className="lp-trust-dot" />144 lande</div>
             <div className="lp-trust-item"><div className="lp-trust-dot" />Gratis at bruge</div>
           </div>
         </div>
