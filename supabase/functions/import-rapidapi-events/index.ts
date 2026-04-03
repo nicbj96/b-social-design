@@ -44,9 +44,18 @@ const COUNTRY_CITIES: Record<string, string[]> = {
   SE: ["Stockholm", "Gothenburg", "Malmö", "Uppsala"], NO: ["Oslo", "Bergen", "Trondheim"], FI: ["Helsinki", "Tampere"],
   DE: ["Berlin", "Munich", "Hamburg", "Frankfurt"], NL: ["Amsterdam", "Rotterdam"], BE: ["Brussels", "Antwerp"],
   AT: ["Vienna", "Salzburg"], CH: ["Zurich", "Geneva"], ES: ["Madrid", "Barcelona", "Valencia"], FR: ["Paris", "Lyon", "Nice"],
-  IT: ["Rome", "Milan", "Florence"], GB: ["London", "Manchester", "Edinburgh"], IE: ["Dublin", "Cork"],
-  US: ["New York", "Los Angeles", "Chicago", "San Francisco", "Miami"], CA: ["Toronto", "Vancouver"],
-  AU: ["Sydney", "Melbourne"], NZ: ["Auckland"], AE: ["Dubai"], ZA: ["Cape Town"], TR: ["Istanbul"]
+  IT: ["Rome", "Milan", "Florence", "Naples"], GB: ["London", "Manchester", "Edinburgh", "Birmingham"], IE: ["Dublin", "Cork"],
+  US: ["New York", "Los Angeles", "Chicago", "San Francisco", "Miami", "Seattle", "Austin", "Boston"], CA: ["Toronto", "Vancouver", "Montreal"],
+  AU: ["Sydney", "Melbourne", "Brisbane"], NZ: ["Auckland", "Wellington"], AE: ["Dubai", "Abu Dhabi"], ZA: ["Cape Town", "Johannesburg"], TR: ["Istanbul", "Ankara"],
+  JP: ["Tokyo", "Osaka", "Kyoto"], KR: ["Seoul", "Busan"], CN: ["Beijing", "Shanghai", "Guangzhou"], IN: ["Mumbai", "Delhi", "Bangalore", "Chennai"],
+  TH: ["Bangkok", "Chiang Mai"], VN: ["Hanoi", "Ho Chi Minh City"], ID: ["Jakarta", "Bali"], MY: ["Kuala Lumpur"], SG: ["Singapore"],
+  PH: ["Manila", "Cebu"], TW: ["Taipei"], HK: ["Hong Kong"],
+  BR: ["São Paulo", "Rio de Janeiro", "Brasília"], AR: ["Buenos Aires", "Córdoba"], CL: ["Santiago"], CO: ["Bogotá", "Medellín"],
+  MX: ["Mexico City", "Guadalajara", "Monterrey"], PE: ["Lima"],
+  EG: ["Cairo", "Alexandria"], MA: ["Casablanca", "Marrakech"], NG: ["Lagos", "Abuja"], KE: ["Nairobi"], GH: ["Accra"],
+  IL: ["Tel Aviv", "Jerusalem"], SA: ["Riyadh", "Jeddah"], QA: ["Doha"], KW: ["Kuwait City"],
+  GR: ["Athens", "Thessaloniki"], PT: ["Lisbon", "Porto"], HU: ["Budapest"], RO: ["Bucharest"],
+  PL: ["Warsaw", "Krakow"], CZ: ["Prague"], HR: ["Zagreb", "Split"],
 };
 
 function categorizeEvent(query: string, event: any) {
