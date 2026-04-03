@@ -5,7 +5,7 @@ import { Search, MapPin, ChevronRight, X, Users, Heart, TrendingUp, Star, Loader
 import { useQuery } from "@tanstack/react-query";
 import type { Event } from "@/lib/data";
 import { getEvents } from "@/lib/data";
-import { fetchPlacesWithLimit, type Place } from "@/lib/supabase";
+import { fetchPlaces, type Place } from "@/lib/supabase";
 import { getCategoryEmoji, getEventImage, formatDanishDate } from "@/lib/eventHelpers";
 import { useTags } from "@/context/TagContext";
 import { searchTags, getParentCategories, TAG_TREE } from "@/lib/tagTree";
@@ -79,22 +79,45 @@ const PLACE_CAT_EMOJI: Record<string, string> = {
   natur: "🌿", aktiv_sport: "🏃", mad_hangout: "🍽️", sport: "⚽", kultur: "🎭", musik: "🎵",
   strand: "🏖️", badning: "🏊", hundeskov: "🐕", hund: "🐕", shelter: "⛺", fiskeri: "🎣",
   loeb: "🏃", mtb: "🚵", vandring: "🥾", mad: "🍽️", fitness: "💪", outdoor: "🌲",
-  // Import source categories
   natteliv: "🌙", familie: "🎡", underholdning: "🎡", temapark: "🎢", zoo: "🦁",
   akvarium: "🐟", overnatning: "🏕️", hostel: "🏕️", forlystelse: "🎡",
   logi: "🏕️", rejser: "✈️", wellness: "🧘", communities: "👥", ture: "🥾", aktiv: "🏃",
+  // Old DB category names with spaces
+  "Natur & friluftsliv": "🌿", "Ture & eventyr": "🥾", "Logi & base": "🏕️",
+  "Aktiv & sport": "🏃", "Oplevelser & kultur": "🎭",
+  // Event categories
+  arrangement: "📅", "Musik & Koncerter": "🎵", "Kultur & Kunst": "🎭",
+};
+
+// Maps filter key → actual DB main_categories values (some have aliases/old names)
+const CAT_ALIASES: Record<string, string[]> = {
+  aktiv_sport: ["aktiv_sport", "Aktiv & sport", "sport"],
+  natur:       ["natur", "Natur & friluftsliv"],
+  mad:         ["mad_hangout", "mad"],
+  kultur:      ["kultur", "Oplevelser & kultur", "underholdning"],
+  logi:        ["logi", "overnatning", "Logi & base"],
+  ture:        ["ture", "Ture & eventyr"],
+  familie:     ["familie", "temapark", "zoo", "akvarium", "forlystelse"],
+  natteliv:    ["natteliv", "klub", "bar"],
+  wellness:    ["wellness"],
+  rejser:      ["rejser", "transport"],
 };
 
 const DB_FILTERS: { key: string | null; label: string; emoji: string }[] = [
-  { key: null, label: "Alle", emoji: "✨" },
-  { key: "natur", label: "Natur", emoji: "🌿" },
-  { key: "strand", label: "Strand", emoji: "🏖️" },
-  { key: "musik", label: "Musik", emoji: "🎵" },
-  { key: "aktiv_sport", label: "Aktivt", emoji: "🏃" },
-  { key: "hundeskov", label: "Hundeskov", emoji: "🐕" },
-  { key: "sport", label: "Sport", emoji: "🏃" },
-  { key: "kultur", label: "Kultur", emoji: "🎭" },
-  { key: "mad", label: "Mad", emoji: "🍽️" },
+  { key: null,          label: "Alle",      emoji: "✨" },
+  { key: "natur",       label: "Natur",     emoji: "🌿" },
+  { key: "aktiv_sport", label: "Sport",     emoji: "🏃" },
+  { key: "kultur",      label: "Kultur",    emoji: "🎭" },
+  { key: "mad",         label: "Mad",       emoji: "🍽️" },
+  { key: "musik",       label: "Musik",     emoji: "🎵" },
+  { key: "natteliv",    label: "Natteliv",  emoji: "🌙" },
+  { key: "familie",     label: "Familie",   emoji: "🎡" },
+  { key: "logi",        label: "Logi",      emoji: "🏕️" },
+  { key: "ture",        label: "Ture",      emoji: "🥾" },
+  { key: "wellness",    label: "Wellness",  emoji: "🧘" },
+  { key: "rejser",      label: "Rejser",    emoji: "✈️" },
+  { key: "strand",      label: "Strand",    emoji: "🏖️" },
+  { key: "hundeskov",   label: "Hundeskov", emoji: "🐕" },
 ];
 
 /* Chip colors matching the mockup exactly */
@@ -126,36 +149,33 @@ const CAT_COLORS: Record<string, string> = {
 function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   const { t } = useTranslation();
   const [dbFilter, setDbFilter] = useState<string | null>(null);
+
+  // Resolve country to single code or undefined (regions handled client-side)
+  const singleCountry = useMemo(() => {
+    if (!activeCountry || activeCountry === 'ALL' || activeCountry === 'EUROPE' ||
+        activeCountry === 'ASIA' || activeCountry === 'AMERICAS' || activeCountry === 'AFRICA') return undefined;
+    return activeCountry;
+  }, [activeCountry]);
+
+  // Server-side filter: fetch by category when filter is active
   const { data: places, isLoading } = useQuery<Place[]>({
-    queryKey: ["supabase-places-50"],
-    queryFn: () => fetchPlacesWithLimit(50),
+    queryKey: ["supabase-places", dbFilter, singleCountry],
+    queryFn: () => {
+      const cats = dbFilter ? (CAT_ALIASES[dbFilter] || [dbFilter]) : undefined;
+      return fetchPlaces({ categories: cats, country: singleCountry, limit: 60 });
+    },
     staleTime: 30 * 60 * 1000,
   });
 
   const filteredPlaces = useMemo(() => {
     if (!places) return [];
-    let countryFiltered = places;
-    if (activeCountry === 'ALL') {
-      countryFiltered = places;
-    } else if (activeCountry === 'EUROPE') {
-      countryFiltered = places.filter(p => EUROPE_CODES.includes(p.country));
-    } else if (activeCountry === 'ASIA') {
-      countryFiltered = places.filter(p => ASIA_CODES.includes(p.country));
-    } else if (activeCountry === 'AMERICAS') {
-      countryFiltered = places.filter(p => AMERICAS_CODES.includes(p.country));
-    } else if (activeCountry === 'AFRICA') {
-      countryFiltered = places.filter(p => AFRICA_CODES.includes(p.country));
-    } else {
-      countryFiltered = places.filter(p => p.country === activeCountry);
-    }
-    if (!dbFilter) return countryFiltered;
-    return countryFiltered.filter(p => {
-      const cats = (p.main_categories || []).map(c => c.toLowerCase());
-      const tags = (p.tags || []).map(tag => tag.toLowerCase());
-      const all = [...cats, ...tags];
-      return all.some(item => item.includes(dbFilter));
-    });
-  }, [places, dbFilter, activeCountry]);
+    if (activeCountry === 'ALL') return places;
+    if (activeCountry === 'EUROPE')   return places.filter(p => EUROPE_CODES.includes(p.country));
+    if (activeCountry === 'ASIA')     return places.filter(p => ASIA_CODES.includes(p.country));
+    if (activeCountry === 'AMERICAS') return places.filter(p => AMERICAS_CODES.includes(p.country));
+    if (activeCountry === 'AFRICA')   return places.filter(p => AFRICA_CODES.includes(p.country));
+    return places;
+  }, [places, activeCountry]);
 
   if (isLoading) return (
     <section className="ud-places-section">

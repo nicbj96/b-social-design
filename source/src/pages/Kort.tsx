@@ -142,6 +142,12 @@ const SUPABASE_CAT_MAP: Record<string, PinCategory> = {
   underholdning: "kultur", forlystelse: "kultur", zoo: "aktiv_sport", akvarium: "aktiv_sport",
   familie: "aktiv_sport", temapark: "aktiv_sport",
   overnatning: "logi", hostel: "logi",
+  // Old DB category names with spaces (legacy from early imports)
+  "Natur & friluftsliv": "natur",
+  "Ture & eventyr": "ture",
+  "Logi & base": "logi",
+  "Aktiv & sport": "aktiv_sport",
+  "Oplevelser & kultur": "kultur",
 };
 
 function placeToPin(place: Place): MapPin | null {

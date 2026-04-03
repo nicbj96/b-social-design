@@ -835,6 +835,23 @@ const CATEGORY_TAG_MAP: Record<string, string[]> = {
   tech: ["tech", "programmering", "ai", "gaming", "drone", "3d-print", "hackathon"],
 };
 
+/** Maps category page keys → actual DB main_categories values (including legacy names) */
+const CATEGORY_DB_MAP: Record<string, string[]> = {
+  natur:       ["natur", "Natur & friluftsliv"],
+  aktiv_sport: ["aktiv_sport", "Aktiv & sport", "sport"],
+  aktiv:       ["aktiv_sport", "Aktiv & sport", "sport"],
+  mad:         ["mad_hangout", "mad"],
+  kultur:      ["kultur", "Oplevelser & kultur", "underholdning"],
+  logi:        ["logi", "overnatning", "Logi & base"],
+  ture:        ["ture", "Ture & eventyr"],
+  familie:     ["familie", "temapark", "zoo", "akvarium", "forlystelse"],
+  natteliv:    ["natteliv", "klub", "bar"],
+  wellness:    ["wellness"],
+  rejser:      ["rejser", "transport"],
+  sport:       ["aktiv_sport", "Aktiv & sport", "sport"],
+  musik:       ["kultur", "Oplevelser & kultur", "underholdning"],
+};
+
 /** Get all tag-tree tags relevant to a category */
 function getCategoryRelatedTags(categoryKey: string, tagTree: any): string[] {
   const base = CATEGORY_TAG_MAP[categoryKey] || [];
@@ -1186,7 +1203,12 @@ export default function CategoryDetail() {
 
   /* ── Data sources ── */
   const { data: allJsonEvents } = useQuery<Event[]>({ queryKey: ["events"], queryFn: () => Promise.resolve(getEvents()), staleTime: 2 * 60 * 1000 });
-  const { data: supabasePlaces } = useQuery<Place[]>({ queryKey: ["supabase-places-500"], queryFn: () => fetchPlaces({ limit: 500 }), staleTime: 30 * 60 * 1000 });
+  const categoryDbCats = CATEGORY_DB_MAP[category] || [];
+  const { data: supabasePlaces } = useQuery<Place[]>({
+    queryKey: ["supabase-places-cat", category],
+    queryFn: () => fetchPlaces({ categories: categoryDbCats.length ? categoryDbCats : undefined, limit: 500 }),
+    staleTime: 30 * 60 * 1000,
+  });
   const { data: supabaseEvents } = useQuery({ queryKey: ["supabase-events"], queryFn: fetchSupabaseEvents, staleTime: 2 * 60 * 1000 });
 
   /* ── Smart suggestions from tag tree ── */
