@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2, Bot, User, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/context/AuthContext";
+import { useTags } from "@/context/TagContext";
 
 const CHAT_API = "https://rbengtfrthqdfbcdcugp.supabase.co/functions/v1/ai-chat";
 
@@ -8,6 +10,22 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   sentToTeam?: boolean;
+}
+
+function parsePageContext(path: string): { pageType: string; entityId?: string } {
+  const eventMatch = path.match(/^\/event\/(.+)/);
+  if (eventMatch) return { pageType: "event", entityId: eventMatch[1] };
+  const stedMatch = path.match(/^\/sted\/(.+)/);
+  if (stedMatch) return { pageType: "place", entityId: stedMatch[1] };
+  const catMatch = path.match(/^\/kategori\/(.+)/);
+  if (catMatch) return { pageType: "category", entityId: decodeURIComponent(catMatch[1]) };
+  const knownPages: Record<string, string> = {
+    "/feed": "feed", "/udforsk": "explore", "/kort": "map",
+    "/kalender": "calendar", "/min-side": "profile", "/beskeder": "messages",
+    "/notifikationer": "notifications", "/overblik": "overview",
+    "/indstillinger": "settings",
+  };
+  return { pageType: knownPages[path] || "other" };
 }
 
 export default function AIChatWidget() {
@@ -18,6 +36,8 @@ export default function AIChatWidget() {
   const [location] = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { profile, session } = useAuth();
+  const { selectedTags, lifeMode, priceTier, city, radius } = useTags();
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -50,13 +70,41 @@ export default function AIChatWidget() {
     setLoading(true);
 
     try {
+      const pageCtx = parsePageContext(location);
       const resp = await fetch(CHAT_API, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
         body: JSON.stringify({
           message: text,
           history: messages.slice(-10),
           page: location,
+          pageType: pageCtx.pageType,
+          entityId: pageCtx.entityId,
+          userContext: profile
+            ? {
+                name: profile.name,
+                city: profile.city,
+                radius_km: profile.radius_km,
+                interests: profile.interests,
+                vibe_tags: profile.vibe_tags,
+                discovery_mode: profile.discovery_mode,
+                experience_mode: profile.experience_mode,
+                energy_level: profile.energy_level,
+                role: profile.role,
+              }
+            : null,
+          tagContext: {
+            selectedTags,
+            lifeMode,
+            priceTier,
+            city,
+            radius,
+          },
         }),
       });
 
@@ -76,6 +124,9 @@ export default function AIChatWidget() {
       setLoading(false);
     }
   }
+
+  // Hide on Beskeder page — has its own chat UI
+  if (location === "/beskeder") return null;
 
   // Floating button (hidden when chat is open)
   if (!open) {
@@ -131,7 +182,10 @@ export default function AIChatWidget() {
                 Jeg er B-Social's AI-assistent. Spørg mig om events, steder, eller hvordan platformen virker.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                {["Find events i dag", "Hvad er B-Social?", "Hjælp med firma-konto"].map(q => (
+                {(profile
+                  ? [`Events i ${profile.city || "nærheden"}`, "Hvad passer til mine interesser?", "Anbefal et sted"]
+                  : ["Find events i dag", "Hvad er B-Social?", "Hjælp med at komme i gang"]
+                ).map(q => (
                   <button
                     key={q}
                     onClick={() => { setInput(q); }}

@@ -1084,30 +1084,9 @@ ${pageBase("bk")}
   10%, 90% { opacity: 1; }
 }
 
-/* ── Mobile bottom channel button ── */
+/* ── Mobile bottom channel button — hidden, channels always open on mobile ── */
 .bk-mobile-channel-btn {
-  display: none;
-}
-@media (max-width: 767px) {
-  .bk-mobile-channel-btn {
-    display: flex;
-    position: fixed;
-    bottom: 80px;
-    left: 16px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--teal);
-    color: var(--bg);
-    border: none;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 16px rgba(78,205,196,0.3);
-    z-index: 50;
-    transition: transform 0.2s;
-  }
-  .bk-mobile-channel-btn:hover { transform: scale(1.05); }
+  display: none !important;
 }
 .bk-mobile-close {
   display: none;
@@ -1974,7 +1953,7 @@ export default function Beskeder() {
               {/* Chat header — Discord style */}
               <div className="bk-chat-header">
                 <div className="bk-chat-header-left">
-                  <button onClick={() => setActiveConvoId(null)} className="bk-back-btn">
+                  <button onClick={() => { setActiveConvoId(null); if (window.innerWidth < 768) setMobileChannelsOpen(true); }} className="bk-back-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
                   <Hash size={18} className="bk-chat-channel-icon" />
