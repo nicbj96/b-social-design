@@ -118,6 +118,7 @@ export async function fetchPlaces(options?: {
   let query = supabase
     .from("places")
     .select("*")
+    .order("quality_score", { ascending: false, nullsFirst: false })
     .order("rating_avg", { ascending: false, nullsFirst: false });
 
   // Geographic bounding box filter (most efficient for map views)
@@ -214,13 +215,14 @@ export async function fetchPlacesInViewport(bounds: MapBounds, country?: string,
 
   let query = supabase
     .from("places")
-    .select("id,name,latitude,longitude,city,country,main_categories,tags,rating_avg")
+    .select("id,name,latitude,longitude,city,country,main_categories,tags,rating_avg,quality_score")
     .not("latitude", "is", null)
     .not("longitude", "is", null)
     .gte("latitude", bounds.south)
     .lte("latitude", bounds.north)
     .gte("longitude", bounds.west)
     .lte("longitude", bounds.east)
+    .order("quality_score", { ascending: false, nullsFirst: false })
     .order("rating_avg", { ascending: false, nullsFirst: false })
     .limit(limit);
 
@@ -242,9 +244,10 @@ export async function fetchAllPlacesForMap(country?: string): Promise<Place[]> {
   while (true) {
     let query = supabase
       .from("places")
-      .select("id,name,latitude,longitude,city,country,main_categories,tags,rating_avg")
+      .select("id,name,latitude,longitude,city,country,main_categories,tags,rating_avg,quality_score")
       .not("latitude", "is", null)
-      .not("longitude", "is", null);
+      .not("longitude", "is", null)
+      .order("quality_score", { ascending: false, nullsFirst: false });
     if (country && country !== 'ALL') {
       query = query.eq("country", country);
     }
@@ -262,7 +265,8 @@ export async function fetchPlacesWithLimit(limit = 50): Promise<Place[]> {
   const { data, error } = await supabase
     .from("places")
     .select("*")
-    .order("rating_avg", { ascending: false })
+    .order("quality_score", { ascending: false, nullsFirst: false })
+    .order("rating_avg", { ascending: false, nullsFirst: false })
     .limit(limit);
   if (error) { console.error("fetchPlacesWithLimit error:", error); return []; }
   return data || [];
