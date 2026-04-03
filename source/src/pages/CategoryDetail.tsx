@@ -813,9 +813,10 @@ const CATEGORY_TAG_MAP: Record<string, string[]> = {
   // 10 låste kategorier
   events: ["festival", "koncert", "stand-up", "quiz", "loppemarked", "julemarked", "fællesspisning", "netværk", "singles", "frivilligt"],
   logi: ["shelter", "camping", "vandrerhjem", "hytter", "glamping", "bål", "overnatning"],
-  ture: ["vandring", "cykling", "mtb", "kajak", "sup", "geocaching", "orienteringsløb", "overlevelse", "bushcraft", "gåtur"],
+  ture: ["vandring", "cykling", "mtb", "kajak", "sup", "geocaching", "orienteringsløb", "overlevelse", "bushcraft", "gåtur", "ridning", "ski", "snowboard", "singletrack", "trail", "piste", "skating", "inline skating", "HIKING", "CYCLING", "MTB", "RIDNING", "SKI", "SKATING", "RUTE"],
   natur: ["natur", "skov", "strand", "nationalpark", "fiskeri", "fuglekiggeri", "hundeskov", "dyrespotting", "badning", "svampejagt", "naturlegeplads"],
-  aktiv: ["cykling", "løb", "fodbold", "svømning", "fitness", "kampsport", "klatring", "tennis", "dans", "crossfit", "calisthenics", "hiit", "basketball", "golf", "ridning"],
+  aktiv: ["cykling", "løb", "fodbold", "svømning", "fitness", "kampsport", "klatring", "tennis", "dans", "crossfit", "calisthenics", "hiit", "basketball", "golf", "ridning", "mtb", "mountainbike", "gravel", "skiing", "snowboard", "trail running", "atletik", "udendørs fitness"],
+  aktiv_sport: ["cykling", "løb", "vandring", "hiking", "mtb", "mountainbike", "singletrack", "trail", "gravel", "cykelrute", "ski", "piste", "snowboard", "vinter sport", "ridning", "horse riding", "hest", "ryttersti", "skating", "skøjteløb", "inline skating", "fitness", "klatring", "atletik", "løbebane", "svømning", "pool", "udendørs fitness", "calisthenics", "bmx", "velodrome", "AKTIV_SPORT", "HIKING", "CYCLING", "MTB", "SKI", "RIDNING", "SKATING", "FITNESS", "LØB", "RUTE"],
   mad: ["mad", "madlavning", "streetfood", "sushi", "grillaften", "vinsmagning", "ølsmagning", "kaffe", "restaurant", "cafe", "bar", "foodmarket"],
   kultur: ["kunst", "maleri", "galleri", "museum", "teater", "stand-up", "impro", "poesi", "keramik", "koncert", "musik", "fotografering", "film", "kreativt"],
   rejser: ["tog", "samkørsel", "cykelruter", "færge", "roadtrip", "flydeals", "transport", "rejse", "bus", "metro"],

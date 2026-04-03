@@ -187,6 +187,46 @@ const CATEGORY_GROUPS: CategoryGroup[] = [
     smart_tags: ["NATUR", "STRAND", "SO"],
     limit: 300,
   },
+  {
+    label: "running_venues",
+    types: ["Q5104209", "Q82414", "Q2997369"], // running track, athletics stadium, athletics facility
+    main_categories: ["aktiv_sport"],
+    tags: ["løb", "atletik", "løbebane", "track"],
+    smart_tags: ["AKTIV_SPORT", "LØB", "ATLETIK"],
+    limit: 200,
+  },
+  {
+    label: "outdoor_fitness",
+    types: ["Q2992592", "Q1373128"], // outdoor gym, fitness trail/parcours
+    main_categories: ["aktiv_sport"],
+    tags: ["udendørs fitness", "calisthenics", "fitness", "outdoor gym"],
+    smart_tags: ["AKTIV_SPORT", "FITNESS", "UDENDØRS"],
+    limit: 300,
+  },
+  {
+    label: "cycling_venues",
+    types: ["Q33218", "Q1060534"], // velodrome, BMX track
+    main_categories: ["aktiv_sport"],
+    tags: ["cykling", "velodrome", "bmx", "banecykling"],
+    smart_tags: ["AKTIV_SPORT", "CYCLING"],
+    limit: 150,
+  },
+  {
+    label: "swimming_venues",
+    types: ["Q1501201", "Q14202586", "Q16570"], // swimming pool, outdoor pool, aquatics centre
+    main_categories: ["aktiv_sport"],
+    tags: ["svømning", "pool", "svømmecenter", "friluftsbad"],
+    smart_tags: ["AKTIV_SPORT", "SVØMNING"],
+    limit: 300,
+  },
+  {
+    label: "ski_resorts",
+    types: ["Q1218195", "Q695850"], // ski resort, alpine ski area
+    main_categories: ["aktiv_sport"],
+    tags: ["ski", "piste", "snowboard", "vinter sport", "skiresort"],
+    smart_tags: ["AKTIV_SPORT", "SKI", "WINTER"],
+    limit: 200,
+  },
 ];
 
 // ---------------------------------------------------------------------------
