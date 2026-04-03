@@ -1181,8 +1181,8 @@ export default function Beskeder() {
   // Chat menu
   const [showChatMenu, setShowChatMenu] = useState(false);
 
-  // Mobile channel sidebar toggle
-  const [mobileChannelsOpen, setMobileChannelsOpen] = useState(false);
+  // Mobile channel sidebar toggle — open by default on mobile
+  const [mobileChannelsOpen, setMobileChannelsOpen] = useState(() => window.innerWidth < 768);
 
   // WebRTC calls
   const [isVideoCall, setIsVideoCall] = useState(false);
@@ -2272,7 +2272,7 @@ export default function Beskeder() {
             <div
               key={convo.id}
               className="bk-member-item"
-              onClick={() => setActiveConvoId(convo.id)}
+              onClick={() => { setActiveConvoId(convo.id); setMobileChannelsOpen(false); }}
             >
               <div className="bk-member-avatar-wrap">
                 <img
