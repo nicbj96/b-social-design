@@ -14,7 +14,6 @@ import type { SocialActivity } from "@/data/feedData";
 import { ALL_PINS } from "@/data/kortPins";
 import { ALL_CATEGORIES } from "@/data/categories";
 import type { Category } from "@/data/categories";
-import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 
 /* ─────────────────────────────────────────────
@@ -201,7 +200,7 @@ export default function Udforsk() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeCountry, setActiveCountry] = useState<string>('EUROPE');
   const searchRef = useRef<HTMLInputElement>(null);
-  const containerRef = useFadeUp("ud");
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 250);
@@ -267,7 +266,7 @@ export default function Udforsk() {
       <style>{udforskCSS}</style>
 
       {/* ── HERO COVER ── */}
-      <div className="ud-hero ud-fade-up">
+      <div className="ud-hero">
         <img
           src="https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=1400&auto=format&fit=crop"
           alt="Copenhagen skyline"
@@ -282,7 +281,7 @@ export default function Udforsk() {
 
       {/* ── SEARCH (click to expand) ── */}
       {showSearch && (
-        <div className="ud-search-wrap ud-fade-up">
+        <div className="ud-search-wrap">
           <div className="ud-search-bar">
             <Search size={16} className="ud-search-icon" />
             <input
@@ -425,7 +424,7 @@ export default function Udforsk() {
         <div className="ud-bento">
 
           {activeCategory && (
-            <div className="ud-active-cat ud-fade-up" style={{ gridColumn: '1 / -1' }}>
+            <div className="ud-active-cat" style={{ gridColumn: '1 / -1' }}>
               <span>{getCategoryEmoji(activeCategory)} {t('events.showing', {category: activeCategory})}</span>
               <button onClick={() => setActiveCategory(null)}>{t('events.show_all')}</button>
             </div>
@@ -433,7 +432,7 @@ export default function Udforsk() {
 
           {/* ──── ROW 1: Featured Event + Right sidebar ──── */}
           {featuredEvent && (
-            <Link href={`/event/${featuredEvent.id}`} className="ud-feat ud-fade-up">
+            <Link href={`/event/${featuredEvent.id}`} className="ud-feat">
               {/* Inset image with rounded corners */}
               <div className="ud-feat-thumb">
                 <img src={getEventImage(featuredEvent)} alt={featuredEvent.title} className="ud-feat-thumb-img" loading="lazy" />
@@ -475,7 +474,7 @@ export default function Udforsk() {
 
           <div className="ud-sidebar">
             {/* Trending kategorier */}
-            <div className="ud-card ud-fade-up ud-d1">
+            <div className="ud-card">
               <h3 className="ud-card-title">Trending kategorier</h3>
               <div className="ud-trend-chips">
                 {ALL_CATEGORIES.slice(0, 10).map((cat) => {
@@ -496,7 +495,7 @@ export default function Udforsk() {
             </div>
 
             {/* Venner deltager */}
-            <div className="ud-card ud-friends-card ud-fade-up ud-d2">
+            <div className="ud-card ud-friends-card">
               <h3 className="ud-card-title">Venner deltager</h3>
               <div className="ud-friends">
                 <div className="ud-friends-avatars">
@@ -511,7 +510,7 @@ export default function Udforsk() {
           </div>
 
           {/* ──── ROW 2: Populært + Redaktørens valg ──── */}
-          <div className="ud-card ud-pop ud-fade-up ud-d2">
+          <div className="ud-card ud-pop">
             <h3 className="ud-card-title">Populært lige nu</h3>
             <div className="ud-pop-mosaic">
               {popular.slice(0, 5).map((e, i) => (
@@ -524,7 +523,7 @@ export default function Udforsk() {
             </div>
           </div>
 
-          <div className="ud-card ud-editor ud-fade-up ud-d3">
+          <div className="ud-card ud-editor">
             <h3 className="ud-card-title">
               <Star size={13} className="ud-teal-icon" /> Redaktørens valg
             </h3>
@@ -540,7 +539,7 @@ export default function Udforsk() {
           </div>
 
           {/* ──── ROW 3: Country filter + Places ──── */}
-          <div className="ud-full ud-fade-up ud-d3">
+          <div className="ud-full">
             <div className="ud-chip-scroll">
               {COUNTRY_CHIP_ORDER.map((code) => {
                 const region = REGIONS[code];
@@ -556,7 +555,7 @@ export default function Udforsk() {
             </div>
           </div>
 
-          <div className="ud-full ud-fade-up ud-d3">
+          <div className="ud-full">
             <SupabasePlacesSection activeCountry={activeCountry} />
           </div>
 
@@ -586,7 +585,7 @@ export default function Udforsk() {
 const udforskCSS = `
 ${pageBase("ud")}
 
-.ud-root { position: relative; padding-bottom: 96px; }
+.ud-root { position: relative; padding-bottom: 96px; opacity: 1 !important; animation: none !important; }
 
 /* ═══════════════════════════════════════════
    HERO — panoramic cover with glass frame
