@@ -915,6 +915,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const startTime = Date.now();
+  function isTimedOut() { return Date.now() - startTime > 55_000; }
   const results: ImportResult[] = [];
   const globalErrors: string[] = [];
 
@@ -922,7 +923,6 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const ticketmasterKey = Deno.env.get("TICKETMASTER_API_KEY") ?? "";
-    // Fall back to hardcoded defaults when env vars are not set in Supabase secrets
     const openAgendaKey = Deno.env.get("OPENAGENDA_KEY") ?? "95cdf9a694424435a29025dbf4e66b92";
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -933,12 +933,24 @@ Deno.serve(async (req: Request) => {
       auth: { persistSession: false },
     });
 
-    // Parse optional ?country=XX query param
+    // Accept country list from query param, body, or default to ALL_COUNTRIES
     const reqUrl = new URL(req.url);
     const countryParam = reqUrl.searchParams.get("country");
+    let body: any = {};
+    try { body = await req.json(); } catch { /* no body */ }
     const countriesToImport = countryParam
       ? [countryParam.toUpperCase()]
-      : ALL_COUNTRIES;
+      : (body.countries ?? ALL_COUNTRIES);
+
+    // Log run start
+    const runId = crypto.randomUUID();
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/import_runs`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json","apikey":supabaseServiceKey,"Authorization":`Bearer ${supabaseServiceKey}`,"Prefer":"return=minimal"},
+        body: JSON.stringify({id:runId,function_name:"import-events",started_at:new Date().toISOString(),status:"running"}),
+      });
+    } catch { /* non-fatal */ }
 
     let ticketmasterUsed = false;
     let ticketmasterFailed = false;
@@ -1056,6 +1068,14 @@ Deno.serve(async (req: Request) => {
     console.log(
       `[import-events] Done: ${totalInserted} inserted, ${totalSkipped} skipped in ${durationMs}ms`
     );
+
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/import_runs?id=eq.${runId}`, {
+        method:"PATCH",
+        headers:{"Content-Type":"application/json","apikey":supabaseServiceKey,"Authorization":`Bearer ${supabaseServiceKey}`,"Prefer":"return=minimal"},
+        body: JSON.stringify({completed_at:new Date().toISOString(),status:"completed",fetched_count:totalFetched,inserted_count:totalInserted,skipped_count:totalSkipped,error_count:globalErrors.length,errors:globalErrors.length>0?globalErrors:null}),
+      });
+    } catch { /* non-fatal */ }
 
     return new Response(
       JSON.stringify({
