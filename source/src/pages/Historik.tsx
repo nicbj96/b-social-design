@@ -1,6 +1,6 @@
-import { MapPin } from "lucide-react";
+import { useRef, useState } from "react";
+import { MapPin, Calendar, Music, Star } from "lucide-react";
 import { useTranslation } from 'react-i18next';
-import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 
 
@@ -9,165 +9,237 @@ interface HistoryEvent {
   title: string;
   emoji: string;
   location: string;
-  month: string;
-  type: "deltog" | "arrangerede" | "ambassadør";
-  people: number;
+  date: string;
+  category: string;
+  image: string;
+  span?: "tall" | "wide";
 }
 
-const HISTORY: { period: string; events: HistoryEvent[] }[] = [
-  {
-    period: "Marts 2026",
-    events: [
-      { id: "h1", title: "Gåtur langs havnen", emoji: "🚶", location: "Havnefronten", month: "mar", type: "deltog", people: 5 },
-      { id: "h2", title: "Brætspil-aften", emoji: "🎲", location: "Vestbyen", month: "mar", type: "deltog", people: 6 },
-      { id: "h3", title: "Fodbold 5-mands", emoji: "⚽", location: "Kildeparken", month: "mar", type: "deltog", people: 5 },
-      { id: "h4", title: "Kaffe og snak", emoji: "☕", location: "Aalborg C", month: "mar", type: "deltog", people: 2 },
-    ],
-  },
-  {
-    period: "Februar 2026",
-    events: [
-      { id: "h5", title: "Løbetur 5 km", emoji: "🏃", location: "Aalborg Øst", month: "feb", type: "deltog", people: 4 },
-      { id: "h6", title: "Fællesspisning", emoji: "🍲", location: "Vestbyen", month: "feb", type: "arrangerede", people: 8 },
-      { id: "h7", title: "Cykeltur til Nibe", emoji: "🚴", location: "Aalborg → Nibe", month: "feb", type: "deltog", people: 3 },
-    ],
-  },
-  {
-    period: "Januar 2026",
-    events: [
-      { id: "h8", title: "Brætspil — Catan marathon", emoji: "🎲", location: "Vestbyen", month: "jan", type: "arrangerede", people: 4 },
-      { id: "h9", title: "Gåtur i Rold Skov", emoji: "🌲", location: "Rold Skov", month: "jan", type: "deltog", people: 6 },
-    ],
-  },
-  {
-    period: "December 2025",
-    events: [
-      { id: "h10", title: "Julefrokost med nye venner", emoji: "🎄", location: "Aalborg C", month: "dec", type: "arrangerede", people: 12 },
-      { id: "h11", title: "Nytårsløb 3 km", emoji: "🏃", location: "Kildeparken", month: "dec", type: "ambassadør", people: 15 },
-    ],
-  },
+const EVENTS: HistoryEvent[] = [
+  { id: "h1", title: "Roskilde Festival '25", emoji: "🎵", location: "Roskilde Dyrskueplads", date: "28 Jun 2025", category: "Musik", image: "/historik/roskilde.jpg", span: "tall" },
+  { id: "h2", title: "Gåtur langs havnen", emoji: "🚶", location: "Havnefronten, Aalborg", date: "15 Mar 2026", category: "Sport", image: "/historik/havn.jpg" },
+  { id: "h3", title: "Brætspil-aften", emoji: "🎲", location: "Vestbyen, Aalborg", date: "12 Mar 2026", category: "Kultur", image: "/historik/braetspil.jpg" },
+  { id: "h4", title: "Fællesspisning", emoji: "🍲", location: "Vestbyen, Aalborg", date: "20 Feb 2026", category: "Mad & Drikke", image: "/historik/spisning.jpg", span: "wide" },
+  { id: "h5", title: "Koncert i Royal Arena", emoji: "🎤", location: "København", date: "12 Jan 2026", category: "Musik", image: "/historik/koncert.jpg" },
+  { id: "h6", title: "Cykeltur til Nibe", emoji: "🚴", location: "Aalborg → Nibe", date: "08 Feb 2026", category: "Sport", image: "/historik/cykel.jpg", span: "tall" },
+  { id: "h7", title: "Julefrokost med venner", emoji: "🎄", location: "Aalborg C", date: "18 Dec 2025", category: "Mad & Drikke", image: "/historik/julefrokost.jpg" },
+  { id: "h8", title: "Løbetur i Kildeparken", emoji: "🏃", location: "Kildeparken", date: "05 Jan 2026", category: "Sport", image: "/historik/loeb.jpg" },
+  { id: "h9", title: "Nytårsløb 3 km", emoji: "🎆", location: "Kildeparken", date: "31 Dec 2025", category: "Sport", image: "/historik/nytaar.jpg", span: "wide" },
+  { id: "h10", title: "Gåtur i Rold Skov", emoji: "🌲", location: "Rold Skov", date: "20 Jan 2026", category: "Rejser", image: "/historik/rold.jpg" },
+  { id: "h11", title: "Kaffe og snak", emoji: "☕", location: "Aalborg C", date: "28 Mar 2026", category: "Mad & Drikke", image: "/historik/kaffe.jpg" },
+  { id: "h12", title: "Fodbold 5-mands", emoji: "⚽", location: "Kildeparken", date: "22 Mar 2026", category: "Sport", image: "/historik/fodbold.jpg" },
 ];
 
-const TYPE_BADGE: Record<string, { color: string; bgAlpha: string; labelKey: string }> = {
-  deltog:      { color: "var(--teal)",      bgAlpha: "rgba(78,205,196,0.15)",  labelKey: "history.badge_attended" },
-  arrangerede: { color: "#60a5fa",          bgAlpha: "rgba(96,165,250,0.15)",  labelKey: "history.badge_organized" },
-  ambassadør:  { color: "#fbbf24",          bgAlpha: "rgba(251,191,36,0.15)",  labelKey: "history.badge_ambassador" },
-};
+const YEARS = ["2024", "2025", "2026"];
+const CATEGORIES = ["Musik", "Rejser", "Mad & Drikke", "Kultur", "Sport"];
 
 /* ── Scoped CSS ── */
 const historikCSS = `
 ${pageBase("hi")}
 
-/* ── Content wrapper ── */
-.hi-content {
-  position: relative; z-index: 1;
-  padding: 0 20px 96px;
-  display: flex; flex-direction: column; gap: 28px;
+/* ── Header ── */
+.hi-header {
+  padding: 32px 20px 0;
 }
-
-/* ── Timeline ── */
-.hi-timeline-group {
-  display: flex; flex-direction: column; gap: 0;
-}
-.hi-period-header {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 14px;
-}
-.hi-period-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--teal);
-  box-shadow: 0 0 12px var(--teal-glow);
-  flex-shrink: 0;
-}
-.hi-period-label {
-  font-family: var(--sans);
-  font-size: 14px; font-weight: 600;
+.hi-title {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 400;
   color: var(--pg-white);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
 }
-.hi-period-count {
-  font-size: 12px; color: var(--pg-white-muted);
-}
-
-/* ── Timeline rail ── */
-.hi-rail {
-  margin-left: 4px;
-  padding-left: 22px;
-  border-left: 2px solid rgba(78,205,196,0.2);
-  display: flex; flex-direction: column; gap: 10px;
-  position: relative;
+.hi-subtitle {
+  font-size: 14px;
+  color: var(--teal);
+  font-weight: 500;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
 }
 
-/* ── Event card ── */
-.hi-event {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 16px;
-  position: relative;
-}
-.hi-event::before {
-  content: '';
-  position: absolute;
-  left: -28px; top: 50%;
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: rgba(6,10,15,0.9);
-  border: 2px solid rgba(78,205,196,0.4);
-  transform: translateY(-50%);
-}
-.hi-event:hover::before {
-  background: var(--teal);
-  border-color: var(--teal);
-  box-shadow: 0 0 10px var(--teal-glow);
-}
-.hi-emoji-box {
-  width: 44px; height: 44px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.05);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-.hi-event-body {
-  flex: 1; min-width: 0;
-}
-.hi-event-top {
-  display: flex; align-items: center; gap: 8px;
+/* ── Filters ── */
+.hi-filters {
+  padding: 20px 20px 0;
+  display: flex;
   flex-wrap: wrap;
-  margin-bottom: 3px;
+  gap: 8px;
+  align-items: center;
 }
-.hi-event-title {
-  font-size: 14px; font-weight: 600;
+.hi-filter-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255,255,255,0.1);
+  margin: 0 6px;
+}
+.hi-pill {
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-family: var(--sans);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: var(--pg-white-dim);
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.hi-pill:hover {
+  border-color: rgba(78,205,196,0.4);
   color: var(--pg-white);
 }
-.hi-badge {
-  padding: 2px 8px;
-  border-radius: 100px;
-  font-size: 11px; font-weight: 700;
-  line-height: 1.4;
+.hi-pill.active {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+  font-weight: 600;
 }
-.hi-event-meta {
-  display: flex; align-items: center; gap: 8px;
+
+/* ── Bento grid ── */
+.hi-bento {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 180px;
+  gap: 12px;
 }
-.hi-event-loc {
-  display: flex; align-items: center; gap: 3px;
-  font-size: 12px; color: var(--pg-white-muted);
+.hi-card {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-.hi-event-people {
-  font-size: 12px; color: rgba(255,255,255,0.2);
+.hi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.hi-card.hi-tall {
+  grid-row: span 2;
+}
+.hi-card.hi-wide {
+  grid-column: span 2;
+}
+
+/* ── Photo card ── */
+.hi-card-photo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  background: linear-gradient(135deg, rgba(78,205,196,0.12) 0%, rgba(6,10,15,0.95) 100%);
+}
+.hi-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hi-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(6,10,15,0.88) 0%, rgba(6,10,15,0.1) 50%);
+}
+.hi-card-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 14px;
+}
+.hi-card-title {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pg-white);
+  line-height: 1.3;
+}
+.hi-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--pg-white-muted);
+  margin-top: 3px;
+}
+.hi-card-date {
+  font-size: 11px;
+  color: var(--pg-white-muted);
+  margin-top: 2px;
+}
+
+/* ── Stat mini-card ── */
+.hi-mini-stat {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 16px;
+}
+.hi-mini-stat-icon {
+  color: var(--teal);
+  opacity: 0.7;
+}
+.hi-mini-stat-label {
+  font-size: 11px;
+  color: var(--pg-white-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.hi-mini-stat-val {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--pg-white);
+  line-height: 1.2;
 }
 
 /* ── Responsive ── */
-@media (max-width: 480px) {
-  .hi-event-top { gap: 6px; }
-  .hi-stat-num { font-size: 22px; }
+@media (max-width: 600px) {
+  .hi-bento {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 160px;
+    gap: 10px;
+    padding: 16px;
+  }
+  .hi-card.hi-wide {
+    grid-column: span 2;
+  }
+  .hi-card.hi-tall {
+    grid-row: span 2;
+  }
+  .hi-header {
+    padding: 24px 16px 0;
+  }
+  .hi-filters {
+    padding: 16px 16px 0;
+  }
+  .hi-title {
+    font-size: 28px;
+  }
+  .hi-filter-divider {
+    display: none;
+  }
 }
 `;
 
 export default function Historik() {
   const { t } = useTranslation();
-  const containerRef = useFadeUp("hi");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeYear, setActiveYear] = useState("2026");
+  const [activeCat, setActiveCat] = useState<string | null>(null);
 
-  const totalEvents = HISTORY.reduce((sum, g) => sum + g.events.length, 0);
-  const totalPeople = HISTORY.reduce((sum, g) => sum + g.events.reduce((s, e) => s + e.people, 0), 0);
+  const filtered = EVENTS.filter((e) => {
+    const yearMatch = e.date.includes(activeYear);
+    const catMatch = !activeCat || e.category === activeCat;
+    return yearMatch && catMatch;
+  });
 
   return (
     <>
@@ -177,74 +249,97 @@ export default function Historik() {
         className="hi-root"
         data-testid="historik-page"
       >
-        {/* Cover */}
-        <div className="hi-cover">
-          <img src="/historik-hero.png" alt="" />
-          <div className="hi-cover-overlay" />
+        {/* Header */}
+        <div className="hi-header">
+          <h1 className="hi-title">Min Historik</h1>
+          <p className="hi-subtitle">Dine minder</p>
         </div>
 
-        {/* Identity */}
-        <div className="hi-identity hi-fade-up">
-          <div className="hi-avatar">📖</div>
-          <h1 className="hi-identity-title">Min <em>Historik</em></h1>
-          <p className="hi-identity-sub">{totalEvents} oplevelser med {totalPeople} mennesker</p>
-        </div>
-
-        {/* Stats */}
-        <div className="hi-stats hi-fade-up hi-d1">
-          <div className="hi-stat-card">
-            <div className="hi-stat-val">{totalEvents}</div>
-            <div className="hi-stat-lbl">{t('history.experiences')}</div>
-          </div>
-          <div className="hi-stat-card">
-            <div className="hi-stat-val">{totalPeople}</div>
-            <div className="hi-stat-lbl">{t('history.people_met')}</div>
-          </div>
-          <div className="hi-stat-card">
-            <div className="hi-stat-val">{HISTORY.length}</div>
-            <div className="hi-stat-lbl">{t('history.active_months')}</div>
-          </div>
-        </div>
-
-        <div className="hi-content">
-          {/* Timeline */}
-          {HISTORY.map((group, gi) => (
-            <div key={group.period} className={`hi-timeline-group hi-fade-up hi-d${Math.min(gi + 1, 4)}`}>
-              <div className="hi-period-header">
-                <div className="hi-period-dot" />
-                <h2 className="hi-period-label">{group.period}</h2>
-                <span className="hi-period-count">{group.events.length} {t('history.experiences_count')}</span>
-              </div>
-
-              <div className="hi-rail">
-                {group.events.map((event) => {
-                  const badge = TYPE_BADGE[event.type];
-                  return (
-                    <div key={event.id} className="hi-glass hi-event">
-                      <div className="hi-emoji-box">{event.emoji}</div>
-                      <div className="hi-event-body">
-                        <div className="hi-event-top">
-                          <h3 className="hi-event-title">{event.title}</h3>
-                          <span
-                            className="hi-badge"
-                            style={{ background: badge.bgAlpha, color: badge.color }}
-                          >
-                            {t(badge.labelKey)}
-                          </span>
-                        </div>
-                        <div className="hi-event-meta">
-                          <span className="hi-event-loc">
-                            <MapPin size={10} />{event.location}
-                          </span>
-                          <span className="hi-event-people">&middot; {event.people} {t('history.persons')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+        {/* Filters */}
+        <div className="hi-filters">
+          {YEARS.map((y) => (
+            <button
+              key={y}
+              className={`hi-pill${activeYear === y ? " active" : ""}`}
+              onClick={() => setActiveYear(y)}
+            >
+              {y}
+            </button>
           ))}
+          <div className="hi-filter-divider" />
+          {CATEGORIES.map((c) => (
+            <button
+              key={c}
+              className={`hi-pill${activeCat === c ? " active" : ""}`}
+              onClick={() => setActiveCat(activeCat === c ? null : c)}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+
+        {/* Bento Grid */}
+        <div className="hi-bento">
+          {filtered.map((event, i) => {
+            // Insert stat cards at positions 2 and 5
+            const items: React.ReactNode[] = [];
+
+            if (i === 2) {
+              items.push(
+                <div key="stat-first" className="hi-mini-stat">
+                  <Calendar size={20} className="hi-mini-stat-icon" />
+                  <span className="hi-mini-stat-label">Første event</span>
+                  <span className="hi-mini-stat-val">Jan 2024</span>
+                </div>
+              );
+              items.push(
+                <div key="stat-fav" className="hi-mini-stat">
+                  <Star size={20} className="hi-mini-stat-icon" />
+                  <span className="hi-mini-stat-label">Favorit</span>
+                  <span className="hi-mini-stat-val">Nordbro</span>
+                </div>
+              );
+            }
+
+            if (i === 5) {
+              items.push(
+                <div key="stat-loc" className="hi-mini-stat">
+                  <MapPin size={20} className="hi-mini-stat-icon" />
+                  <span className="hi-mini-stat-label">Mest besøgte</span>
+                  <span className="hi-mini-stat-val">Aalborg</span>
+                </div>
+              );
+              items.push(
+                <div key="stat-cat" className="hi-mini-stat">
+                  <Music size={20} className="hi-mini-stat-icon" />
+                  <span className="hi-mini-stat-label">Top kategori</span>
+                  <span className="hi-mini-stat-val">Musik</span>
+                </div>
+              );
+            }
+
+            items.push(
+              <div
+                key={event.id}
+                className={`hi-card hi-glass${event.span === "tall" ? " hi-tall" : ""}${event.span === "wide" ? " hi-wide" : ""}`}
+              >
+                <div className="hi-card-photo">
+                  {event.emoji}
+                </div>
+                <div className="hi-card-overlay" />
+                <div className="hi-card-info">
+                  <div className="hi-card-title">{event.title}</div>
+                  <div className="hi-card-meta">
+                    <MapPin size={10} />
+                    {event.location}
+                  </div>
+                  <div className="hi-card-date">{event.date}</div>
+                </div>
+              </div>
+            );
+
+            return items;
+          })}
         </div>
       </div>
     </>
