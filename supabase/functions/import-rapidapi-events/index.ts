@@ -25,18 +25,22 @@ const COUNTRY_CITIES: Record<string, string[]> = {
 };
 
 function categorizeEvent(query: string, event: any) {
-  const combined = \`\${query} \${event.name} \${event.description}\`.toLowerCase();
-  if (/concert|music|festival|koncert/i.test(combined)) return { category: "Musik & Koncerter", tags: ["musik", "koncert"], indoor_outdoor: "indoor" };
-  if (/sport|match|game|tournament|race|marathon/i.test(combined)) return { category: "Sport", tags: ["sport"], indoor_outdoor: "outdoor" };
-  if (/extreme|surfing|climbing|skate|bmx|skydiv|bungee|paraglid|motocross|parkour|wakeboard|kite|snowboard|freestyle/i.test(combined)) return { category: "Extreme Sport", tags: ["extreme", "action"], indoor_outdoor: "outdoor" };
-  if (/mountain bike|mtb|trail run|hiking|rute|trail/i.test(combined)) return { category: "Natur & Ruter", tags: ["natur", "rute"], indoor_outdoor: "outdoor" };
-  if (/fitness|gym|yoga|crossfit|workout/i.test(combined)) return { category: "Sundhed & Wellness", tags: ["fitness", "wellness"], indoor_outdoor: "indoor" };
-  return { category: "Events", tags: ["event"], indoor_outdoor: "indoor" };
+  const combined = `${query} ${event.name} ${event.description}`.toLowerCase();
+  if (/concert|music|festival|koncert/i.test(combined)) return { category: "musik", tags: ["musik", "koncert"], indoor_outdoor: "indoor", weather_suitable: ["all"], suitable_for_modes: ["solo", "duo", "gruppe"] };
+  if (/extreme|surfing|climbing|skate|bmx|skydiv|bungee|paraglid|motocross|parkour|wakeboard|kite|snowboard|freestyle/i.test(combined)) return { category: "aktiv_sport", tags: ["extreme", "action"], indoor_outdoor: "outdoor", weather_suitable: ["clear", "cloudy"], suitable_for_modes: ["solo", "duo", "gruppe"] };
+  if (/mountain bike|mtb|trail run|hiking|rute|trail/i.test(combined)) return { category: "natur", tags: ["natur", "rute"], indoor_outdoor: "outdoor", weather_suitable: ["clear", "cloudy"], suitable_for_modes: ["solo", "duo", "gruppe"] };
+  if (/sport|match|game|tournament|race|marathon/i.test(combined)) return { category: "sport", tags: ["sport"], indoor_outdoor: "outdoor", weather_suitable: ["clear", "cloudy"], suitable_for_modes: ["solo", "duo", "gruppe"] };
+  if (/fitness|gym|yoga|crossfit|workout/i.test(combined)) return { category: "aktiv_sport", tags: ["fitness", "wellness"], indoor_outdoor: "indoor", weather_suitable: ["all"], suitable_for_modes: ["solo", "duo", "gruppe"] };
+  return { category: "arrangement", tags: ["event", "oplevelse"], indoor_outdoor: "indoor", weather_suitable: ["all"], suitable_for_modes: ["solo", "duo", "gruppe"] };
 }
 
 async function fetchRapidAPI(apiKey: string, query: string, date: string) {
-  const url = \`https://real-time-events-search.p.rapidapi.com/search-events?query=\${encodeURIComponent(query)}&date=\${date}\`;
-  const resp = await fetch(url, { headers: { "x-rapidapi-key": apiKey, "x-rapidapi-host": RAPIDAPI_HOST } });
+  const url = `https://real-time-events-search.p.rapidapi.com/search-events?query=${encodeURIComponent(query)}&date=${date}`;
+  const resp = await fetch(url, {
+    headers: { "x-rapidapi-key": apiKey, "x-rapidapi-host": RAPIDAPI_HOST },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!resp.ok) return [];
   const data = await resp.json();
   return data.data || [];
 }
@@ -52,7 +56,7 @@ Deno.serve(async (req) => {
   
   for (const [cc, cities] of Object.entries(COUNTRY_CITIES)) {
     for (const city of cities) {
-      plan.push({ query: \`\${EVENT_QUERIES[Math.floor(Math.random()*EVENT_QUERIES.length)]} in \${city}\`, country: cc });
+      plan.push({ query: `${EVENT_QUERIES[Math.floor(Math.random()*EVENT_QUERIES.length)]} in ${city}`, country: cc });
     }
   }
   
@@ -62,11 +66,30 @@ Deno.serve(async (req) => {
     try {
       const events = await fetchRapidAPI(RAPIDAPI_KEY!, item.query, "month");
       const toInsert = events.map((e: any) => {
-        const { category, tags, indoor_outdoor } = categorizeEvent(item.query, e);
+        const { category, tags, indoor_outdoor, weather_suitable, suitable_for_modes } = categorizeEvent(item.query, e);
+        const lat = e.venue?.latitude ? parseFloat(e.venue.latitude) : null;
+        const lon = e.venue?.longitude ? parseFloat(e.venue.longitude) : null;
         return {
-          title: e.name, description: e.description, location: e.venue?.full_address || e.venue?.city || item.query,
-          image_url: e.thumbnail, date: e.start_time, category, interest_tags: tags,
-          indoor_outdoor, country: item.country, source: "rapidapi", status: "active"
+          title: e.name,
+          description: (e.description || e.name || "").slice(0, 500),
+          location: e.venue?.full_address || e.venue?.city || item.query,
+          image_url: e.thumbnail || null,
+          date: e.start_time,
+          category,
+          interest_tags: tags,
+          indoor_outdoor,
+          weather_suitable,
+          suitable_for_modes,
+          latitude: lat,
+          longitude: lon,
+          country: item.country,
+          source: "rapidapi",
+          status: "active",
+          max_participants: 500,
+          created_by: null,
+          price: null,
+          min_required_participants: 1,
+          category_level: 2,
         };
       });
       if (toInsert.length > 0) await supabase.from("events").upsert(toInsert, { onConflict: "title,date,location", ignoreDuplicates: true });
