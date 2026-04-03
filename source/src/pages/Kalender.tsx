@@ -1,15 +1,13 @@
-import { useState, useMemo } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useState, useMemo, useRef } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Share2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { fetchEvents, type Event as SupabaseEvent } from "@/lib/supabase";
-import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 
 /* ─────────────────────────────────────────────
-   B-Social Kalender — Premium Redesign
-   Scoped CSS prefix: kl-
+   B-Social Kalender — Month Grid (Option A)
+   Scoped CSS prefix: ka-
    ───────────────────────────────────────────── */
 
 const DAY_KEYS = ["calendar.day_mon", "calendar.day_tue", "calendar.day_wed", "calendar.day_thu", "calendar.day_fri", "calendar.day_sat", "calendar.day_sun"];
@@ -41,116 +39,206 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 const kalenderCSS = `
-${pageBase("kl")}
+${pageBase("ka")}
 
-.kl-root { padding-bottom: 40px; }
+/* Override .dsk-main > * fadeSlideIn which sets opacity:0 */
+.ka-root { animation: none !important; opacity: 1 !important; padding-bottom: 40px; }
 
-/* ── Content area ── */
-.kl-content { padding: 0 20px; }
+/* ── Cover hero ── */
+.ka-cover {
+  position: relative; width: 100%; height: 220px; overflow: hidden;
+}
+.ka-cover img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;
+}
+.ka-cover-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(6,10,15,0.25) 0%, rgba(6,10,15,0.92) 100%);
+}
+
+/* ── Identity block ── */
+.ka-identity {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: -32px; padding: 0 28px 24px; position: relative; z-index: 2;
+}
+.ka-identity-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  background: rgba(78,205,196,0.12); border: 1px solid rgba(78,205,196,0.25);
+  display: flex; align-items: center; justify-content: center; font-size: 26px;
+  flex-shrink: 0;
+}
+.ka-identity-text {}
+.ka-identity-title {
+  font-family: var(--serif); font-size: 26px; font-weight: 400;
+  color: var(--pg-white); line-height: 1.1;
+}
+.ka-identity-title em { font-style: italic; color: var(--teal); }
+.ka-identity-sub {
+  font-size: 13px; color: var(--teal); margin-top: 2px; font-weight: 500;
+}
+
+/* ── Main two-column layout ── */
+.ka-layout {
+  display: grid; grid-template-columns: 1fr 280px; gap: 24px;
+  padding: 0 28px 24px;
+}
+@media (max-width: 768px) {
+  .ka-layout { grid-template-columns: 1fr; gap: 20px; padding: 0 12px 24px; }
+  .ka-layout > * { min-width: 0; }
+  .ka-identity { padding: 0 12px 20px; }
+  .ka-calendar-card { padding: 14px 10px; }
+  .ka-day-cell { font-size: 12px; border-radius: 8px; }
+}
 
 /* ── Calendar grid card ── */
-.kl-calendar-card {
-  background: rgba(255,255,255,0.06); backdrop-filter: blur(24px);
+.ka-calendar-card {
+  background: rgba(255,255,255,0.04); backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
-  padding: 16px; margin-bottom: 24px;
+  border: 1px solid rgba(255,255,255,0.07); border-radius: 16px;
+  padding: 20px;
 }
-.kl-month-nav {
+.ka-month-nav {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
-.kl-month-btn {
-  width: 32px; height: 32px; border-radius: 50%;
+.ka-month-btn {
+  width: 30px; height: 30px; border-radius: 8px;
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.25s; color: var(--pg-white);
 }
-.kl-month-btn:hover { background: rgba(255,255,255,0.12); }
-.kl-month-label {
-  font-size: 14px; font-weight: 600; color: var(--pg-white);
+.ka-month-btn:hover { background: rgba(255,255,255,0.12); }
+.ka-month-label {
+  font-size: 15px; font-weight: 600; color: var(--pg-white);
 }
 
 /* ── Day headers ── */
-.kl-day-headers {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px;
+.ka-day-headers {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 6px;
 }
-.kl-day-header {
-  text-align: center; font-size: 11px; font-weight: 500;
-  color: var(--pg-white-muted);
+.ka-day-header {
+  text-align: center; font-size: 11px; font-weight: 600;
+  color: var(--pg-white-muted); padding: 6px 0;
+  text-transform: uppercase; letter-spacing: 0.5px;
 }
 
 /* ── Calendar days grid ── */
-.kl-days-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+.ka-days-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
 }
-.kl-day-cell {
-  width: 100%; aspect-ratio: 1; border-radius: 12px;
+.ka-day-cell {
+  width: 100%; aspect-ratio: 1; border-radius: 10px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 500; cursor: pointer;
   transition: all 0.2s; position: relative; border: none; background: transparent;
   color: var(--pg-white-dim);
 }
-.kl-day-cell:hover { background: rgba(255,255,255,0.06); }
-.kl-day-today { background: rgba(255,255,255,0.1); color: var(--pg-white); }
-.kl-day-selected { background: var(--teal); color: var(--bg); }
-.kl-day-dot {
-  position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%;
+.ka-day-cell:hover { background: rgba(255,255,255,0.06); }
+.ka-day-today {
+  background: rgba(78,205,196,0.12); color: var(--teal);
+  border: 1px solid rgba(78,205,196,0.25);
+}
+.ka-day-selected {
+  background: var(--teal); color: var(--bg); font-weight: 700;
+}
+.ka-day-dot {
+  position: absolute; bottom: 5px; width: 4px; height: 4px; border-radius: 50%;
   background: var(--teal);
 }
-.kl-day-dot-db { background: #a78bfa; }
+.ka-day-dot-db { background: #a78bfa; }
 
-/* ── Events section ── */
-.kl-section-title {
-  font-size: 14px; font-weight: 600; color: var(--pg-white); margin-bottom: 12px;
+/* ── Hint text ── */
+.ka-hint {
+  font-size: 12px; color: var(--pg-white-muted); margin-top: 14px;
+  font-style: italic;
 }
 
-.kl-event-card {
+/* ── Events sidebar ── */
+.ka-events-panel {}
+.ka-events-title {
+  font-family: var(--serif); font-size: 20px; font-weight: 400;
+  color: var(--pg-white); margin-bottom: 16px;
+}
+.ka-events-title em { font-style: italic; color: var(--teal); }
+
+.ka-event-item {
   display: flex; align-items: center; gap: 12px;
-  padding: 12px; border-radius: 14px;
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  margin-bottom: 8px; transition: all 0.25s;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.2s;
 }
-.kl-event-card:hover {
-  background: var(--glass-bg-hover); border-color: var(--glass-border-hover);
-}
-.kl-event-emoji {
-  width: 40px; height: 40px; border-radius: 12px;
-  background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.15);
+.ka-event-item:last-child { border-bottom: none; }
+.ka-event-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
+  font-size: 20px; flex-shrink: 0; overflow: hidden;
 }
-.kl-event-info { flex: 1; min-width: 0; }
-.kl-event-title {
+.ka-event-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ka-event-info { flex: 1; min-width: 0; }
+.ka-event-name {
   font-size: 14px; font-weight: 500; color: var(--pg-white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.kl-event-date {
-  font-size: 12px; color: var(--pg-white-muted); margin-top: 2px;
+.ka-event-name.ka-teal { color: var(--teal); }
+.ka-event-date-label {
+  font-size: 11px; color: var(--pg-white-muted); margin-top: 1px;
 }
-.kl-event-badge {
-  padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600;
-}
-.kl-badge-registered { background: rgba(78,205,196,0.15); color: var(--teal); }
-.kl-badge-waiting { background: rgba(245,158,11,0.15); color: #fbbf24; }
-.kl-badge-db { background: rgba(167,139,250,0.15); color: #a78bfa; }
 
 /* ── Empty state ── */
-.kl-empty {
+.ka-empty {
   padding: 32px; border-radius: 16px;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
   text-align: center;
 }
-.kl-empty-emoji { font-size: 28px; }
-.kl-empty-text { font-size: 12px; color: var(--pg-white-dim); margin-top: 8px; }
+.ka-empty-emoji { font-size: 28px; }
+.ka-empty-text { font-size: 12px; color: var(--pg-white-dim); margin-top: 8px; }
+
+/* ── Bottom bar ── */
+.ka-bottom-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px; margin-top: 20px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+}
+.ka-search-group {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+}
+.ka-search-icon { color: var(--pg-white-muted); flex-shrink: 0; }
+.ka-search-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--pg-white); font-size: 13px; font-family: var(--sans);
+}
+.ka-search-input::placeholder { color: var(--pg-white-muted); }
+.ka-search-btn {
+  padding: 6px 18px; background: var(--teal); color: var(--bg);
+  border: none; border-radius: 100px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.25s; font-family: var(--sans);
+}
+.ka-search-btn:hover { box-shadow: 0 4px 16px var(--teal-glow); }
+.ka-share-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 100px;
+  color: var(--pg-white-dim); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.25s; font-family: var(--sans);
+}
+.ka-share-btn:hover { border-color: var(--teal); color: var(--teal); }
+
+/* ── Mobile tweaks ── */
+@media (max-width: 768px) {
+  .ka-root { padding-bottom: 96px; }
+  .ka-cover { height: 180px; }
+  .ka-bottom-bar { margin: 16px 16px 0; }
+}
 `;
 
 export default function Kalender() {
   const { t } = useTranslation();
-  const [, setLocation] = useLocation();
   const [year, setYear] = useState(2026);
-  const [month, setMonth] = useState(2);
+  const [month, setMonth] = useState(3); // April = index 3
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const containerRef = useFadeUp("kl");
+  const [searchQuery, setSearchQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: supabaseEvents, isLoading } = useQuery<SupabaseEvent[]>({
     queryKey: ["supabase-events"],
@@ -189,112 +277,127 @@ export default function Kalender() {
   const upcomingEvents = Object.entries(EVENT_DATES)
     .filter(([date]) => date >= todayStr)
     .sort(([a], [b]) => a.localeCompare(b))
-    .flatMap(([date, events]) => events.map(e => ({ ...e, date })));
+    .flatMap(([date, events]) => events.map(e => ({ ...e, date })))
+    .slice(0, 6);
 
-  const totalEvents = Object.values(EVENT_DATES).flat().length;
-  const registeredEvents = Object.values(EVENT_DATES).flat().filter(e => e.type === 'tilmeldt').length;
-  const waitingEvents = Object.values(EVENT_DATES).flat().filter(e => e.type === 'venter').length;
+  const formatEventDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-");
+    return `${t(MONTH_NAME_KEYS[parseInt(m) - 1])} ${parseInt(d)}, ${y}`;
+  };
 
   return (
     <>
       <style>{kalenderCSS}</style>
-      <div className="kl-root" ref={containerRef} data-testid="kalender-page">
+      <div className="ka-root" ref={containerRef} data-testid="kalender-page">
 
         {/* ── COVER HERO ── */}
-        <div className="kl-cover">
+        <div className="ka-cover">
           <img src="/kalender-hero.png" alt="" />
-          <div className="kl-cover-overlay" />
+          <div className="ka-cover-overlay" />
         </div>
 
         {/* ── IDENTITY ── */}
-        <div className="kl-identity kl-fade-up">
-          <div className="kl-avatar">📅</div>
-          <h1 className="kl-identity-title">Min <em>Kalender</em></h1>
-          <p className="kl-identity-sub">{t(MONTH_NAME_KEYS[month])} {year}</p>
-        </div>
-
-        {/* ── STATS ── */}
-        <div className="kl-stats kl-fade-up kl-d1">
-          <div className="kl-stat-card">
-            <div className="kl-stat-val">{totalEvents}</div>
-            <div className="kl-stat-lbl">Denne måned</div>
-          </div>
-          <div className="kl-stat-card">
-            <div className="kl-stat-val">{registeredEvents}</div>
-            <div className="kl-stat-lbl">Tilmeldt</div>
-          </div>
-          <div className="kl-stat-card">
-            <div className="kl-stat-val">{waitingEvents}{isLoading && <Loader2 size={12} className="animate-spin" style={{display:'inline',marginLeft:4}} />}</div>
-            <div className="kl-stat-lbl">Venter</div>
+        <div className="ka-identity">
+          <div className="ka-identity-icon">📅</div>
+          <div className="ka-identity-text">
+            <h1 className="ka-identity-title">Min <em>Kalender</em></h1>
+            <p className="ka-identity-sub">{t(MONTH_NAME_KEYS[month])} {year}</p>
           </div>
         </div>
 
-        <div className="kl-content">
+        {/* ── TWO-COLUMN LAYOUT ── */}
+        <div className="ka-layout">
 
-          {/* ── Calendar ── */}
-          <div className="kl-calendar-card kl-fade-up">
-            <div className="kl-month-nav">
-              <button className="kl-month-btn" onClick={prevMonth}><ChevronLeft size={16} /></button>
-              <span className="kl-month-label">{t(MONTH_NAME_KEYS[month])} {year}</span>
-              <button className="kl-month-btn" onClick={nextMonth}><ChevronRight size={16} /></button>
+          {/* Left: Calendar Grid */}
+          <div>
+            <div className="ka-calendar-card">
+              <div className="ka-month-nav">
+                <button className="ka-month-btn" onClick={prevMonth}><ChevronLeft size={16} /></button>
+                <span className="ka-month-label">{t(MONTH_NAME_KEYS[month])} {year}</span>
+                <button className="ka-month-btn" onClick={nextMonth}><ChevronRight size={16} /></button>
+              </div>
+
+              <div className="ka-day-headers">
+                {DAY_KEYS.map(dk => <div key={dk} className="ka-day-header">{t(dk)}</div>)}
+              </div>
+
+              <div className="ka-days-grid">
+                {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                  const hasEvent = !!EVENT_DATES[dateStr];
+                  const hasDBEvent = (EVENT_DATES[dateStr] || []).some(e => (e as any).fromDB);
+                  const isToday = dateStr === todayStr;
+                  const isSelected = dateStr === selectedDate;
+
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+                      className={`ka-day-cell ${isSelected ? 'ka-day-selected' : isToday ? 'ka-day-today' : ''}`}
+                    >
+                      {day}
+                      {hasEvent && !isSelected && (
+                        <span className={`ka-day-dot ${hasDBEvent ? 'ka-day-dot-db' : ''}`} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="ka-hint">
+                {selectedDate
+                  ? `${t('calendar.events_on')} ${parseInt(selectedDate.split("-")[2])}. ${t(MONTH_NAME_KEYS[parseInt(selectedDate.split("-")[1]) - 1])}`
+                  : t('calendar.click_date', { defaultValue: 'Klik på en dato for at se events.' })
+                }
+              </p>
             </div>
 
-            <div className="kl-day-headers">
-              {DAY_KEYS.map(dk => <div key={dk} className="kl-day-header">{t(dk)}</div>)}
-            </div>
-
-            <div className="kl-days-grid">
-              {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                const hasEvent = !!EVENT_DATES[dateStr];
-                const hasDBEvent = (EVENT_DATES[dateStr] || []).some(e => (e as any).fromDB);
-                const isToday = dateStr === todayStr;
-                const isSelected = dateStr === selectedDate;
-
-                return (
-                  <button
-                    key={day}
-                    onClick={() => setSelectedDate(isSelected ? null : dateStr)}
-                    className={`kl-day-cell ${isSelected ? 'kl-day-selected' : isToday ? 'kl-day-today' : ''}`}
-                  >
-                    {day}
-                    {hasEvent && !isSelected && (
-                      <span className={`kl-day-dot ${hasDBEvent ? 'kl-day-dot-db' : ''}`} />
-                    )}
-                  </button>
-                );
-              })}
+            {/* ── Bottom bar ── */}
+            <div className="ka-bottom-bar">
+              <div className="ka-search-group">
+                <Search size={14} className="ka-search-icon" />
+                <input
+                  className="ka-search-input"
+                  placeholder="Events"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+                <button className="ka-search-btn">Søge</button>
+              </div>
+              <button className="ka-share-btn">
+                <Share2 size={12} /> Deler
+              </button>
             </div>
           </div>
 
-          {/* ── Events list ── */}
-          <h2 className="kl-section-title kl-fade-up kl-d1">
-            {selectedDate ? `${t('calendar.events_on')} ${parseInt(selectedDate.split("-")[2])}. ${t(MONTH_NAME_KEYS[parseInt(selectedDate.split("-")[1]) - 1])}` : t('calendar.upcoming_events')}
-          </h2>
+          {/* Right: Events Panel */}
+          <div className="ka-events-panel">
+            <h2 className="ka-events-title">
+              {selectedDate
+                ? <>Events d. <em>{parseInt(selectedDate.split("-")[2])}. {t(MONTH_NAME_KEYS[parseInt(selectedDate.split("-")[1]) - 1])}</em></>
+                : <>Tilmeldte <em>events</em></>
+              }
+              {isLoading && <Loader2 size={14} className="animate-spin" style={{ display: 'inline', marginLeft: 8 }} />}
+            </h2>
 
-          {selectedDate && selectedEvents.length === 0 && (
-            <div className="kl-empty kl-fade-up kl-d1">
-              <span className="kl-empty-emoji">📅</span>
-              <p className="kl-empty-text">{t('calendar.no_events_this_day')}</p>
-            </div>
-          )}
+            {selectedDate && selectedEvents.length === 0 && (
+              <div className="ka-empty">
+                <span className="ka-empty-emoji">📅</span>
+                <p className="ka-empty-text">{t('calendar.no_events_this_day')}</p>
+              </div>
+            )}
 
-          <div className="kl-fade-up kl-d2">
             {(selectedDate ? selectedEvents.map((e, i) => ({ ...e, date: selectedDate, _key: i })) : upcomingEvents.map((e, i) => ({ ...e, _key: i }))).map((event) => (
-              <div key={event._key} className="kl-event-card">
-                <div className="kl-event-emoji">{event.emoji}</div>
-                <div className="kl-event-info">
-                  <div className="kl-event-title">{event.title}</div>
-                  <div className="kl-event-date">{event.date.split("-").reverse().join("/")}</div>
+              <div key={event._key} className="ka-event-item">
+                <div className="ka-event-avatar">{event.emoji}</div>
+                <div className="ka-event-info">
+                  <div className={`ka-event-name ${(event as any).fromDB ? 'ka-teal' : ''}`}>
+                    {event.title}
+                  </div>
+                  <div className="ka-event-date-label">{formatEventDate(event.date)}</div>
                 </div>
-                <span className={`kl-event-badge ${
-                  (event as any).fromDB ? 'kl-badge-db' :
-                  event.type === "tilmeldt" ? 'kl-badge-registered' : 'kl-badge-waiting'
-                }`}>
-                  {(event as any).fromDB ? t('calendar.from_db') : event.type === "tilmeldt" ? t('calendar.registered') : t('calendar.waiting')}
-                </span>
               </div>
             ))}
           </div>
