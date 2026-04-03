@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
           price: null,
           min_required_participants: 1,
           category_level: 2,
+          url: e.link || e.url || null,
         };
       });
       if (toInsert.length > 0) await supabase.from("events").upsert(toInsert, { onConflict: "title,date,location", ignoreDuplicates: true });

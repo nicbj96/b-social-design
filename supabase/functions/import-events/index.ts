@@ -33,6 +33,7 @@ interface ImportedEvent {
   source: string;
   status: string;
   country: string;
+  url?: string | null;
 }
 
 interface ImportResult {
@@ -431,6 +432,7 @@ async function fetchTicketmasterByCountry(
         source: "ticketmaster",
         status: "active",
         country: countryCode,
+        url: item.url || null,
       });
     } catch (itemErr) {
       errors.push(`Ticketmaster ${countryCode} event parse error: ${itemErr}`);
