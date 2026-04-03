@@ -16,6 +16,8 @@ const msnCSS = `
   background: rgba(255,255,255,0.02);
   border-bottom: 1px solid rgba(255,255,255,0.06);
   padding: 16px 0;
+  overflow: hidden;
+  max-width: 100%;
 }
 .msn-scroll {
   display: flex;
@@ -24,6 +26,8 @@ const msnCSS = `
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  width: 0;
+  min-width: 100%;
 }
 .msn-scroll::-webkit-scrollbar { display: none; }
 .msn-item {
