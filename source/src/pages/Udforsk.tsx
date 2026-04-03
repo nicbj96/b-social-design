@@ -79,12 +79,18 @@ const PLACE_CAT_EMOJI: Record<string, string> = {
   natur: "🌿", aktiv_sport: "🏃", mad_hangout: "🍽️", sport: "⚽", kultur: "🎭", musik: "🎵",
   strand: "🏖️", badning: "🏊", hundeskov: "🐕", hund: "🐕", shelter: "⛺", fiskeri: "🎣",
   loeb: "🏃", mtb: "🚵", vandring: "🥾", mad: "🍽️", fitness: "💪", outdoor: "🌲",
+  // Import source categories
+  natteliv: "🌙", familie: "🎡", underholdning: "🎡", temapark: "🎢", zoo: "🦁",
+  akvarium: "🐟", overnatning: "🏕️", hostel: "🏕️", forlystelse: "🎡",
+  logi: "🏕️", rejser: "✈️", wellness: "🧘", communities: "👥", ture: "🥾", aktiv: "🏃",
 };
 
 const DB_FILTERS: { key: string | null; label: string; emoji: string }[] = [
   { key: null, label: "Alle", emoji: "✨" },
   { key: "natur", label: "Natur", emoji: "🌿" },
   { key: "strand", label: "Strand", emoji: "🏖️" },
+  { key: "musik", label: "Musik", emoji: "🎵" },
+  { key: "aktiv_sport", label: "Aktivt", emoji: "🏃" },
   { key: "hundeskov", label: "Hundeskov", emoji: "🐕" },
   { key: "sport", label: "Sport", emoji: "🏃" },
   { key: "kultur", label: "Kultur", emoji: "🎭" },

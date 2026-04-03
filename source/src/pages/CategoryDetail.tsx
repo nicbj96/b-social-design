@@ -822,7 +822,8 @@ const CATEGORY_TAG_MAP: Record<string, string[]> = {
   communities: ["bogklub", "brætspil", "gaming", "sprogcafé", "tech", "startup", "filmaften", "ridning", "rollespil", "kortspil", "esport", "lan-party", "programmering", "hackathon"],
   wellness: ["yoga", "meditation", "sauna", "vinterbadning", "breathwork", "mindfulness", "wellness"],
   // Legacy aliases for backward compat
-  musik: ["musik", "koncert", "festival", "rock", "pop", "elektronisk", "jazz", "klassisk", "hip-hop", "metal", "akustisk", "kor", "jam-session", "dj"],
+  musik: ["musik", "koncert", "festival", "rock", "pop", "elektronisk", "jazz", "klassisk", "hip-hop", "metal", "akustisk", "kor", "jam-session", "dj", "psytrance", "goa", "goa-trance", "electronic music", "techno", "house", "openair", "rave", "natteliv"],
+  natteliv: ["natteliv", "klub", "bar", "dj", "rave", "dance", "techno", "elektronisk", "psytrance", "goa", "electronic", "house", "nightlife", "clubbing"],
   sport: ["cykling", "løb", "fodbold", "svømning", "fitness", "kampsport", "vandsport", "basketball", "tennis", "golf", "klatring", "rulleskøjter", "ridning"],
   spil: ["gaming", "brætspil", "rollespil", "kortspil", "esport", "lan-party"],
   kreativt: ["kunst", "fotografering", "film", "keramik", "strik", "skrivning"],
