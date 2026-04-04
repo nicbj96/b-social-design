@@ -309,7 +309,13 @@ export default function Udforsk() {
     });
   }, [allEvents, debouncedSearch, activeCategory, activeCountry, selectedTags]);
 
-  const popular = [...filtered].sort((a, b) => (b.max_participants || 0) - (a.max_participants || 0)).slice(0, 10);
+  const popular = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 10);
+
+  const newest = useMemo(() => {
+    return [...allEvents]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 12);
+  }, [allEvents]);
 
   function pickTag(tag: string) {
     setActiveCategory(tag);
@@ -618,6 +624,35 @@ export default function Udforsk() {
           <div className="ud-full">
             <SupabasePlacesSection activeCountry={activeCountry} />
           </div>
+
+          {/* ──── Nyeste events ──── */}
+          {newest.length > 0 && (
+            <div className="ud-full">
+              <section className="ud-newest-section">
+                <div className="ud-section-head">
+                  <div className="ud-section-head-left">
+                    <span>✨</span>
+                    <h2>Nyeste events</h2>
+                    <span className="ud-section-count">{newest.length}</span>
+                  </div>
+                </div>
+                <div className="ud-newest-scroll">
+                  {newest.map(e => (
+                    <Link key={e.id} href={`/event/${e.id}`} className="ud-newest-card">
+                      <div className="ud-newest-img-wrap">
+                        <img src={getEventImage(e)} alt={e.title} loading="lazy" className="ud-newest-img" />
+                      </div>
+                      <div className="ud-newest-body">
+                        <span className="ud-newest-cat">{getCategoryEmoji(e.category || '')} {e.category}</span>
+                        <h3 className="ud-newest-title">{e.title}</h3>
+                        <span className="ud-newest-date">{formatDanishDate(e.date)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
 
           {activeCategory && filtered.length === 0 && (
             <div className="ud-empty-state" style={{ gridColumn: '1 / -1' }}>
@@ -1107,5 +1142,31 @@ ${pageBase("ud")}
   .ud-editor-grid { grid-template-columns: 1fr; }
   .ud-places-grid { grid-template-columns: 1fr; }
   .ud-search-fab { bottom: 80px; right: 16px; }
+  .ud-newest-card { min-width: 150px; max-width: 150px; }
+  .ud-newest-img-wrap { height: 90px; }
 }
+
+/* ═══ NEWEST EVENTS ═══ */
+.ud-newest-section { width: 100%; }
+.ud-newest-scroll {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.ud-newest-scroll::-webkit-scrollbar { display: none; }
+.ud-newest-card {
+  min-width: 170px; max-width: 170px; border-radius: 14px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  text-decoration: none; color: var(--pg-white); flex-shrink: 0;
+  overflow: hidden; transition: transform 0.2s;
+}
+.ud-newest-card:hover { transform: translateY(-2px); }
+.ud-newest-img-wrap { height: 100px; overflow: hidden; }
+.ud-newest-img { width: 100%; height: 100%; object-fit: cover; }
+.ud-newest-body { padding: 10px 12px; }
+.ud-newest-cat { font-size: 10px; color: var(--pg-accent); text-transform: uppercase; letter-spacing: 0.04em; }
+.ud-newest-title {
+  font-size: 12px; font-weight: 600; margin: 4px 0 5px; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ud-newest-date { font-size: 10px; color: rgba(255,255,255,0.45); }
 `;

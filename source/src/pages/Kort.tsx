@@ -7,7 +7,7 @@ import { MapContainer, TileLayer, Marker, useMap, CircleMarker, useMapEvents } f
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
-import { fetchPlacesInViewport, fetchEvents, type Place, type Event as SupabaseEvent, type MapBounds } from "@/lib/supabase";
+import { fetchPlacesInViewport, fetchEvents, fetchRoutesForMap, type Place, type Event as SupabaseEvent, type MapBounds, type RouteWithPlace } from "@/lib/supabase";
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { pageBase } from "@/lib/pageCSSBase";
@@ -122,18 +122,74 @@ const CITY_COORDS: Record<string, [number, number]> = {
 const DEFAULT_LAT = 57.048;
 const DEFAULT_LNG = 9.9187;
 
-/* ── Supabase place → category mapping ── */
+/* ── Supabase place/tag → PinCategory mapping ── */
 const SUPABASE_CAT_MAP: Record<string, PinCategory> = {
-  natur: "natur", hike: "natur", vandring: "vandring", hundeskov: "hund",
-  shelter: "shelter", dyrespot: "dyrespot", fiskeri: "fiskeri",
+  // Natur
+  natur: "natur", nature: "natur", park: "natur", skov: "natur", forest: "natur",
+  outdoor: "outdoor", friluftsliv: "natur", bakke: "natur", klit: "natur",
+  dyrespot: "dyrespot", dyrereservat: "dyrespot", fugle: "dyrespot", naturreservat: "natur",
+
+  // Strand / Badning
   strand: "badning", badning: "badning", vand: "badning", badestrand: "badning",
-  kultur: "kultur", museum: "kultur", kreativt: "kreativt",
-  sport: "sport", aktiv_sport: "aktiv_sport", loeb: "loeb", mtb: "mtb", fitness: "fitness",
-  mad: "mad", mad_hangout: "mad_hangout",
-  // New 10 locked categories
-  rejser: "rejser", transport: "rejser", tog: "rejser", bus: "rejser", faerge: "rejser",
+  sø: "badning", lake: "badning", beach: "badning", hav: "badning", sea: "badning",
+  swimming: "badning", badesø: "badning",
+
+  // Vandring / Hiking
+  vandring: "vandring", hike: "vandring", hiking: "vandring", trail: "vandring",
+  ture: "ture", eventyr: "ture", kajak: "ture", kano: "ture", klatring: "ture",
+  shelter: "shelter",
+
+  // MTB / Cykling
+  mtb: "mtb", mountainbike: "mtb", cykling: "mtb", cycling: "mtb", bike: "mtb",
+  cykli: "mtb", cyklerute: "mtb", bikeparken: "mtb",
+
+  // Løb / Running
+  loeb: "loeb", running: "loeb", løb: "loeb", run: "loeb", jogging: "loeb",
+  motionssti: "loeb", løbesti: "loeb",
+
+  // Hund
+  hundeskov: "hund", hund: "hund", dog: "hund", hundeskoven: "hund", hundepark: "hund",
+
+  // Fiskeri
+  fiskeri: "fiskeri", fishing: "fiskeri", lystfiskeri: "fiskeri",
+
+  // Sport
+  sport: "sport", aktiv_sport: "aktiv_sport", aktiv: "aktiv",
+  fodbold: "sport", tennis: "sport", basketball: "sport", volleyball: "sport",
+  svømning: "sport", svømmeri: "sport", squash: "sport", padel: "sport",
+  bowling: "sport", golf: "sport", klatrevæg: "sport", skydning: "sport",
+  badminton: "sport", atletik: "sport",
+
+  // Fitness
+  fitness: "fitness", gym: "fitness", træning: "fitness", crossfit: "fitness",
+  styrketræning: "fitness", motionscenter: "fitness",
+
+  // Musik / Koncert
+  musik: "musik", music: "musik", koncert: "musik", concert: "musik",
+  festival: "musik", live: "musik", scene: "musik", spillested: "musik",
+  musikhus: "musik", rockklub: "musik", jazzklub: "musik",
+
+  // Kultur / Kunst
+  kultur: "kultur", museum: "kultur", udstilling: "kultur", galleri: "kultur",
+  teater: "kultur", biograf: "kultur", cinema: "kultur", kunst: "kreativt",
+  kreativt: "kreativt", workshop: "kreativt", keramik: "kreativt", maleri: "kreativt",
+
+  // Mad / Restaurant
+  mad: "mad", mad_hangout: "mad_hangout", restaurant: "mad", cafe: "mad",
+  bar: "mad", pub: "mad", spisested: "mad", madmarked: "mad", street_food: "mad",
+  takeaway: "mad", fastfood: "mad", brunch: "mad", bakery: "mad", bageri: "mad",
+  cocktailbar: "mad", vinbar: "mad", ølbar: "mad",
+
+  // Logi / Overnatning
   logi: "logi", camping: "logi", vandrerhjem: "logi", hytter: "logi", glamping: "logi",
+  hotel: "logi", hostel: "logi", bnb: "logi", feriehus: "logi", overnatning: "logi",
+  teltplads: "logi",
+
+  // Wellness
   wellness: "wellness", yoga: "wellness", meditation: "wellness", sauna: "wellness",
+  spa: "wellness", massage: "wellness", mindfulness: "wellness", pilates: "wellness",
+
+  // Communities / Social
   communities: "communities", bogklub: "communities", braetspil: "communities",
   ture: "ture", eventyr: "ture", kajak: "ture",
   aktiv: "aktiv",
@@ -148,6 +204,11 @@ const SUPABASE_CAT_MAP: Record<string, PinCategory> = {
   "Logi & base": "logi",
   "Aktiv & sport": "aktiv_sport",
   "Oplevelser & kultur": "kultur",
+  socialt: "socialt", mødested: "communities", foreningsliv: "communities",
+
+  // Rejser / Transport
+  rejser: "rejser", transport: "rejser", tog: "rejser", bus: "rejser",
+  faerge: "rejser", færge: "rejser", lufthavn: "rejser",
 };
 
 function placeToPin(place: Place): MapPin | null {
@@ -193,6 +254,39 @@ function supabaseEventToPin(event: SupabaseEvent): MapPin | null {
     date: event.date,
     price: event.price,
     city: event.location,
+  };
+}
+
+/* ── Supabase route → MapPin ── */
+function routeToPin(route: RouteWithPlace): MapPin | null {
+  const lat = route.places?.latitude;
+  const lng = route.places?.longitude;
+  if (!lat || !lng || !isFinite(lat) || !isFinite(lng)) return null;
+  if (lat === 0 && lng === 0) return null;
+
+  const activity = (route.activity_type || "").toLowerCase();
+  let cat: PinCategory = "vandring";
+  if (activity.includes("mtb") || activity.includes("cykling") || activity.includes("cycling") || activity.includes("bike")) cat = "mtb";
+  else if (activity.includes("loeb") || activity.includes("run") || activity.includes("løb")) cat = "loeb";
+  else if (activity.includes("vandring") || activity.includes("hike") || activity.includes("hiking")) cat = "vandring";
+  else if (activity.includes("kajak") || activity.includes("kano") || activity.includes("kayak")) cat = "ture";
+  else if (activity.includes("fitness") || activity.includes("træning")) cat = "fitness";
+
+  return {
+    id: `rt-${route.id}`,
+    name: route.name,
+    lat, lng,
+    category: cat,
+    description: [
+      route.description,
+      route.distance_km ? `${route.distance_km} km` : null,
+      route.difficulty,
+      route.loop ? "Rundrute" : null,
+    ].filter(Boolean).join(" · "),
+    rating: 0,
+    tags: route.tags || [],
+    city: route.places?.city || undefined,
+    fromSupabase: true,
   };
 }
 
@@ -474,11 +568,22 @@ function PinDetail({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
 
 /* ── Scoped CSS ── */
 const SIDEBAR_CATEGORIES = [
-  { key: "alle", label: "Alle" },
-  { key: "mad", label: "Mad" },
-  { key: "musik", label: "Musik" },
-  { key: "sport", label: "Sport" },
-  { key: "kunst", label: "Kunst" },
+  { key: "alle",     label: "Alle",     emoji: "✨" },
+  { key: "events",   label: "Events",   emoji: "🎉" },
+  { key: "natur",    label: "Natur",    emoji: "🌿" },
+  { key: "strand",   label: "Strand",   emoji: "🏖️" },
+  { key: "vandring", label: "Vandring", emoji: "🥾" },
+  { key: "mtb",      label: "MTB",      emoji: "🚵" },
+  { key: "loeb",     label: "Løb",      emoji: "🏃" },
+  { key: "sport",    label: "Sport",    emoji: "⚽" },
+  { key: "fitness",  label: "Fitness",  emoji: "💪" },
+  { key: "mad",      label: "Mad",      emoji: "🍽️" },
+  { key: "musik",    label: "Musik",    emoji: "🎵" },
+  { key: "kultur",   label: "Kultur",   emoji: "🎭" },
+  { key: "hund",     label: "Hund",     emoji: "🐕" },
+  { key: "fiskeri",  label: "Fiskeri",  emoji: "🎣" },
+  { key: "logi",     label: "Logi",     emoji: "🏕️" },
+  { key: "wellness", label: "Wellness", emoji: "🧘" },
 ] as const;
 
 const kortCSS = `${pageBase("kt")}
@@ -567,45 +672,49 @@ const kortCSS = `${pageBase("kt")}
 }
 .kt-search-clear:hover { color: var(--pg-white); }
 
-/* ══════════ LEFT SIDEBAR CATEGORY FILTERS ══════════ */
+/* ══════════ CATEGORY FILTER STRIP (horizontal scroll, below search) ══════════ */
 .kt-sidebar-cats {
   position: absolute;
-  top: 50%;
-  left: 16px;
-  transform: translateY(-50%);
+  top: 62px;
+  left: 0; right: 0;
   z-index: 1000;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
+  overflow-x: auto;
+  padding: 0 14px;
+  scrollbar-width: none;
 }
+.kt-sidebar-cats::-webkit-scrollbar { display: none; }
 .kt-cat-pill {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: 100px;
   font-size: 12px;
   font-weight: 600;
   font-family: var(--sans);
   cursor: pointer;
-  transition: all 0.25s;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(6,10,15,0.7);
+  transition: all 0.2s;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(6,10,15,0.78);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  color: rgba(255,255,255,0.55);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  color: rgba(255,255,255,0.6);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  white-space: nowrap;
 }
 .kt-cat-pill:hover {
   background: rgba(255,255,255,0.1);
   color: var(--pg-white);
 }
 .kt-cat-pill.active {
-  background: transparent;
+  background: rgba(78,205,196,0.15);
   border-color: var(--teal);
   color: var(--teal);
-  box-shadow: 0 0 16px var(--teal-glow);
+  box-shadow: 0 0 14px var(--teal-glow);
 }
 
 /* ══════════ ZOOM / FAB BUTTONS ══════════ */
@@ -1106,8 +1215,8 @@ const kortCSS = `${pageBase("kt")}
     width: min(320px, calc(100% - 120px));
   }
   .kt-search-input { padding: 10px 36px 10px 40px; font-size: 13px; }
-  .kt-sidebar-cats { left: 10px; gap: 6px; }
-  .kt-cat-pill { width: 44px; height: 44px; font-size: 10px; }
+  .kt-sidebar-cats { top: 58px; padding: 0 10px; gap: 6px; }
+  .kt-cat-pill { font-size: 11px; padding: 5px 11px; }
   .kt-carousel { bottom: 72px; padding: 0 10px; }
   .kt-carousel-card { width: 110px; }
   .kt-carousel-thumb { width: 110px; height: 68px; }
@@ -1193,16 +1302,27 @@ export default function Kort() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // Fetch Supabase routes (MTB, vandring, løb, cykling…)
+  const { data: supabaseRoutes } = useQuery<RouteWithPlace[]>({
+    queryKey: ["supabase-routes-map"],
+    queryFn: fetchRoutesForMap,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const eventPins = useMemo(() => {
     return (supabaseEvents || []).map(supabaseEventToPin).filter((p): p is MapPin => p !== null);
   }, [supabaseEvents]);
+
+  const routePins = useMemo(() => {
+    return (supabaseRoutes || []).map(routeToPin).filter((p): p is MapPin => p !== null);
+  }, [supabaseRoutes]);
 
   const allPins = useMemo(() => {
     const sbPins = (supabasePlaces || []).map(placeToPin).filter((p): p is MapPin => p !== null);
     const sbNames = new Set(sbPins.map(p => p.name.toLowerCase()));
     const hardcodedFiltered = HARDCODED_PINS.filter(p => !sbNames.has(p.name.toLowerCase()));
-    return [...sbPins, ...hardcodedFiltered, ...eventPins];
-  }, [supabasePlaces, eventPins]);
+    return [...sbPins, ...hardcodedFiltered, ...eventPins, ...routePins];
+  }, [supabasePlaces, eventPins, routePins]);
 
   // Sidebar category → filter pins
   const filteredPins = useMemo(() => {
@@ -1211,10 +1331,25 @@ export default function Kort() {
       // Sidebar category filter
       if (sidebarCat !== "alle") {
         const pCat = p.category.toLowerCase();
-        if (sidebarCat === "mad" && pCat !== "mad" && pCat !== "mad_hangout") return false;
-        if (sidebarCat === "musik" && pCat !== "musik") return false;
-        if (sidebarCat === "sport" && pCat !== "sport" && pCat !== "aktiv_sport" && pCat !== "aktiv" && pCat !== "fitness" && pCat !== "loeb" && pCat !== "mtb") return false;
-        if (sidebarCat === "kunst" && pCat !== "kultur" && pCat !== "kreativt") return false;
+        const CAT_GROUPS: Record<string, string[]> = {
+          events:   ["events"],
+          natur:    ["natur", "outdoor", "dyrespot", "shelter"],
+          strand:   ["badning"],
+          vandring: ["vandring", "ture"],
+          mtb:      ["mtb"],
+          loeb:     ["loeb"],
+          sport:    ["sport", "aktiv_sport", "aktiv"],
+          fitness:  ["fitness"],
+          mad:      ["mad", "mad_hangout"],
+          musik:    ["musik"],
+          kultur:   ["kultur", "kreativt"],
+          hund:     ["hund"],
+          fiskeri:  ["fiskeri"],
+          logi:     ["logi"],
+          wellness: ["wellness"],
+        };
+        const allowed = CAT_GROUPS[sidebarCat];
+        if (allowed && !allowed.includes(pCat)) return false;
       }
       // Text search
       const q = search.toLowerCase();
@@ -1348,7 +1483,7 @@ export default function Kort() {
           </div>
         </div>
 
-        {/* ── Left sidebar category filters ── */}
+        {/* ── Category filter strip ── */}
         <div className="kt-sidebar-cats">
           {SIDEBAR_CATEGORIES.map(cat => (
             <button
@@ -1356,7 +1491,7 @@ export default function Kort() {
               onClick={() => { setSidebarCat(sidebarCat === cat.key ? "alle" : cat.key); setSelectedPin(null); }}
               className={`kt-cat-pill ${sidebarCat === cat.key ? "active" : ""}`}
             >
-              {cat.label}
+              <span>{cat.emoji}</span>{cat.label}
             </button>
           ))}
         </div>

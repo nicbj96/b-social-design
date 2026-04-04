@@ -93,7 +93,7 @@ export default function Feed() {
       catMap[cat].push(e);
     }
     const categorySections = Object.entries(catMap)
-      .filter(([_, evts]) => evts.length >= 2)
+      .filter(([_, evts]) => evts.length >= 1)
       .sort((a, b) => b[1].length - a[1].length)
       .slice(0, 6)
       .map(([cat, evts]) => ({
@@ -164,15 +164,26 @@ export default function Feed() {
 
   const tagColors = ['#4ecdc4','#2dd4a8','#06b6d4','#22c55e','#14b8a6','#0ea5e9','#10b981'];
 
+  const newestEvents = useMemo(() => {
+    if (events.length === 0) return [];
+    return [...events]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 10);
+  }, [events]);
+
   const masonryEvents = useMemo(() => {
     // Show tag-filtered events if user has tags, otherwise show all events (demo sections)
     const hasUserTags = selectedTags.length > 0 && filteredTagSections.length > 0;
     const src = hasUserTags ? filteredTagSections : (activeSearch ? filteredDemoSections : demoSections);
     const maxLen = Math.max(...src.map(s => s.events.length), 0);
+    const seen = new Set<string>();
     const result: typeof events = [];
     for (let i = 0; i < maxLen; i++) {
       for (const s of src) {
-        if (i < s.events.length) result.push(s.events[i]);
+        if (i < s.events.length) {
+          const e = s.events[i];
+          if (!seen.has(e.id)) { seen.add(e.id); result.push(e); }
+        }
       }
     }
     return result;
@@ -264,6 +275,29 @@ export default function Feed() {
             );
           })}
           <button onClick={() => setSelectedTags([])} className="fd-clear-all">Ryd alle</button>
+        </div>
+      )}
+
+      {/* ── NEWEST EVENTS ── */}
+      {!activeSearch && newestEvents.length > 0 && (
+        <div className="fd-newest-section fd-fade-up">
+          <div className="fd-newest-head">
+            <span className="fd-newest-label">✨ Nyeste events</span>
+            <Link href="/udforsk" className="fd-newest-link">Se alle</Link>
+          </div>
+          <div className="fd-newest-scroll">
+            {newestEvents.map(e => (
+              <Link key={e.id} href={`/event/${e.id}`} className="fd-newest-card">
+                <img src={getEventImage(e)} alt={e.title} className="fd-newest-img" loading="lazy"
+                  onError={(ev) => { (ev.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop"; }} />
+                <div className="fd-newest-grad" />
+                <div className="fd-newest-text">
+                  <p className="fd-newest-date">{formatDanishDate(e.date)}</p>
+                  <h3 className="fd-newest-title">{e.title}</h3>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
@@ -763,5 +797,38 @@ ${pageBase("fd")}
   .fd-masonry-date { font-size: 9px; letter-spacing: 0.5px; margin-bottom: 2px; }
   .fd-masonry-title { font-size: 11px; -webkit-line-clamp: 2; }
   .fd-sidebar { display: none; }
+  .fd-newest-card { min-width: 140px; max-width: 140px; height: 100px; }
+}
+
+/* ── NEWEST EVENTS STRIP ── */
+.fd-newest-section { padding: 0 0 4px; }
+.fd-newest-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.fd-newest-label { font-size: 13px; font-weight: 600; color: var(--pg-white); }
+.fd-newest-link { font-size: 12px; color: var(--pg-accent); text-decoration: none; }
+.fd-newest-scroll {
+  display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.fd-newest-scroll::-webkit-scrollbar { display: none; }
+.fd-newest-card {
+  position: relative; min-width: 160px; max-width: 160px; height: 110px;
+  border-radius: 12px; overflow: hidden; flex-shrink: 0;
+  text-decoration: none; color: var(--pg-white);
+}
+.fd-newest-img { width: 100%; height: 100%; object-fit: cover; }
+.fd-newest-grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%);
+}
+.fd-newest-text {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 10px;
+}
+.fd-newest-date { font-size: 9px; letter-spacing: 0.05em; color: rgba(255,255,255,0.6); margin-bottom: 2px; }
+.fd-newest-title {
+  font-size: 11px; font-weight: 600; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 `;

@@ -153,8 +153,22 @@ export async function fetchRoutes(): Promise<SupabaseRoute[]> {
   return data || [];
 }
 
+export type RouteWithPlace = SupabaseRoute & {
+  places: { latitude: number | null; longitude: number | null; city: string | null; country: string | null } | null;
+};
+
+/** Fetch routes joined with their place's coordinates — for map display */
+export async function fetchRoutesForMap(): Promise<RouteWithPlace[]> {
+  const { data, error } = await supabase
+    .from("routes")
+    .select("*, places(latitude, longitude, city, country)");
+  if (error) { console.error("fetchRoutesForMap error:", error); return []; }
+  return (data as RouteWithPlace[]) || [];
+}
+
 export async function fetchEvents(): Promise<Event[]> {
-  // Paginate to get ALL events (Supabase defaults to 1000 row limit)
+  // Paginate to get active/future events only (Supabase defaults to 1000 row limit)
+  const todayISO = new Date().toISOString().split("T")[0];
   const all: Event[] = [];
   let from = 0;
   const PAGE = 1000;
@@ -162,6 +176,8 @@ export async function fetchEvents(): Promise<Event[]> {
     const { data, error } = await supabase
       .from("events")
       .select("*")
+      .gte("date", todayISO)
+      .or("status.eq.active,status.is.null")
       .order("date", { ascending: true })
       .range(from, from + PAGE - 1);
     if (error) { console.error("fetchEvents error:", error); break; }
@@ -265,8 +281,7 @@ export async function fetchPlacesWithLimit(limit = 50): Promise<Place[]> {
   const { data, error } = await supabase
     .from("places")
     .select("*")
-    .order("quality_score", { ascending: false, nullsFirst: false })
-    .order("rating_avg", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
     .limit(limit);
   if (error) { console.error("fetchPlacesWithLimit error:", error); return []; }
   return data || [];
