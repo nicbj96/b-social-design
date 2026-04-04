@@ -17,6 +17,7 @@ delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: '', iconRetinaUrl: '', shadowUrl: '' });
 
 import { Search, X, Plus, Minus, Navigation, Star, ExternalLink, Users, MapPin as MapPinIcon } from "lucide-react";
+import DrillDownFilter from "@/components/DrillDownFilter";
 
 import { lazyLoadTagFunctions } from "@/lib/lazyDataLoader";
 import { type PinCategory, type MapPin, HARDCODED_PINS } from "@/data/kortPins";
@@ -164,21 +165,23 @@ const SUPABASE_CAT_MAP: Record<string, PinCategory> = {
   fitness: "fitness", gym: "fitness", træning: "fitness", crossfit: "fitness",
   styrketræning: "fitness", motionscenter: "fitness",
 
-  // Musik / Koncert
+  // Musik / Koncert / Natteliv
   musik: "musik", music: "musik", koncert: "musik", concert: "musik",
   festival: "musik", live: "musik", scene: "musik", spillested: "musik",
   musikhus: "musik", rockklub: "musik", jazzklub: "musik",
+  natteliv: "musik", klub: "musik",
 
   // Kultur / Kunst
   kultur: "kultur", museum: "kultur", udstilling: "kultur", galleri: "kultur",
   teater: "kultur", biograf: "kultur", cinema: "kultur", kunst: "kreativt",
   kreativt: "kreativt", workshop: "kreativt", keramik: "kreativt", maleri: "kreativt",
+  underholdning: "kultur", forlystelse: "kultur",
 
   // Mad / Restaurant
   mad: "mad", mad_hangout: "mad_hangout", restaurant: "mad", cafe: "mad",
-  bar: "mad", pub: "mad", spisested: "mad", madmarked: "mad", street_food: "mad",
+  bar: "mad_hangout", pub: "mad", spisested: "mad", madmarked: "mad", street_food: "mad",
   takeaway: "mad", fastfood: "mad", brunch: "mad", bakery: "mad", bageri: "mad",
-  cocktailbar: "mad", vinbar: "mad", ølbar: "mad",
+  cocktailbar: "mad_hangout", vinbar: "mad_hangout", ølbar: "mad_hangout",
 
   // Logi / Overnatning
   logi: "logi", camping: "logi", vandrerhjem: "logi", hytter: "logi", glamping: "logi",
@@ -189,22 +192,19 @@ const SUPABASE_CAT_MAP: Record<string, PinCategory> = {
   wellness: "wellness", yoga: "wellness", meditation: "wellness", sauna: "wellness",
   spa: "wellness", massage: "wellness", mindfulness: "wellness", pilates: "wellness",
 
+  // Sport (additions)
+  zoo: "aktiv_sport", akvarium: "aktiv_sport", familie: "aktiv_sport", temapark: "aktiv_sport",
+
   // Communities / Social
   communities: "communities", bogklub: "communities", braetspil: "communities",
-  ture: "ture", eventyr: "ture", kajak: "ture",
-  aktiv: "aktiv",
-  // Import source categories
-  musik: "musik", natteliv: "musik", klub: "musik", bar: "mad_hangout",
-  underholdning: "kultur", forlystelse: "kultur", zoo: "aktiv_sport", akvarium: "aktiv_sport",
-  familie: "aktiv_sport", temapark: "aktiv_sport",
-  overnatning: "logi", hostel: "logi",
+  socialt: "socialt", mødested: "communities", foreningsliv: "communities",
+
   // Old DB category names with spaces (legacy from early imports)
   "Natur & friluftsliv": "natur",
   "Ture & eventyr": "ture",
   "Logi & base": "logi",
   "Aktiv & sport": "aktiv_sport",
   "Oplevelser & kultur": "kultur",
-  socialt: "socialt", mødested: "communities", foreningsliv: "communities",
 
   // Rejser / Transport
   rejser: "rejser", transport: "rejser", tog: "rejser", bus: "rejser",
@@ -567,24 +567,7 @@ function PinDetail({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
 }
 
 /* ── Scoped CSS ── */
-const SIDEBAR_CATEGORIES = [
-  { key: "alle",     label: "Alle",     emoji: "✨" },
-  { key: "events",   label: "Events",   emoji: "🎉" },
-  { key: "natur",    label: "Natur",    emoji: "🌿" },
-  { key: "strand",   label: "Strand",   emoji: "🏖️" },
-  { key: "vandring", label: "Vandring", emoji: "🥾" },
-  { key: "mtb",      label: "MTB",      emoji: "🚵" },
-  { key: "loeb",     label: "Løb",      emoji: "🏃" },
-  { key: "sport",    label: "Sport",    emoji: "⚽" },
-  { key: "fitness",  label: "Fitness",  emoji: "💪" },
-  { key: "mad",      label: "Mad",      emoji: "🍽️" },
-  { key: "musik",    label: "Musik",    emoji: "🎵" },
-  { key: "kultur",   label: "Kultur",   emoji: "🎭" },
-  { key: "hund",     label: "Hund",     emoji: "🐕" },
-  { key: "fiskeri",  label: "Fiskeri",  emoji: "🎣" },
-  { key: "logi",     label: "Logi",     emoji: "🏕️" },
-  { key: "wellness", label: "Wellness", emoji: "🧘" },
-] as const;
+// SIDEBAR_CATEGORIES removed — replaced by DrillDownFilter component (Phase 2)
 
 const kortCSS = `${pageBase("kt")}
 
@@ -715,6 +698,49 @@ const kortCSS = `${pageBase("kt")}
   border-color: var(--teal);
   color: var(--teal);
   box-shadow: 0 0 14px var(--teal-glow);
+}
+
+/* ── DrillDown filter overrides for map sidebar ── */
+.kt-wrap { margin: 0; }
+.kt-compact .kt-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 8px; }
+.kt-compact .kt-row::-webkit-scrollbar { display: none; }
+.kt-loading { font-size: 11px; color: var(--pg-white-muted); padding: 4px 0; }
+.kt-breadcrumb {
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 8px; font-size: 11px; color: var(--pg-white-dim);
+  font-family: var(--sans);
+}
+.kt-back {
+  background: none; border: none; color: var(--pg-white-muted);
+  cursor: pointer; padding: 2px; display: flex; align-items: center;
+}
+.kt-back:hover { color: var(--pg-white); }
+.kt-crumb {
+  background: none; border: none; color: var(--pg-white-muted);
+  cursor: pointer; font-size: 11px; font-family: var(--sans); padding: 2px 3px;
+}
+.kt-crumb:hover { color: var(--pg-white); }
+.kt-crumb-active { color: var(--teal); font-weight: 600; }
+.kt-crumb-sep { color: rgba(255,255,255,0.2); }
+.kt-row { display: flex; gap: 8px; }
+.kt-row .kt-chip {
+  flex-shrink: 0;
+  padding: 6px 13px;
+  border-radius: 100px;
+  font-size: 12px; font-weight: 600;
+  background: rgba(6,10,15,0.78);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.6);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  white-space: nowrap; cursor: pointer; transition: all 0.2s;
+}
+.kt-row .kt-chip:hover {
+  background: rgba(255,255,255,0.1); color: var(--pg-white);
+}
+.kt-row .kt-chip.active {
+  background: rgba(78,205,196,0.15); border-color: var(--teal);
+  color: var(--teal); box-shadow: 0 0 14px var(--teal-glow);
 }
 
 /* ══════════ ZOOM / FAB BUTTONS ══════════ */
@@ -1217,6 +1243,8 @@ const kortCSS = `${pageBase("kt")}
   .kt-search-input { padding: 10px 36px 10px 40px; font-size: 13px; }
   .kt-sidebar-cats { top: 58px; padding: 0 10px; gap: 6px; }
   .kt-cat-pill { font-size: 11px; padding: 5px 11px; }
+  .kt-row .kt-chip { font-size: 11px; padding: 5px 11px; }
+  .kt-breadcrumb { font-size: 10px; }
   .kt-carousel { bottom: 72px; padding: 0 10px; }
   .kt-carousel-card { width: 110px; }
   .kt-carousel-thumb { width: 110px; height: 68px; }
@@ -1233,7 +1261,8 @@ export default function Kort() {
   const [search, setSearch] = useState("");
   const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
   const [flyTo, setFlyTo] = useState<{ center: [number, number]; zoom: number } | null>(null);
-  const [sidebarCat, setSidebarCat] = useState<string>("alle");
+  // sidebarCat removed — replaced by mapFilterSlugs from DrillDownFilter
+  const [mapFilterSlugs, setMapFilterSlugs] = useState<string[] | null>(null);
   const [tagSearchCache, setTagSearchCache] = useState<{ [query: string]: any[] }>({});
   const [mapCountry] = useState<string>('DK');
   const searchRef = useRef<HTMLInputElement>(null);
@@ -1264,13 +1293,16 @@ export default function Kort() {
 
   const isMobile = useIsMobile();
 
-  const fetchViewportPlaces = async (bounds: MapBounds) => {
+  const fetchViewportPlaces = async (bounds: MapBounds, filterSlugs?: string[] | null) => {
     try {
       setIsLoadingViewport(true);
+      // When a filter is active, pass slugs to Supabase for server-side filtering
+      const cats = filterSlugs && filterSlugs.length > 0 ? filterSlugs : undefined;
       const newPlaces = await fetchPlacesInViewport(
         bounds,
         mapCountry && mapCountry !== 'ALL' ? (mapCountry === 'DK' ? 'Denmark' : mapCountry) : undefined,
-        isMobile
+        isMobile,
+        cats,
       );
       setSupabasePlaces((prevPlaces) => {
         const existingIds = new Set(prevPlaces.map(p => p.id));
@@ -1288,8 +1320,17 @@ export default function Kort() {
   const handleMapBoundsChange = (bounds: MapBounds) => {
     setMapBounds(bounds);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    debounceTimerRef.current = setTimeout(() => fetchViewportPlaces(bounds), 500);
+    debounceTimerRef.current = setTimeout(() => fetchViewportPlaces(bounds, mapFilterSlugs), 500);
   };
+
+  // Re-fetch when filter changes (clear cache + refetch current bounds)
+  useEffect(() => {
+    if (mapBounds) {
+      setSupabasePlaces([]);
+      cachedPlaceIdsRef.current = new Set();
+      fetchViewportPlaces(mapBounds, mapFilterSlugs);
+    }
+  }, [mapFilterSlugs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); };
@@ -1324,33 +1365,27 @@ export default function Kort() {
     return [...sbPins, ...hardcodedFiltered, ...eventPins, ...routePins];
   }, [supabasePlaces, eventPins, routePins]);
 
-  // Sidebar category → filter pins
+  // Sidebar category → filter pins (supports both legacy flat + hierarchical DrillDownFilter)
   const filteredPins = useMemo(() => {
     return allPins.filter((p) => {
       if (!isFinite(p.lat) || !isFinite(p.lng)) return false;
-      // Sidebar category filter
-      if (sidebarCat !== "alle") {
+
+      // Hierarchical drill-down filter (from DrillDownFilter component)
+      if (mapFilterSlugs && mapFilterSlugs.length > 0) {
         const pCat = p.category.toLowerCase();
-        const CAT_GROUPS: Record<string, string[]> = {
-          events:   ["events"],
-          natur:    ["natur", "outdoor", "dyrespot", "shelter"],
-          strand:   ["badning"],
-          vandring: ["vandring", "ture"],
-          mtb:      ["mtb"],
-          loeb:     ["loeb"],
-          sport:    ["sport", "aktiv_sport", "aktiv"],
-          fitness:  ["fitness"],
-          mad:      ["mad", "mad_hangout"],
-          musik:    ["musik"],
-          kultur:   ["kultur", "kreativt"],
-          hund:     ["hund"],
-          fiskeri:  ["fiskeri"],
-          logi:     ["logi"],
-          wellness: ["wellness"],
-        };
-        const allowed = CAT_GROUPS[sidebarCat];
-        if (allowed && !allowed.includes(pCat)) return false;
+        const pTags = (p.tags || []).map(t => t.toLowerCase());
+        // A pin matches if its category OR any tag overlaps with selected slugs
+        // Also check via SUPABASE_CAT_MAP: if any slug maps to the pin's category
+        const slugSet = new Set(mapFilterSlugs.map(s => s.toLowerCase()));
+        const catMatch = slugSet.has(pCat) || pTags.some(t => slugSet.has(t));
+        // Also check reverse: if pin's category is a mapped value from any selected slug
+        const reverseMatch = mapFilterSlugs.some(slug => {
+          const mapped = SUPABASE_CAT_MAP[slug.toLowerCase()];
+          return mapped && mapped === pCat;
+        });
+        if (!catMatch && !reverseMatch) return false;
       }
+
       // Text search
       const q = search.toLowerCase();
       if (!q) return true;
@@ -1364,7 +1399,7 @@ export default function Kort() {
         (p.tags && p.tags.some(tag => tag.toLowerCase().includes(term)))
       );
     });
-  }, [search, allPins, sidebarCat, t, tagSearchCache]);
+  }, [search, allPins, mapFilterSlugs, t, tagSearchCache]);
 
   // Carousel: nearest pins sorted by distance
   const carouselPins = useMemo(() => {
@@ -1483,17 +1518,13 @@ export default function Kort() {
           </div>
         </div>
 
-        {/* ── Category filter strip ── */}
+        {/* ── Category filter strip (hierarchical drill-down) ── */}
         <div className="kt-sidebar-cats">
-          {SIDEBAR_CATEGORIES.map(cat => (
-            <button
-              key={cat.key}
-              onClick={() => { setSidebarCat(sidebarCat === cat.key ? "alle" : cat.key); setSelectedPin(null); }}
-              className={`kt-cat-pill ${sidebarCat === cat.key ? "active" : ""}`}
-            >
-              <span>{cat.emoji}</span>{cat.label}
-            </button>
-          ))}
+          <DrillDownFilter
+            onFilterChange={(slugs) => { setMapFilterSlugs(slugs); setSelectedPin(null); }}
+            classPrefix="kt"
+            compact
+          />
         </div>
 
         {/* ── Recenter button ── */}

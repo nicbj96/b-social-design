@@ -601,7 +601,7 @@ const ZIP_TO_CITY: Record<string, string> = {
   "2820":"Gentofte","2860":"Søborg","2800":"Lyngby","2750":"Ballerup","2650":"Hvidovre",
   "2605":"Brøndby","2620":"Albertslund","2635":"Ishøj","2625":"Vallensbæk","2670":"Greve",
   "2680":"Solrød","4640":"Faxe","4760":"Vordingborg","3700":"Rønne","4400":"Kalundborg",
-  "4180":"Sorø","4320":"Lejre","8660":"Skanderborg","8700":"Horsens","7190":"Billund",
+  "4180":"Sorø","4320":"Lejre","8660":"Skanderborg","7190":"Billund",
   "6800":"Varde","6600":"Vejen","6270":"Tønder","6200":"Aabenraa","6720":"Fanø",
   "3600":"Frederikssund","3500":"Værløse","2970":"Hørsholm","2791":"Dragør",
   "2770":"Kastrup","7700":"Thisted","7620":"Lemvig","7600":"Struer","8500":"Grenaa",

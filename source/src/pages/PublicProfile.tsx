@@ -536,7 +536,7 @@ export default function PublicProfile() {
 
       {/* Hero with background image */}
       <div className="pp-hero">
-        <button className="pp-back" onClick={() => navigate(-1)}>
+        <button className="pp-back" onClick={() => window.history.back()}>
           <ArrowLeft size={20} />
         </button>
 
@@ -545,7 +545,7 @@ export default function PublicProfile() {
             <div className="pp-avatar">
               <img
                 src={false as unknown as string}
-                alt={profile.display_name || "Bruger"}
+                alt={profile?.display_name || "Bruger"}
                 loading="lazy"
               />
             </div>

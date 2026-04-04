@@ -225,7 +225,12 @@ export type MapBounds = {
 };
 
 /** Fetch places within viewport bounds (lightweight columns, limit 500 desktop / 200 mobile) */
-export async function fetchPlacesInViewport(bounds: MapBounds, country?: string, isMobile?: boolean): Promise<Place[]> {
+export async function fetchPlacesInViewport(
+  bounds: MapBounds,
+  country?: string,
+  isMobile?: boolean,
+  categories?: string[],
+): Promise<Place[]> {
   // Reduce marker limit on mobile to improve clustering performance
   const limit = isMobile ? 200 : 500;
 
@@ -245,10 +250,13 @@ export async function fetchPlacesInViewport(bounds: MapBounds, country?: string,
   if (country && country !== 'ALL') {
     query = query.eq("country", country);
   }
+  if (categories && categories.length > 0) {
+    query = query.overlaps("main_categories", categories);
+  }
 
   const { data, error } = await query;
   if (error) { console.error("fetchPlacesInViewport error:", error); return []; }
-  return (data as Place[]) || [];
+  return (data as unknown as Place[]) || [];
 }
 
 /** Fetch places with optional limit */
@@ -270,7 +278,7 @@ export async function fetchAllPlacesForMap(country?: string): Promise<Place[]> {
     const { data, error } = await query.range(from, from + PAGE - 1);
     if (error) { console.error("fetchAllPlacesForMap error:", error); break; }
     if (!data || data.length === 0) break;
-    all.push(...(data as Place[]));
+    all.push(...(data as unknown as Place[]));
     if (data.length < PAGE) break;
     from += PAGE;
   }

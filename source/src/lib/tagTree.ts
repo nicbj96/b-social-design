@@ -237,8 +237,6 @@ export const TAG_TREE: TagNode[] = [
           { tag: "electronic", emoji: "🎛️", label: "Electronic" },
           { tag: "psytrance", emoji: "🌀", label: "Psytrance" },
           { tag: "goa-trance", emoji: "🌀", label: "Goa Trance" },
-          { tag: "techno", emoji: "🎚️", label: "Techno" },
-          { tag: "house", emoji: "🎛️", label: "House" },
           { tag: "gospel", emoji: "🙏", label: "Gospel" },
         ],
       },

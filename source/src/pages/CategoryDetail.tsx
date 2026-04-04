@@ -12,7 +12,7 @@ import { getCategoryByKey, ALL_CATEGORIES } from "@/data/categories";
 import { fetchPlaces, fetchEvents as fetchSupabaseEvents, type Place } from "@/lib/supabase";
 import type { TagNode } from "@/lib/tagTree";
 import { lazyLoadTagTree, lazyLoadTagFunctions, lazyLoadCategoryFunctions } from "@/lib/lazyDataLoader";
-import type { CategoryPlace, CategoryActivity } from "@/data/categoryContent";
+import type { CategoryPlace, CategoryActivity, SubcategoryInfo } from "@/data/categoryContent";
 
 import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
@@ -867,7 +867,7 @@ function getCategoryRelatedTags(categoryKey: string, tagTree: any): string[] {
 }
 
 /** Smart search suggestions from tag tree within category context */
-function getSmartSuggestions(query: string, categoryKey: string, tagTree: any): TagNode[] {
+function getSmartSuggestions(query: string, categoryKey: string, tagTree: TagNode[] | null): TagNode[] {
   if (!query.trim()) return [];
   const q = query.toLowerCase().trim();
   const relatedTags = getCategoryRelatedTags(categoryKey, tagTree);
@@ -1161,17 +1161,27 @@ export default function CategoryDetail() {
   const containerRef = useFadeUp("cd");
 
   // Lazy load data
-  const [tagTree, setTagTree] = useState<any>(null);
-  const [categoryFunctions, setCategoryFunctions] = useState<any>(null);
+  const [tagTree, setTagTree] = useState<TagNode[] | null>(null);
+  const [categoryFunctions, setCategoryFunctions] = useState<{
+    getCategoryPlaces: (cat: string) => CategoryPlace[];
+    getCategoryActivities: (cat: string) => CategoryActivity[];
+    getSubcategoryPlaces: (cat: string, sub: string) => CategoryPlace[];
+    getSubcategoryActivities: (cat: string, sub: string) => CategoryActivity[];
+    SUBCATEGORY_INFO: Record<string, SubcategoryInfo>;
+    getCategoryContentCount: (cat: string) => { places: number; activities: number; total: number };
+  } | null>(null);
+  const [tagFunctions, setTagFunctions] = useState<{ searchTags: (q: string) => TagNode[] } | null>(null);
 
   useEffect(() => {
-    // Load both datasets on component mount
+    // Load all datasets on component mount
     Promise.all([
       lazyLoadTagTree(),
-      lazyLoadCategoryFunctions()
-    ]).then(([tree, funcs]) => {
+      lazyLoadCategoryFunctions(),
+      lazyLoadTagFunctions(),
+    ]).then(([tree, funcs, tagFuncs]) => {
       setTagTree(tree);
       setCategoryFunctions(funcs);
+      setTagFunctions(tagFuncs);
     }).catch(err => console.error('Error loading data:', err));
   }, []);
 
@@ -1295,7 +1305,7 @@ export default function CategoryDetail() {
         if (directMatch) return true;
 
         // Tag tree expansion: if user types "jazz", also match "musik", "koncert" etc.
-        const tagResults = searchTags(q);
+        const tagResults = tagFunctions?.searchTags(q) || [];
         const expandedTerms = tagResults.map(item => item.tag.toLowerCase());
         return tags.some(item => expandedTerms.includes(item)) || smartTags.some(item => expandedTerms.includes(item));
       }
@@ -1310,10 +1320,10 @@ export default function CategoryDetail() {
 
       return true;
     });
-  }, [supabasePlaces, category, searchQuery, priceFilter, catData]);
+  }, [supabasePlaces, category, searchQuery, priceFilter, catData, tagFunctions]);
 
   /* ── Subcategory info ── */
-  const subInfo = activeSub ? SUBCATEGORY_INFO[activeSub] : null;
+  const subInfo = activeSub ? (categoryFunctions?.SUBCATEGORY_INFO?.[activeSub] ?? null) : null;
 
   /* ── Counts per subcategory ── */
   const subCounts = useMemo(() => {
@@ -1324,7 +1334,7 @@ export default function CategoryDetail() {
       counts[sub.key] = p + a;
     }
     return counts;
-  }, [category, subcats]);
+  }, [category, subcats, categoryFunctions]);
 
   /* ── Filter content by search query + price ── */
   const filteredPlaces = useMemo(() => {
@@ -1332,7 +1342,7 @@ export default function CategoryDetail() {
     const q = searchQuery.toLowerCase().trim();
     if (q) {
       // Smart search: expand through tag tree
-      const tagResults = searchTags(q);
+      const tagResults = tagFunctions?.searchTags(q) || [];
       const expandedTerms = [q, ...tagResults.map(item => item.tag.toLowerCase()), ...tagResults.map(item => item.label.toLowerCase())];
 
       result = result.filter(p =>
@@ -1346,13 +1356,13 @@ export default function CategoryDetail() {
     if (priceFilter === "gratis") result = result.filter(p => p.isFree);
     if (priceFilter === "premium") result = result.filter(p => !p.isFree && p.price && p.price > 0);
     return result;
-  }, [places, searchQuery, priceFilter]);
+  }, [places, searchQuery, priceFilter, tagFunctions]);
 
   const filteredActivities = useMemo(() => {
     let result = activities;
     const q = searchQuery.toLowerCase().trim();
     if (q) {
-      const tagResults = searchTags(q);
+      const tagResults = tagFunctions?.searchTags(q) || [];
       const expandedTerms = [q, ...tagResults.map(item => item.tag.toLowerCase()), ...tagResults.map(item => item.label.toLowerCase())];
 
       result = result.filter(a =>
@@ -1366,7 +1376,7 @@ export default function CategoryDetail() {
     if (priceFilter === "gratis") result = result.filter(a => a.price === 0);
     if (priceFilter === "premium") result = result.filter(a => a.price > 0);
     return result;
-  }, [activities, searchQuery, priceFilter]);
+  }, [activities, searchQuery, priceFilter, tagFunctions]);
 
   const totalLocalContent = filteredPlaces.length + filteredActivities.length;
   const totalDbContent = matchingSupabasePlaces.length;

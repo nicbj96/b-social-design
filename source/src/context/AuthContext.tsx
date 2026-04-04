@@ -28,6 +28,7 @@ interface AuthContextType {
 export interface ProfileData {
   id: string;
   name: string | null;
+  display_name: string | null;
   email: string | null;
   avatar_url: string | null;
   bio: string | null;
@@ -81,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile({
         id: data.id,
         name: data.name,
+        display_name: data.display_name ?? null,
         email: data.email,
         avatar_url: data.avatar_url,
         bio: data.bio,

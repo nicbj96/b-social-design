@@ -9,6 +9,7 @@ import { fetchPlaces, type Place } from "@/lib/supabase";
 import { getCategoryEmoji, getEventImage, formatDanishDate } from "@/lib/eventHelpers";
 import { useTags } from "@/context/TagContext";
 import { searchTags, getParentCategories, TAG_TREE } from "@/lib/tagTree";
+import DrillDownFilter from "@/components/DrillDownFilter";
 import { OPLEVELSER_NAER_DIG } from "@/data/feedData";
 import type { SocialActivity } from "@/data/feedData";
 import { ALL_PINS } from "@/data/kortPins";
@@ -103,22 +104,7 @@ const CAT_ALIASES: Record<string, string[]> = {
   rejser:      ["rejser", "transport"],
 };
 
-const DB_FILTERS: { key: string | null; label: string; emoji: string }[] = [
-  { key: null,          label: "Alle",      emoji: "✨" },
-  { key: "natur",       label: "Natur",     emoji: "🌿" },
-  { key: "aktiv_sport", label: "Sport",     emoji: "🏃" },
-  { key: "kultur",      label: "Kultur",    emoji: "🎭" },
-  { key: "mad",         label: "Mad",       emoji: "🍽️" },
-  { key: "musik",       label: "Musik",     emoji: "🎵" },
-  { key: "natteliv",    label: "Natteliv",  emoji: "🌙" },
-  { key: "familie",     label: "Familie",   emoji: "🎡" },
-  { key: "logi",        label: "Logi",      emoji: "🏕️" },
-  { key: "ture",        label: "Ture",      emoji: "🥾" },
-  { key: "wellness",    label: "Wellness",  emoji: "🧘" },
-  { key: "rejser",      label: "Rejser",    emoji: "✈️" },
-  { key: "strand",      label: "Strand",    emoji: "🏖️" },
-  { key: "hundeskov",   label: "Hundeskov", emoji: "🐕" },
-];
+// DB_FILTERS removed — replaced by DrillDownFilter component (Phase 2)
 
 /* Chip colors matching the mockup exactly */
 const CAT_COLORS: Record<string, string> = {
@@ -148,7 +134,7 @@ const CAT_COLORS: Record<string, string> = {
 
 function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
   const { t } = useTranslation();
-  const [dbFilter, setDbFilter] = useState<string | null>(null);
+  const [filterSlugs, setFilterSlugs] = useState<string[] | null>(null);
 
   // Resolve country to single code or undefined (regions handled client-side)
   const singleCountry = useMemo(() => {
@@ -157,11 +143,21 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
     return activeCountry;
   }, [activeCountry]);
 
-  // Server-side filter: fetch by category when filter is active
+  // Server-side filter: use hierarchical tag slugs from DrillDownFilter
   const { data: places, isLoading } = useQuery<Place[]>({
-    queryKey: ["supabase-places", dbFilter, singleCountry],
+    queryKey: ["supabase-places", filterSlugs, singleCountry],
     queryFn: () => {
-      const cats = dbFilter ? (CAT_ALIASES[dbFilter] || [dbFilter]) : undefined;
+      // When filterSlugs is set, pass all descendant slugs as categories
+      // Also include legacy CAT_ALIASES mappings for backward compatibility
+      let cats: string[] | undefined;
+      if (filterSlugs && filterSlugs.length > 0) {
+        cats = [...filterSlugs];
+        // Add legacy aliases for top-level slugs that map to old DB names
+        for (const slug of filterSlugs) {
+          if (CAT_ALIASES[slug]) cats.push(...CAT_ALIASES[slug]);
+        }
+        cats = Array.from(new Set(cats)); // deduplicate
+      }
       return fetchPlaces({ categories: cats, country: singleCountry, limit: 60 });
     },
     staleTime: 30 * 60 * 1000,
@@ -203,18 +199,10 @@ function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
           {t('nav.kort')} <ChevronRight size={12} />
         </Link>
       </div>
-      <div className="ud-filter-row">
-        {DB_FILTERS.map((f) => (
-          <button
-            key={f.key || "alle"}
-            onClick={() => setDbFilter(f.key)}
-            className={`ud-chip ${dbFilter === f.key ? "active" : ""}`}
-            data-testid={`db-filter-${f.key || "alle"}`}
-          >
-            <span>{f.emoji}</span> {f.label}
-          </button>
-        ))}
-      </div>
+      <DrillDownFilter
+        onFilterChange={setFilterSlugs}
+        classPrefix="ud"
+      />
       <div className="ud-places-grid">
         {filteredPlaces.slice(0, 20).map(p => {
           const mainCat = p.main_categories?.[0] || "natur";
@@ -295,13 +283,13 @@ export default function Udforsk() {
       if (activeCountry === 'ALL') {
         matchCountry = true;
       } else if (activeCountry === 'EUROPE') {
-        matchCountry = EUROPE_CODES.includes(e.country);
+        matchCountry = EUROPE_CODES.includes(e.country ?? "");
       } else if (activeCountry === 'ASIA') {
-        matchCountry = ASIA_CODES.includes(e.country);
+        matchCountry = ASIA_CODES.includes(e.country ?? "");
       } else if (activeCountry === 'AMERICAS') {
-        matchCountry = AMERICAS_CODES.includes(e.country);
+        matchCountry = AMERICAS_CODES.includes(e.country ?? "");
       } else if (activeCountry === 'AFRICA') {
-        matchCountry = AFRICA_CODES.includes(e.country);
+        matchCountry = AFRICA_CODES.includes(e.country ?? "");
       } else {
         matchCountry = e.country === activeCountry;
       }
@@ -1023,6 +1011,37 @@ ${pageBase("ud")}
   background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);
   color: var(--pg-white);
 }
+
+/* ═══════════════════════════════════════════
+   DRILL-DOWN FILTER
+   ═══════════════════════════════════════════ */
+.ud-wrap { margin-bottom: 14px; }
+.ud-compact .ud-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.ud-compact .ud-row::-webkit-scrollbar { display: none; }
+.ud-loading { font-size: 12px; color: var(--pg-white-muted); padding: 8px 0; }
+.ud-breadcrumb {
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 10px; font-size: 12px; color: var(--pg-white-dim);
+  font-family: var(--sans);
+}
+.ud-back {
+  background: none; border: none; color: var(--pg-white-muted);
+  cursor: pointer; padding: 2px; display: flex; align-items: center;
+  transition: color 0.2s;
+}
+.ud-back:hover { color: var(--pg-white); }
+.ud-crumb {
+  background: none; border: none; color: var(--pg-white-muted);
+  cursor: pointer; font-size: 12px; font-family: var(--sans);
+  padding: 2px 4px; transition: color 0.2s;
+}
+.ud-crumb:hover { color: var(--pg-white); }
+.ud-crumb-active { color: var(--teal); font-weight: 600; cursor: default; }
+.ud-crumb-sep { color: rgba(255,255,255,0.2); margin: 0 1px; }
+.ud-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.ud-row .ud-chip span { margin-right: 2px; }
 
 /* ═══════════════════════════════════════════
    PLACES
