@@ -10,6 +10,7 @@
  */
 
 import { supabase } from "./supabase";
+import { TAG_TREE, type TagNode } from "./tagTree";
 
 /* ── Types ── */
 
@@ -50,6 +51,28 @@ const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 function isCacheValid(): boolean {
   return Date.now() - _cacheTimestamp < CACHE_TTL;
+}
+
+/* ── Static fallback: convert TAG_TREE → HierarchyNode[] ── */
+// Used when Supabase is unreachable — keeps the filter working offline.
+
+function tagNodeToHierarchy(node: TagNode, level: number): HierarchyNode {
+  return {
+    tag: node.tag,
+    emoji: node.emoji,
+    label: node.label,
+    level,
+    children: node.children?.map(c => tagNodeToHierarchy(c, level + 1)),
+  };
+}
+
+let _staticFallback: HierarchyNode[] | null = null;
+
+function getStaticFallback(): HierarchyNode[] {
+  if (!_staticFallback) {
+    _staticFallback = TAG_TREE.map(n => tagNodeToHierarchy(n, 1));
+  }
+  return _staticFallback;
 }
 
 /* ── Fetch all tag_categories ── */
@@ -108,10 +131,25 @@ export async function fetchAllNormalizedTags(): Promise<NormalizedTag[]> {
 export async function fetchTagTree(): Promise<HierarchyNode[]> {
   if (_treeCache && isCacheValid()) return _treeCache;
 
-  const [categories, tags] = await Promise.all([
-    fetchTagCategories(),
-    fetchAllNormalizedTags(),
-  ]);
+  let categories: TagCategory[];
+  let tags: NormalizedTag[];
+
+  try {
+    [categories, tags] = await Promise.all([
+      fetchTagCategories(),
+      fetchAllNormalizedTags(),
+    ]);
+  } catch {
+    // Supabase unreachable — use bundled static TAG_TREE as fallback
+    console.warn("[tagApi] Supabase unavailable, falling back to static TAG_TREE");
+    return getStaticFallback();
+  }
+
+  // If we got no data (e.g. tables empty), also fall back
+  if (tags.length === 0) {
+    console.warn("[tagApi] tags_normalized empty, falling back to static TAG_TREE");
+    return getStaticFallback();
+  }
 
   // Index tags by id for parent lookup
   const byId = new Map<string, NormalizedTag>();

@@ -46,10 +46,15 @@ export default function DrillDownFilter({
   const [activeL3, setActiveL3] = useState<string | null>(null);
 
   // Load tag tree on mount (cached in tagApi — fast after first load)
+  // Falls back to static TAG_TREE if Supabase is unreachable (via tagApi fallback)
   useEffect(() => {
+    // 5-second timeout: if Supabase hangs, tagApi will return static fallback
+    const timeout = setTimeout(() => setLoading(false), 5000);
     fetchTagTree()
       .then(t => { setTree(t); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(() => setLoading(false))
+      .finally(() => clearTimeout(timeout));
+    return () => clearTimeout(timeout);
   }, []);
 
   // Derived lists

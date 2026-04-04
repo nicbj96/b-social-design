@@ -112,12 +112,16 @@ export async function fetchPlaces(options?: {
   offset?: number;
   bbox?: { minLat: number; maxLat: number; minLon: number; maxLon: number };
 }): Promise<Place[]> {
-  const limit = options?.limit || 500;
+  const limit = options?.limit || 60; // reduced from 500 — avoids timeouts
   const offset = options?.offset || 0;
+
+  // Explicit column list: omits metadata (large JSONB) and smart_tags
+  // to avoid statement timeouts on the 191K-row places table.
+  const COLS = "id,name,description,latitude,longitude,city,region,country,main_categories,tags,rating_avg,rating_count,quality_score,created_at,updated_at";
 
   let query = supabase
     .from("places")
-    .select("*")
+    .select(COLS)
     .order("quality_score", { ascending: false, nullsFirst: false })
     .order("rating_avg", { ascending: false, nullsFirst: false });
 
