@@ -38,11 +38,11 @@ export default function Feed() {
   }, [selectedOverkategorier]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-20">
+    <div className="min-h-screen text-white pb-20" style={{ background: "#060a0f" }}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-white/5">
+      <div className="sticky top-0 z-40 backdrop-blur-lg border-b border-white/[0.06]" style={{ background: "rgba(6,10,15,0.85)" }}>
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Dit Feed</h1>
+          <h1 className="text-2xl font-bold" style={{ fontFamily: "'Instrument Serif', Georgia, serif", letterSpacing: "-0.3px", color: "#f0fffe" }}>Dit Feed</h1>
           <button
             onClick={() => setTagEditorOpen(true)}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -224,42 +224,36 @@ function EventCard({
   }, [event.category]);
 
   return (
-    <Link to={`/event/${event.id}`}>
-      <div className="flex-shrink-0 w-56 rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-pointer group snap-start">
-        {/* Image */}
-        {imageUrl && (
-          <div className="h-32 overflow-hidden bg-white/5">
-            <img
-              src={imageUrl}
-              alt={event.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-            />
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="p-3 space-y-2">
-          {/* Title */}
-          <h3 className="font-medium text-sm text-white truncate line-clamp-2">
-            {event.title}
-          </h3>
-
-          {/* Date */}
-          <p className="text-xs text-white/50">
-            {formatDanishDate(event.date)}
-          </p>
-
-          {/* Location */}
-          <p className="text-xs text-white/40 truncate">
-            {event.location}
-          </p>
-
-          {/* Tags */}
-          {tagArray.length > 0 && (
-            <div className="pt-1">
-              <TagRow tags={tagArray} maxVisible={1} size="sm" />
-            </div>
+    <Link to={`/event/${event.id}`} style={{ flexShrink: 0 }}>
+      <div style={{
+        flexShrink: 0, width: "200px", borderRadius: "16px", overflow: "hidden",
+        background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
+        cursor: "pointer", transition: "transform 0.18s, box-shadow 0.18s", snapAlign: "start",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+      }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(1.03)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(78,205,196,0.15)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.4)";
+        }}
+      >
+        <div style={{ position: "relative", height: "230px", background: "rgba(78,205,196,0.06)" }}>
+          {imageUrl && (
+            <img src={imageUrl} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(6,10,15,0.95) 0%, rgba(6,10,15,0.5) 50%, rgba(0,0,0,0.05) 100%)" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 12px 12px" }}>
+            <h3 style={{ fontWeight: 600, fontSize: "13px", color: "#fff", lineHeight: 1.35, marginBottom: "5px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+              {event.title}
+            </h3>
+            <p style={{ fontSize: "11px", color: "#4ECDC4", fontWeight: 600 }}>{formatDanishDate(event.date)}</p>
+            {event.location && (
+              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.location}</p>
+            )}
+          </div>
         </div>
       </div>
     </Link>

@@ -70,11 +70,11 @@ export default function Udforsk() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-20">
+    <div className="min-h-screen text-white pb-20" style={{ background: "#060a0f" }}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-white/5">
+      <div className="sticky top-0 z-40 backdrop-blur-lg border-b border-white/[0.06]" style={{ background: "rgba(6,10,15,0.85)" }}>
         <div className="max-w-6xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold mb-4">Udforsk</h1>
+          <h1 className="text-3xl font-bold mb-4" style={{ fontFamily: "'Instrument Serif', Georgia, serif", letterSpacing: "-0.5px", color: "#f0fffe" }}>Udforsk</h1>
 
           {/* Search Bar */}
           <div className="relative">
@@ -200,8 +200,24 @@ export default function Udforsk() {
   );
 }
 
+/* Premium color palette for category cards */
+const CAT_PALETTE = [
+  { color: "#4ECDC4", rgb: "78,205,196" },
+  { color: "#FF6B6B", rgb: "255,107,107" },
+  { color: "#FECA57", rgb: "254,202,87" },
+  { color: "#A29BFE", rgb: "162,155,254" },
+  { color: "#74B9FF", rgb: "116,185,255" },
+  { color: "#55EFC4", rgb: "85,239,196" },
+  { color: "#FDCB6E", rgb: "253,203,110" },
+  { color: "#FD79A8", rgb: "253,121,168" },
+  { color: "#6C5CE7", rgb: "108,92,231" },
+  { color: "#FAB1A0", rgb: "250,177,160" },
+  { color: "#00B894", rgb: "0,184,148" },
+  { color: "#E17055", rgb: "225,112,85" },
+];
+
 /**
- * Level 0: Category Grid
+ * Level 0: Category Grid — Premium bento design
  */
 function Level0View({
   categories,
@@ -213,51 +229,65 @@ function Level0View({
   onSelectL1: (cat: { slug: string; name: string; emoji: string }) => void;
 }) {
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Kategorier</h2>
+    <div style={{ marginBottom: 8 }}>
+      <h2 style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: "20px" }}>
+        Kategorier
+      </h2>
 
       {isLoading ? (
-        // Skeleton Grid
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "12px" }}>
           {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="rounded-xl bg-white/5 border border-white/10 p-4 h-32 animate-pulse"
-            />
+            <div key={i} style={{ height: "120px", borderRadius: "16px", background: "rgba(255,255,255,0.04)", animation: "pulse 1.5s ease-in-out infinite" }} />
           ))}
         </div>
       ) : categories.length === 0 ? (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
-          <p className="text-white/60">Ingen kategorier fundet</p>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "32px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
+          Ingen kategorier fundet
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {categories.map((cat) => (
-            <button
-              key={cat.slug}
-              onClick={() =>
-                onSelectL1({
-                  slug: cat.slug,
-                  name: cat.name,
-                  emoji: cat.emoji || "🏷️",
-                })
-              }
-              className="rounded-xl bg-white/5 border border-white/10 p-4 text-left hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] transition-all group cursor-pointer"
-            >
-              {/* Emoji */}
-              <p className="text-3xl mb-3">{cat.emoji || "🏷️"}</p>
-
-              {/* Name */}
-              <p className="font-medium text-sm text-white mb-2 line-clamp-2">
-                {cat.name}
-              </p>
-
-              {/* Count Badge */}
-              <p className="text-xs text-white/40">
-                {(cat.total_count || 0).toLocaleString("da-DK")} oplevelser
-              </p>
-            </button>
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "12px" }}>
+          {categories.map((cat, idx) => {
+            const pal = CAT_PALETTE[idx % CAT_PALETTE.length];
+            return (
+              <button
+                key={cat.slug}
+                onClick={() => onSelectL1({ slug: cat.slug, name: cat.name, emoji: cat.emoji || "🏷️" })}
+                style={{
+                  background: `linear-gradient(135deg, rgba(${pal.rgb},0.13) 0%, rgba(6,10,15,0.9) 100%)`,
+                  border: `1px solid rgba(${pal.rgb},0.28)`,
+                  boxShadow: `0 0 24px rgba(${pal.rgb},0.10), inset 0 1px 0 rgba(255,255,255,0.04)`,
+                  borderRadius: "16px",
+                  padding: "20px 16px 16px",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  transition: "transform 0.18s, box-shadow 0.18s",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.transform = "scale(1.03)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 40px rgba(${pal.rgb},0.22), inset 0 1px 0 rgba(255,255,255,0.06)`;
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 24px rgba(${pal.rgb},0.10), inset 0 1px 0 rgba(255,255,255,0.04)`;
+                }}
+              >
+                {/* Ambient glow orb */}
+                <div style={{ position: "absolute", top: -12, right: -12, width: 64, height: 64, borderRadius: "50%", background: `rgba(${pal.rgb},0.18)`, filter: "blur(16px)", pointerEvents: "none" }} />
+                {/* Emoji */}
+                <p style={{ fontSize: "34px", marginBottom: "12px", lineHeight: 1, position: "relative" }}>{cat.emoji || "🏷️"}</p>
+                {/* Name */}
+                <p style={{ fontWeight: 600, fontSize: "14px", color: "#f0fffe", marginBottom: "6px", lineHeight: 1.3, position: "relative" }}>
+                  {cat.name}
+                </p>
+                {/* Count */}
+                <p style={{ fontSize: "11px", color: pal.color, fontWeight: 600, position: "relative" }}>
+                  {(cat.total_count || 0).toLocaleString("da-DK")} oplevelser
+                </p>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -592,38 +622,39 @@ function EventCard({
   }, [event.category]);
 
   return (
-    <Link to={`/event/${event.id}`}>
-      <div className="flex-shrink-0 w-56 rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-pointer group snap-start">
-        {/* Image */}
-        {imageUrl && (
-          <div className="h-32 overflow-hidden bg-white/5">
-            <img
-              src={imageUrl}
-              alt={event.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-            />
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="p-3 space-y-2">
-          {/* Title */}
-          <h3 className="font-medium text-sm text-white truncate line-clamp-2">
-            {event.title}
-          </h3>
-
-          {/* Date */}
-          <p className="text-xs text-white/50">{formatDanishDate(event.date)}</p>
-
-          {/* Location */}
-          <p className="text-xs text-white/40 truncate">{event.location}</p>
-
-          {/* Tags */}
-          {tagArray.length > 0 && (
-            <div className="pt-1">
-              <TagRow tags={tagArray} maxVisible={1} size="sm" />
-            </div>
+    <Link to={`/event/${event.id}`} style={{ flexShrink: 0 }}>
+      <div style={{
+        flexShrink: 0, width: "200px", borderRadius: "16px", overflow: "hidden",
+        background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
+        cursor: "pointer", transition: "transform 0.18s, box-shadow 0.18s", snapAlign: "start",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+      }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(1.03)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(78,205,196,0.15)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.4)";
+        }}
+      >
+        {/* Image fill with gradient overlay */}
+        <div style={{ position: "relative", height: "230px", background: "rgba(78,205,196,0.06)" }}>
+          {imageUrl && (
+            <img src={imageUrl} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           )}
+          {/* Gradient overlay */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(6,10,15,0.95) 0%, rgba(6,10,15,0.55) 50%, rgba(0,0,0,0.1) 100%)" }} />
+          {/* Content overlay */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 12px 12px" }}>
+            <h3 style={{ fontWeight: 600, fontSize: "13px", color: "#fff", lineHeight: 1.35, marginBottom: "5px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+              {event.title}
+            </h3>
+            <p style={{ fontSize: "11px", color: "#4ECDC4", fontWeight: 600 }}>{formatDanishDate(event.date)}</p>
+            {event.location && (
+              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.location}</p>
+            )}
+          </div>
         </div>
       </div>
     </Link>
@@ -664,21 +695,41 @@ function PlaceCard({
   }, [place.interest_tags]);
 
   return (
-    <Link to={`/sted/${place.id}`}>
-      <div className="flex-shrink-0 w-56 rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-pointer group snap-start p-4 h-fit">
+    <Link to={`/sted/${place.id}`} style={{ flexShrink: 0 }}>
+      <div style={{
+        flexShrink: 0, width: "200px", borderRadius: "16px",
+        background: "linear-gradient(135deg, rgba(78,205,196,0.08) 0%, rgba(6,10,15,0.9) 100%)",
+        border: "1px solid rgba(78,205,196,0.18)",
+        cursor: "pointer", transition: "transform 0.18s, box-shadow 0.18s",
+        padding: "16px", snapAlign: "start",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+      }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(1.03)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(78,205,196,0.18)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
+        }}
+      >
+        {/* Map pin icon */}
+        <div style={{ width: 36, height: 36, borderRadius: "10px", background: "rgba(78,205,196,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
+          <MapPin size={18} color="#4ECDC4" />
+        </div>
         {/* Name */}
-        <h3 className="font-medium text-sm text-white line-clamp-2 mb-2">
+        <h3 style={{ fontWeight: 600, fontSize: "14px", color: "#f0fffe", lineHeight: 1.3, marginBottom: "6px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
           {place.name}
         </h3>
 
         {/* City/Region */}
         {place.city && (
-          <p className="text-xs text-white/50 mb-2">{place.city}</p>
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginBottom: "8px" }}>{place.city}</p>
         )}
 
         {/* Rating */}
         {place.rating_avg && place.rating_count && place.rating_count > 0 && (
-          <p className="text-xs text-white/60 mb-3 flex items-center gap-1">
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: "10px", display: "flex", alignItems: "center", gap: "4px" }}>
             <span>⭐</span>
             {place.rating_avg.toFixed(1)} ({place.rating_count})
           </p>
@@ -733,13 +784,28 @@ function MapLink() {
   return (
     <section>
       <Link to="/kort">
-        <div className="rounded-xl bg-gradient-to-r from-teal-500/20 to-blue-500/20 border border-teal-500/30 p-8 hover:border-teal-500/50 hover:bg-gradient-to-r hover:from-teal-500/30 hover:to-blue-500/30 transition-all cursor-pointer group">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h3 className="text-xl font-semibold">Udforsk på Kort</h3>
-              <p className="text-white/60 text-sm">Se alle steder og events omkring dig</p>
+        <div style={{
+          borderRadius: "20px",
+          background: "linear-gradient(135deg, rgba(78,205,196,0.12) 0%, rgba(116,185,255,0.08) 100%)",
+          border: "1px solid rgba(78,205,196,0.25)",
+          padding: "28px 32px",
+          cursor: "pointer",
+          transition: "all 0.2s",
+          boxShadow: "0 0 40px rgba(78,205,196,0.08)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 60px rgba(78,205,196,0.18)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 40px rgba(78,205,196,0.08)"; }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <h3 style={{ fontSize: "20px", fontWeight: 700, color: "#f0fffe" }}>Udforsk på Kort</h3>
+              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)" }}>Se alle steder og events omkring dig</p>
             </div>
-            <MapPin size={32} className="text-teal-400 group-hover:scale-110 transition-transform" />
+            <div style={{ width: 52, height: 52, borderRadius: "14px", background: "rgba(78,205,196,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <MapPin size={26} color="#4ECDC4" />
+            </div>
           </div>
         </div>
       </Link>
