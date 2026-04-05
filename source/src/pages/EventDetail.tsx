@@ -275,6 +275,59 @@ ${pageBase("ed")}
   border: 1px solid rgba(78,205,196,0.2);
 }
 
+/* ── Cancel button ── */
+.ed-join-btn-cancel {
+  background: rgba(239,68,68,0.08); color: #f87171;
+  border: 1px solid rgba(239,68,68,0.25);
+}
+.ed-join-btn-cancel:hover {
+  background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4);
+}
+
+/* ── Attendees section ── */
+.ed-attendees {
+  margin-bottom: 24px;
+}
+.ed-attendees-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.ed-attendees-header svg { color: var(--teal); width: 16px; height: 16px; }
+.ed-attendees-label {
+  font-size: 12px; font-weight: 600; color: var(--teal);
+  text-transform: uppercase; letter-spacing: 1.5px;
+}
+.ed-attendees-row {
+  display: flex; align-items: center; gap: -6px; flex-wrap: nowrap;
+}
+.ed-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--glass-bg);
+  object-fit: cover;
+  margin-right: -8px;
+  flex-shrink: 0;
+}
+.ed-avatar-fallback {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: rgba(78,205,196,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; color: var(--teal);
+  margin-right: -8px; flex-shrink: 0;
+}
+.ed-avatar-more {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5);
+  margin-right: -8px; flex-shrink: 0;
+}
+.ed-attendees-names {
+  margin-left: 20px; font-size: 13px; color: var(--pg-white-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* ── Loading skeleton ── */
 .ed-skeleton {
   min-height: 100vh; background: var(--bg);
@@ -321,6 +374,16 @@ ${pageBase("ed")}
 }
 `;
 
+interface Attendee {
+  user_id: string;
+  profiles: {
+    id: string;
+    name: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -329,7 +392,9 @@ export default function EventDetail() {
   const { toggle: toggleFavorite, isFavorite } = useFavorites();
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [rsvpCount, setRsvpCount] = useState(0);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
   const containerRef = useFadeUp("ed");
 
   const { data: event, isLoading } = useQuery<Event | null>({
@@ -352,10 +417,27 @@ export default function EventDetail() {
       .then(({ data }) => { if (data) setJoined(true); });
   }, [user, id]);
 
-  useEffect(() => {
+  // Load RSVP count + attendee list
+  const loadAttendees = async () => {
     if (!id) return;
-    supabase.from("event_rsvps").select("*", { count: 'exact' }).eq("event_id", id).eq("status", "going")
-      .then(({ count }) => { if (count !== null) setRsvpCount(count); });
+    const { count } = await supabase
+      .from("event_rsvps")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", id)
+      .eq("status", "going");
+    if (count !== null) setRsvpCount(count);
+
+    const { data } = await supabase
+      .from("event_rsvps")
+      .select("user_id, profiles(id, name, full_name, avatar_url)")
+      .eq("event_id", id)
+      .eq("status", "going")
+      .limit(12);
+    if (data) setAttendees(data as unknown as Attendee[]);
+  };
+
+  useEffect(() => {
+    loadAttendees();
   }, [id]);
 
   const handleJoin = async () => {
@@ -369,11 +451,34 @@ export default function EventDetail() {
       const { error } = await supabase
         .from("event_rsvps")
         .upsert({ event_id: id, user_id: user.id, status: 'going' }, { onConflict: 'event_id,user_id' });
-      if (!error) setJoined(true);
+      if (!error) {
+        setJoined(true);
+        await loadAttendees();
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setJoining(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!user || !id) return;
+    setCancelling(true);
+    try {
+      const { error } = await supabase
+        .from("event_rsvps")
+        .delete()
+        .eq("event_id", id)
+        .eq("user_id", user.id);
+      if (!error) {
+        setJoined(false);
+        await loadAttendees();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -549,6 +654,47 @@ export default function EventDetail() {
             </div>
           )}
 
+          {/* Attendee list */}
+          {attendees.length > 0 && (
+            <div className="ed-attendees ed-fade-up ed-d2">
+              <div className="ed-attendees-header">
+                <Users />
+                <span className="ed-attendees-label">
+                  {rsvpCount} {rsvpCount === 1 ? 'deltager' : 'deltagere'}
+                </span>
+              </div>
+              <div className="ed-attendees-row">
+                {attendees.slice(0, 8).map((a) => {
+                  const profile = a.profiles;
+                  const displayName = profile?.full_name || profile?.name || '?';
+                  const initials = displayName.charAt(0).toUpperCase();
+                  return profile?.avatar_url ? (
+                    <img
+                      key={a.user_id}
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      className="ed-avatar"
+                      title={displayName}
+                    />
+                  ) : (
+                    <div key={a.user_id} className="ed-avatar-fallback" title={displayName}>
+                      {initials}
+                    </div>
+                  );
+                })}
+                {attendees.length > 8 && (
+                  <div className="ed-avatar-more">+{attendees.length - 8}</div>
+                )}
+                <span className="ed-attendees-names">
+                  {attendees.slice(0, 3).map(a =>
+                    a.profiles?.full_name || a.profiles?.name || 'Anonym'
+                  ).join(', ')}
+                  {attendees.length > 3 && ` og ${attendees.length - 3} andre`}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Related navigation */}
           <div className="ed-related-nav ed-fade-up ed-d3">
             <Link href="/feed" className="ed-related-link">Tilbage til feed</Link>
@@ -591,14 +737,25 @@ export default function EventDetail() {
         {/* ── Fixed bottom CTA ── */}
         <div className="ed-bottom-cta">
           <div className="ed-rsvp-count">{rsvpCount} {rsvpCount === 1 ? 'deltager' : 'deltagere'}</div>
-          <button
-            onClick={handleJoin}
-            disabled={joined || joining}
-            className={`ed-join-btn ${joined ? 'ed-join-btn-joined' : 'ed-join-btn-active'}`}
-            data-testid="button-deltag"
-          >
-            {joined ? t('events.joined') : joining ? t('events.joining') : t('events.join_experience')}
-          </button>
+          {joined ? (
+            <button
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="ed-join-btn ed-join-btn-cancel"
+              data-testid="button-afmeld"
+            >
+              {cancelling ? 'Afmelder…' : '✓ Tilmeldt — Klik for at afmelde'}
+            </button>
+          ) : (
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              className="ed-join-btn ed-join-btn-active"
+              data-testid="button-deltag"
+            >
+              {joining ? t('events.joining') : t('events.join_experience')}
+            </button>
+          )}
         </div>
       </div>
     </>
