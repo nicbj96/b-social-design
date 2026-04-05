@@ -270,9 +270,9 @@ export default function Landing() {
           </form>
           <p className="lp-cta-note lp-fade-up lp-delay-3">Ingen spam. Afmeld når som helst.</p>
           <div className="lp-trust-row lp-fade-up lp-delay-4">
-            <div className="lp-trust-item"><div className="lp-trust-dot" />188K+ steder</div>
-            <div className="lp-trust-item"><div className="lp-trust-dot" />9.400+ events</div>
-            <div className="lp-trust-item"><div className="lp-trust-dot" />144 lande</div>
+            <div className="lp-trust-item"><div className="lp-trust-dot" />{fmt(liveStats?.places ?? 95000)}+ steder</div>
+            <div className="lp-trust-item"><div className="lp-trust-dot" />{fmt(liveStats?.events ?? 6400)}+ events</div>
+            <div className="lp-trust-item"><div className="lp-trust-dot" />{liveStats?.countries ?? 117} lande</div>
             <div className="lp-trust-item"><div className="lp-trust-dot" />Gratis at bruge</div>
           </div>
         </div>
