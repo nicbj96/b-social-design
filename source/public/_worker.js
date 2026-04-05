@@ -169,9 +169,15 @@ export default {
     const eventMatch = path.match(/^\/event\/([^/]+)$/);
     const stedMatch = path.match(/^\/sted\/([^/]+)$/);
 
-    // Pass through for non-dynamic routes or real users
-    if ((!eventMatch && !stedMatch) || !isBot(ua)) {
-      return env.ASSETS.fetch(request);
+    // For real users (non-bots): serve static assets, fall back to SPA shell
+    if (!isBot(ua)) {
+      const assetRes = await env.ASSETS.fetch(request);
+      // If asset exists (JS/CSS/images/etc.), return it directly
+      if (assetRes.status !== 404) return assetRes;
+      // SPA fallback: serve index.html so client-side router handles the path
+      return env.ASSETS.fetch(
+        new Request(new URL('/', request.url).href, { headers: request.headers })
+      );
     }
 
     try {
