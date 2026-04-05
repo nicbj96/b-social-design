@@ -17,12 +17,26 @@ export default function Landing() {
   const { data: liveStats } = useQuery({
     queryKey: ["landingStats"],
     queryFn: async () => {
-      const [placesRes, eventsRes, countriesRes] = await Promise.all([
+      const [placesRes, eventsRes] = await Promise.all([
         supabase.from("places").select("id", { count: "exact", head: true }),
         supabase.from("events").select("id", { count: "exact", head: true }),
-        supabase.from("places").select("country").not("country", "is", null),
       ]);
-      const countries = new Set((countriesRes.data || []).map((r: any) => r.country)).size;
+      // Fetch distinct countries by paginating in chunks to avoid the default 1000-row cap
+      const allCountries = new Set<string>();
+      let from = 0;
+      const PAGE = 5000;
+      while (true) {
+        const { data } = await supabase
+          .from("places")
+          .select("country")
+          .not("country", "is", null)
+          .range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        data.forEach((r: any) => allCountries.add(r.country));
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      const countries = allCountries.size;
       return {
         places: placesRes.count || 95000,
         events: eventsRes.count || 6400,
