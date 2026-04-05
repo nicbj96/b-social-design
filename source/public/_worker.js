@@ -92,7 +92,7 @@ function injectOGTags(html, { title, desc, image, pageUrl }) {
   const safeImg = image || 'https://b-social.net/og-image.svg';
   const safeUrl = pageUrl;
 
-  return html
+  let result = html
     // <title>
     .replace(/(<title>)[^<]*(<\/title>)/, `$1${esc(fullTitle)}$2`)
     // description
@@ -135,6 +135,26 @@ function injectOGTags(html, { title, desc, image, pageUrl }) {
       /(<meta\s+name="twitter:image"\s+content=")[^"]*(")/i,
       `$1${esc(safeImg)}$2`,
     );
+
+  // When we have a real event/place image (not the SVG placeholder), update
+  // image:type + dimensions so crawlers render the photo correctly.
+  if (image) {
+    result = result
+      .replace(
+        /<meta\s+property="og:image:type"\s+content="[^"]*"\s*\/>/i,
+        '<meta property="og:image:type" content="image/jpeg" />',
+      )
+      .replace(
+        /<meta\s+property="og:image:width"\s+content="[^"]*"\s*\/>/i,
+        '<meta property="og:image:width" content="1200" />',
+      )
+      .replace(
+        /<meta\s+property="og:image:height"\s+content="[^"]*"\s*\/>/i,
+        '<meta property="og:image:height" content="630" />',
+      );
+  }
+
+  return result;
 }
 
 // ─── Main Worker handler ──────────────────────────────────────────────────────

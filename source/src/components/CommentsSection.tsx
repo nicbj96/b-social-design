@@ -157,8 +157,11 @@ export default function CommentsSection({ entityType, entityId }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // ── Load comments ──────────────────────────────────────────────────────
+  // events  → event_id column (exists in DB)
+  // places  → post_id column  (reused, no migration needed)
+  const col = entityType === 'event' ? 'event_id' : 'post_id';
+
   const loadComments = async () => {
-    const col = entityType === 'event' ? 'event_id' : 'place_id';
     const { data, error } = await supabase
       .from('comments')
       .select('id, content, user_id, created_at, profiles(name, full_name, avatar_url)')
@@ -188,7 +191,6 @@ export default function CommentsSection({ entityType, entityId }: Props) {
     if (!user || !text.trim() || submitting) return;
     setSubmitting(true);
 
-    const col = entityType === 'event' ? 'event_id' : 'place_id';
     const { error } = await supabase.from('comments').insert({
       [col]: entityId,
       user_id: user.id,
