@@ -6,6 +6,8 @@ import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 
 import { supabase, type Place } from "@/lib/supabase";
+import { useTagsForPlace } from "@/hooks/useTagData";
+import TagPill from "@/components/TagPill";
 
 /* ── Category → hero image ── */
 const HERO_IMAGES: Record<string, string> = {
@@ -292,6 +294,8 @@ export default function StedDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const { data: placeTags } = useTagsForPlace(place?.id ?? "");
+
   useEffect(() => {
     if (!placeId) { setLoading(false); setError(true); return; }
     setLoading(true);
@@ -347,7 +351,11 @@ export default function StedDetail() {
           <button className="sd-back-btn" onClick={() => window.history.back()}>
             <ArrowLeft size={18} />
           </button>
-          {mainCat && <span className="sd-cat-badge">{mainCat}</span>}
+          {placeTags?.find(t => t.level === 1) && (
+            <span className="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-medium">
+              {placeTags.find(t => t.level === 1)?.emoji} {placeTags.find(t => t.level === 1)?.name}
+            </span>
+          )}
         </div>
 
         {/* ── Content ── */}
@@ -391,11 +399,14 @@ export default function StedDetail() {
           </div>
 
           {/* Tags */}
-          {place.tags && place.tags.length > 0 && (
-            <div className="sd-tags sd-fade-up sd-d2">
-              {place.tags.filter(tag => tag !== place.city).slice(0, 8).map(tag => (
-                <span key={tag} className="sd-tag">{tag}</span>
-              ))}
+          {placeTags && placeTags.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-white/60 mb-2">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {placeTags.map(t => (
+                  <TagPill key={t.slug} slug={t.slug} name={t.name} emoji={t.emoji} level={t.level} size="sm" clickable />
+                ))}
+              </div>
             </div>
           )}
 

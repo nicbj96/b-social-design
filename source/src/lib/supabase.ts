@@ -71,10 +71,11 @@ export type Place = {
   country: string;
   main_categories: string[];
   tags: string[];
-  smart_tags: string[];
-  metadata: Record<string, any> | null;
+  smart_tags?: string[];
+  metadata?: Record<string, any> | null;
   rating_avg: number;
   rating_count: number;
+  quality_score?: number;
   created_at: string;
   updated_at: string;
 };

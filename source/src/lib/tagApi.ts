@@ -39,6 +39,12 @@ export interface HierarchyNode {
   label: string;    // display name
   level: number;
   children?: HierarchyNode[];
+  // Extended fields (populated by tagData.ts)
+  id?: string;
+  slug?: string;
+  name?: string;
+  parent_id?: string | null;
+  category_id?: string | null;
 }
 
 /* ── In-memory cache ── */

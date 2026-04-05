@@ -47,6 +47,7 @@ const CategoryDetail = lazy(() => import("@/pages/CategoryDetail"));
 const Historik = lazy(() => import("@/pages/Historik"));
 const Overblik = lazy(() => import("@/pages/Overblik"));
 const Noter = lazy(() => import("@/pages/Noter"));
+const Stats = lazy(() => import("@/pages/Stats"));
 // Firma pages
 const FirmaAuth = lazy(() => import("@/pages/FirmaAuth"));
 const FirmaDashboard = lazy(() => import("@/pages/FirmaDashboard"));
@@ -77,6 +78,7 @@ function MainRouter() {
           <Route path="/historik" component={Historik} />
           <Route path="/overblik" component={Overblik} />
           <Route path="/noter" component={Noter} />
+          <Route path="/stats" component={Stats} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>

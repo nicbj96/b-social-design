@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabase";
 import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 import { gradients } from "@/lib/designTokens";
+import { useTagsForEvent } from "@/hooks/useTagData";
+import TagPill from "@/components/TagPill";
 
 /* ─────────────────────────────────────────────
    B-Social Event Detail — Premium Redesign
@@ -334,6 +336,8 @@ export default function EventDetail() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: eventTags } = useTagsForEvent(event?.id ?? "");
+
   useEffect(() => {
     if (!user || !id) return;
     supabase.from("event_rsvps").select("status").eq("event_id", id).eq("user_id", user.id).single()
@@ -484,11 +488,14 @@ export default function EventDetail() {
           )}
 
           {/* Tags */}
-          {event.interest_tags && event.interest_tags.length > 0 && (
-            <div className="ed-tags ed-fade-up ed-d2">
-              {event.interest_tags.map((tag) => (
-                <span key={tag} className="ed-tag">#{tag}</span>
-              ))}
+          {eventTags && eventTags.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-white/60 mb-2">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {eventTags.map(t => (
+                  <TagPill key={t.slug} slug={t.slug} name={t.name} emoji={t.emoji} level={t.level} size="sm" clickable />
+                ))}
+              </div>
             </div>
           )}
 

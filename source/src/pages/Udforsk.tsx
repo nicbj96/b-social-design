@@ -1,1191 +1,745 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
+import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { Search, MapPin, ChevronRight, X, Users, Heart, TrendingUp, Star, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import type { Event } from "@/lib/data";
-import { getEvents } from "@/lib/data";
-import { fetchPlaces, type Place } from "@/lib/supabase";
-import { getCategoryEmoji, getEventImage, formatDanishDate } from "@/lib/eventHelpers";
-import { useTags } from "@/context/TagContext";
-import { searchTags, getParentCategories, TAG_TREE } from "@/lib/tagTree";
-import DrillDownFilter from "@/components/DrillDownFilter";
-import { OPLEVELSER_NAER_DIG } from "@/data/feedData";
-import type { SocialActivity } from "@/data/feedData";
-import { ALL_PINS } from "@/data/kortPins";
-import { ALL_CATEGORIES } from "@/data/categories";
-import type { Category } from "@/data/categories";
-import { pageBase } from "@/lib/pageCSSBase";
+import {
+  useL1Categories,
+  useEventsByTag,
+  usePlacesByTag,
+  useTagSearch,
+  usePopularTags,
+  useChildTags,
+} from "@/hooks/useTagData";
+import TagPill from "@/components/TagPill";
+import TagRow from "@/components/TagRow";
+import TagBreadcrumb from "@/components/TagBreadcrumb";
+import { getEventImage, formatDanishDate } from "@/lib/eventHelpers";
+import { Search, MapPin, ChevronRight, ArrowLeft } from "lucide-react";
+import { getTagNode, getTagLevel, getOverkategoriForTag } from "@/lib/tagEngine";
 
-/* ─────────────────────────────────────────────
-   B-Social Udforsk — Bento Dashboard
-   Scoped CSS prefix: ud-
-   ───────────────────────────────────────────── */
+export default function Udforsk() {
+  // State for drill-down navigation
+  const [activeL1, setActiveL1] = useState<{
+    slug: string;
+    name: string;
+    emoji: string;
+  } | null>(null);
+  const [activeL2, setActiveL2] = useState<{
+    slug: string;
+    name: string;
+    emoji: string;
+  } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-const REGIONS: Record<string, { flag: string; label: string }> = {
-  'DK': { flag: '🇩🇰', label: 'Danmark' },
-  'SE': { flag: '🇸🇪', label: 'Sverige' },
-  'NO': { flag: '🇳🇴', label: 'Norge' },
-  'DE': { flag: '🇩🇪', label: 'Tyskland' },
-  'NL': { flag: '🇳🇱', label: 'Holland' },
-  'GB': { flag: '🇬🇧', label: 'UK' },
-  'FR': { flag: '🇫🇷', label: 'Frankrig' },
-  'ES': { flag: '🇪🇸', label: 'Spanien' },
-  'IT': { flag: '🇮🇹', label: 'Italien' },
-  'JP': { flag: '🇯🇵', label: 'Japan' },
-  'US': { flag: '🇺🇸', label: 'USA' },
-  'AU': { flag: '🇦🇺', label: 'Australien' },
-  'BR': { flag: '🇧🇷', label: 'Brasilien' },
-  'IN': { flag: '🇮🇳', label: 'Indien' },
-  'ZA': { flag: '🇿🇦', label: 'S. Afrika' },
-  'EUROPE': { flag: '🌍', label: 'Europa' },
-  'ASIA': { flag: '🌏', label: 'Asien' },
-  'AMERICAS': { flag: '🌎', label: 'Amerika' },
-  'AFRICA': { flag: '🌍', label: 'Afrika' },
-  'ALL': { flag: '🌐', label: 'Hele verden' },
-};
+  // Fetch L1 categories
+  const { data: l1Categories = [], isLoading: l1Loading } = useL1Categories();
 
-const EUROPE_CODES = [
-  'DK','SE','NO','DE','NL','BE','AT','CH','ES','FR','IT','GB','IE','PL','CZ','FI',
-  'PT','GR','HU','RO','HR','SK','SI','LT','LV','EE','BG','RS','UA','BY',
-  'LU','MT','CY','LI','IS','AL','MK','BA','ME','MD','AM','GE','AZ',
-];
-const ASIA_CODES = [
-  'JP','KR','CN','TW','TH','VN','ID','MY','PH','SG','MM','KH','LA',
-  'IN','BD','PK','LK','NP','KZ','UZ','KG','TJ','TM','MN','AF',
-  'IR','IQ','SA','QA','KW','BH','OM','YE','JO','IL','LB','SY','TR','AE',
-];
-const AMERICAS_CODES = [
-  'US','CA','MX','BR','AR','CL','CO','PE','VE','EC','BO','PY','UY','GY',
-  'CR','PA','GT','HN','SV','NI','CU','JM','DO','HT','TT',
-];
-const AFRICA_CODES = [
-  'ZA','EG','MA','DZ','TN','LY','NG','GH','SN','CI','CM','ET','KE','TZ',
-  'UG','RW','SD','CD','AO','MZ','ZM','ZW','BW','NA','MG',
-];
+  // Fetch search results (enabled when query.length >= 2)
+  const { data: searchResults = [], isLoading: searchLoading } =
+    useTagSearch(searchQuery);
 
-const COUNTRY_CHIP_ORDER = ['DK','SE','NO','DE','NL','GB','FR','ES','IT','JP','US','AU','BR','IN','ZA','EUROPE','ASIA','AMERICAS','AFRICA','ALL'] as const;
+  // Reset drill-down when search is active
+  const hasSearchResults = searchQuery.length >= 2 && searchResults.length > 0;
 
-const BRUGERE = [
-  { name: "Anna", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&auto=format&fit=crop&crop=face", action: "Koncert" },
-  { name: "Mads", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&crop=face", action: "Festival" },
-  { name: "Sofie", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&crop=face", action: "Udstilling" },
-  { name: "Jonas", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&crop=face", action: "Løbeevent" },
-  { name: "Emil", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&crop=face", action: "Madmarked" },
-  { name: "Lise", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&crop=face", action: "Teater" },
-  { name: "Peter", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&crop=face", action: "Fodbold" },
-];
-
-const PLACE_CAT_EMOJI: Record<string, string> = {
-  natur: "🌿", aktiv_sport: "🏃", mad_hangout: "🍽️", sport: "⚽", kultur: "🎭", musik: "🎵",
-  strand: "🏖️", badning: "🏊", hundeskov: "🐕", hund: "🐕", shelter: "⛺", fiskeri: "🎣",
-  loeb: "🏃", mtb: "🚵", vandring: "🥾", mad: "🍽️", fitness: "💪", outdoor: "🌲",
-  natteliv: "🌙", familie: "🎡", underholdning: "🎡", temapark: "🎢", zoo: "🦁",
-  akvarium: "🐟", overnatning: "🏕️", hostel: "🏕️", forlystelse: "🎡",
-  logi: "🏕️", rejser: "✈️", wellness: "🧘", communities: "👥", ture: "🥾", aktiv: "🏃",
-  // Old DB category names with spaces
-  "Natur & friluftsliv": "🌿", "Ture & eventyr": "🥾", "Logi & base": "🏕️",
-  "Aktiv & sport": "🏃", "Oplevelser & kultur": "🎭",
-  // Event categories
-  arrangement: "📅", "Musik & Koncerter": "🎵", "Kultur & Kunst": "🎭",
-};
-
-// Maps filter key → actual DB main_categories values (some have aliases/old names)
-const CAT_ALIASES: Record<string, string[]> = {
-  aktiv_sport: ["aktiv_sport", "Aktiv & sport", "sport"],
-  natur:       ["natur", "Natur & friluftsliv"],
-  mad:         ["mad_hangout", "mad"],
-  kultur:      ["kultur", "Oplevelser & kultur", "underholdning"],
-  logi:        ["logi", "overnatning", "Logi & base"],
-  ture:        ["ture", "Ture & eventyr"],
-  familie:     ["familie", "temapark", "zoo", "akvarium", "forlystelse"],
-  natteliv:    ["natteliv", "klub", "bar"],
-  wellness:    ["wellness"],
-  rejser:      ["rejser", "transport"],
-};
-
-// DB_FILTERS removed — replaced by DrillDownFilter component (Phase 2)
-
-/* Chip colors matching the mockup exactly */
-const CAT_COLORS: Record<string, string> = {
-  events_faellesskab: "#e74c3c",
-  logi_base: "#9b59b6",
-  ture_eventyr: "#27ae60",
-  natur_friluftsliv: "#2ecc71",
-  aktiv_sport: "#e67e22",
-  mad_hangouts: "#f39c12",
-  oplevelser_kultur: "#9b59b6",
-  rejser_transport: "#3498db",
-  communities_clubs: "#16a085",
-  wellness_balance: "#2980b9",
-  musik: "#e74c3c",
-  kunst: "#9b59b6",
-  kultur: "#9b59b6",
-  mad: "#e67e22",
-  sport: "#27ae60",
-  natur: "#2ecc71",
-  udliv: "#16a085",
-  livstil: "#3498db",
-  teknologi: "#2980b9",
-  socialt: "#e91e63",
-};
-
-/* ── Sub-components ── */
-
-function SupabasePlacesSection({ activeCountry }: { activeCountry: string }) {
-  const { t } = useTranslation();
-  const [filterSlugs, setFilterSlugs] = useState<string[] | null>(null);
-
-  // Resolve country to single code or undefined (regions handled client-side)
-  const singleCountry = useMemo(() => {
-    if (!activeCountry || activeCountry === 'ALL' || activeCountry === 'EUROPE' ||
-        activeCountry === 'ASIA' || activeCountry === 'AMERICAS' || activeCountry === 'AFRICA') return undefined;
-    return activeCountry;
-  }, [activeCountry]);
-
-  // Server-side filter: use hierarchical tag slugs from DrillDownFilter
-  const { data: places, isLoading } = useQuery<Place[]>({
-    queryKey: ["supabase-places", filterSlugs, singleCountry],
-    queryFn: () => {
-      // When filterSlugs is set, pass all descendant slugs as categories
-      // Also include legacy CAT_ALIASES mappings for backward compatibility
-      let cats: string[] | undefined;
-      if (filterSlugs && filterSlugs.length > 0) {
-        cats = [...filterSlugs];
-        // Add legacy aliases for top-level slugs that map to old DB names
-        for (const slug of filterSlugs) {
-          if (CAT_ALIASES[slug]) cats.push(...CAT_ALIASES[slug]);
-        }
-        cats = Array.from(new Set(cats)); // deduplicate
+  const handleSearchResultClick = (result: {
+    slug: string;
+    name: string;
+    emoji?: string;
+    level?: number;
+  }) => {
+    // Check level of result
+    const level = result.level || getTagLevel(result.slug);
+    if (level === 1) {
+      setActiveL1({ slug: result.slug, name: result.name, emoji: result.emoji || "" });
+      setActiveL2(null);
+    } else if (level === 2) {
+      // Find parent L1 from the result
+      const parentSlug = getOverkategoriForTag(result.slug);
+      const parentNode = parentSlug ? getTagNode(parentSlug) : null;
+      if (parentNode && parentSlug) {
+        setActiveL1({
+          slug: parentSlug,
+          name: parentNode.label || parentSlug,
+          emoji: parentNode.emoji || "",
+        });
       }
-      return fetchPlaces({ categories: cats, country: singleCountry, limit: 60 });
-    },
-    staleTime: 30 * 60 * 1000,
-  });
-
-  const filteredPlaces = useMemo(() => {
-    if (!places) return [];
-    if (activeCountry === 'ALL') return places;
-    if (activeCountry === 'EUROPE')   return places.filter(p => EUROPE_CODES.includes(p.country));
-    if (activeCountry === 'ASIA')     return places.filter(p => ASIA_CODES.includes(p.country));
-    if (activeCountry === 'AMERICAS') return places.filter(p => AMERICAS_CODES.includes(p.country));
-    if (activeCountry === 'AFRICA')   return places.filter(p => AFRICA_CODES.includes(p.country));
-    return places;
-  }, [places, activeCountry]);
-
-  if (isLoading) return (
-    <section className="ud-places-section">
-      <div className="ud-section-head">
-        <span>📍</span>
-        <h2>{t('udforsk.places_in_area')}</h2>
-      </div>
-      <div className="ud-places-loading">
-        <Loader2 size={14} className="animate-spin" /> {t('udforsk.fetching_places')}
-      </div>
-    </section>
-  );
-
-  if (!places || places.length === 0) return null;
+      setActiveL2({ slug: result.slug, name: result.name, emoji: result.emoji || "" });
+    }
+    setSearchQuery("");
+  };
 
   return (
-    <section className="ud-places-section">
-      <div className="ud-section-head">
-        <div className="ud-section-head-left">
-          <span>📍</span>
-          <h2>{t('udforsk.places_in_area')}</h2>
-          <span className="ud-section-count">{places.length}</span>
-        </div>
-        <Link href="/kort" className="ud-section-link">
-          {t('nav.kort')} <ChevronRight size={12} />
-        </Link>
-      </div>
-      <DrillDownFilter
-        onFilterChange={setFilterSlugs}
-        classPrefix="ud"
-      />
-      <div className="ud-places-grid">
-        {filteredPlaces.slice(0, 20).map(p => {
-          const mainCat = p.main_categories?.[0] || "natur";
-          const emoji = PLACE_CAT_EMOJI[mainCat] || "📍";
-          return (
-            <Link key={p.id} href={`/sted/${p.id}`} className="ud-place-card" data-testid={`db-place-${p.id}`}>
-              <div className="ud-place-card-icon">{emoji}</div>
-              <h3 className="ud-place-card-name">{p.name}</h3>
-              <div className="ud-place-card-meta">
-                <div className="ud-place-card-rating">
-                  <Star size={10} className="ud-star" />
-                  <span>{p.rating_avg?.toFixed(1) || "–"}</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold mb-4">Udforsk</h1>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search
+              size={20}
+              className="absolute left-3 top-3 text-white/40 flex-shrink-0"
+            />
+            <input
+              type="text"
+              placeholder="Søg blandt tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-teal-500/50 focus:bg-white/10 transition-all"
+            />
+
+            {/* Search Results Dropdown */}
+            {hasSearchResults && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-white/10 rounded-lg overflow-hidden shadow-xl z-50">
+                <div className="max-h-64 overflow-y-auto">
+                  {searchResults.map((result) => (
+                    <button
+                      key={`${result.level}-${result.slug}`}
+                      onClick={() => handleSearchResultClick(result)}
+                      className="w-full px-4 py-3 text-left hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-b-0"
+                    >
+                      <span className="text-xl flex-shrink-0">
+                        {result.emoji || "🏷️"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium truncate">
+                          {result.name}
+                        </p>
+                        <p className="text-xs text-white/40">
+                          Level {result.level}
+                        </p>
+                      </div>
+                      <ChevronRight size={16} className="text-white/20" />
+                    </button>
+                  ))}
                 </div>
-                <span className="ud-place-card-sep">·</span>
-                <span className="ud-place-card-city">{p.city}</span>
               </div>
-            </Link>
-          );
-        })}
-      </div>
-      {filteredPlaces.length === 0 && (
-        <div className="ud-empty-places">
-          <span>{t('udforsk.no_places_category')}</span>
+            )}
+          </div>
         </div>
-      )}
-    </section>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Breadcrumb (when drilled down) */}
+        {(activeL1 || activeL2) && (
+          <div className="mb-8">
+            <TagBreadcrumb
+              segments={
+                activeL2
+                  ? [
+                      {
+                        slug: activeL1!.slug,
+                        name: activeL1!.name,
+                        emoji: activeL1!.emoji,
+                      },
+                      {
+                        slug: activeL2.slug,
+                        name: activeL2.name,
+                        emoji: activeL2.emoji,
+                      },
+                    ]
+                  : activeL1
+                  ? [
+                      {
+                        slug: activeL1.slug,
+                        name: activeL1.name,
+                        emoji: activeL1.emoji,
+                      },
+                    ]
+                  : []
+              }
+              onNavigate={(slug: string | null) => {
+                if (slug === null) {
+                  setActiveL1(null);
+                  setActiveL2(null);
+                } else if (slug === activeL1?.slug) {
+                  setActiveL2(null);
+                } else {
+                  setActiveL1(null);
+                  setActiveL2(null);
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {/* Level 2 Detail View */}
+        {activeL2 && (
+          <Level2View activeL2={activeL2} onBack={() => setActiveL2(null)} />
+        )}
+
+        {/* Level 1 Detail View */}
+        {activeL1 && !activeL2 && (
+          <Level1View activeL1={activeL1} onBack={() => setActiveL1(null)} onSelectL2={setActiveL2} />
+        )}
+
+        {/* Level 0: Category Grid */}
+        {!activeL1 && !activeL2 && (
+          <Level0View
+            categories={l1Categories}
+            isLoading={l1Loading}
+            onSelectL1={setActiveL1}
+          />
+        )}
+
+        {/* Bottom Sections (always visible) */}
+        {!activeL1 && !activeL2 && (
+          <div className="mt-16 space-y-12">
+            {/* Trending Tags */}
+            <TrendingSection />
+
+            {/* Map Link */}
+            <MapLink />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-/* ═══════════════════ MAIN ═══════════════════ */
-export default function Udforsk() {
-  const { t } = useTranslation();
-  const { selectedTags } = useTags();
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [activeCountry, setActiveCountry] = useState<string>('EUROPE');
-  const searchRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 250);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const { data: events } = useQuery<Event[]>({
-    queryKey: ["events"],
-    queryFn: () => Promise.resolve(getEvents()),
-    staleTime: 2 * 60 * 1000,
-  });
-
-  const allEvents = events || [];
-
-  const filtered = useMemo(() => {
-    const q = debouncedSearch.toLowerCase().trim();
-    let expandedTerms: string[] = q ? [q] : [];
-    if (q) {
-      const tagResults = searchTags(q);
-      expandedTerms = [q, ...tagResults.map(tr => tr.tag.toLowerCase()), ...tagResults.map(tr => tr.label.toLowerCase())];
-    }
-
-    return allEvents.filter((e) => {
-      const matchSearch = !q ||
-        expandedTerms.some(term =>
-          (e.title || "").toLowerCase().includes(term) ||
-          (e.description || "").toLowerCase().includes(term) ||
-          (e.location || "").toLowerCase().includes(term) ||
-          (e.interest_tags || []).some(tag => tag.toLowerCase().includes(term)) ||
-          (e.category || "").toLowerCase().includes(term)
-        );
-      const matchCat = !activeCategory ||
-        (e.interest_tags || []).some(tag => tag.toLowerCase().includes(activeCategory)) ||
-        (e.category || "").toLowerCase().includes(activeCategory);
-      const matchUserTags = selectedTags.length === 0 || !activeCategory ||
-        selectedTags.some(t => (e.interest_tags || []).some(tag => tag.toLowerCase().includes(t.toLowerCase())));
-      let matchCountry = true;
-      if (activeCountry === 'ALL') {
-        matchCountry = true;
-      } else if (activeCountry === 'EUROPE') {
-        matchCountry = EUROPE_CODES.includes(e.country ?? "");
-      } else if (activeCountry === 'ASIA') {
-        matchCountry = ASIA_CODES.includes(e.country ?? "");
-      } else if (activeCountry === 'AMERICAS') {
-        matchCountry = AMERICAS_CODES.includes(e.country ?? "");
-      } else if (activeCountry === 'AFRICA') {
-        matchCountry = AFRICA_CODES.includes(e.country ?? "");
-      } else {
-        matchCountry = e.country === activeCountry;
-      }
-      return matchSearch && matchCat && matchCountry && matchUserTags;
-    });
-  }, [allEvents, debouncedSearch, activeCategory, activeCountry, selectedTags]);
-
-  const popular = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 10);
-
-  const newest = useMemo(() => {
-    return [...allEvents]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 12);
-  }, [allEvents]);
-
-  function pickTag(tag: string) {
-    setActiveCategory(tag);
-    setSearch("");
-    setSearchFocused(false);
-    searchRef.current?.blur();
-  }
-
-  const featuredEvent = popular[0] || null;
-  const showSearch = search || searchFocused;
-
+/**
+ * Level 0: Category Grid
+ */
+function Level0View({
+  categories,
+  isLoading,
+  onSelectL1,
+}: {
+  categories: any[];
+  isLoading: boolean;
+  onSelectL1: (cat: { slug: string; name: string; emoji: string }) => void;
+}) {
   return (
-    <div ref={containerRef} className="ud-root" data-testid="udforsk-page">
-      <style>{udforskCSS}</style>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">Kategorier</h2>
 
-      {/* ── HERO COVER ── */}
-      <div className="ud-hero">
-        <img
-          src="https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=1400&auto=format&fit=crop"
-          alt="Copenhagen skyline"
-          className="ud-hero-img"
-        />
-        <div className="ud-hero-gradient" />
-        <div className="ud-hero-text">
-          <h1 className="ud-hero-title">Udforsk</h1>
-          <p className="ud-hero-sub">Hvad sker der i Danmark?</p>
-        </div>
-      </div>
-
-      {/* ── SEARCH (click to expand) ── */}
-      {showSearch && (
-        <div className="ud-search-wrap">
-          <div className="ud-search-bar">
-            <Search size={16} className="ud-search-icon" />
-            <input
-              ref={searchRef}
-              type="search"
-              placeholder={t('udforsk.search_placeholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => setSearchFocused(true)}
-              className="ud-search-input"
-              autoFocus
-              data-testid="input-search"
+      {isLoading ? (
+        // Skeleton Grid
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl bg-white/5 border border-white/10 p-4 h-32 animate-pulse"
             />
-            <button onClick={() => { setSearch(""); setSearchFocused(false); setActiveCategory(null); searchRef.current?.blur(); }} className="ud-search-clear">
-              <X size={16} />
+          ))}
+        </div>
+      ) : categories.length === 0 ? (
+        <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
+          <p className="text-white/60">Ingen kategorier fundet</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {categories.map((cat) => (
+            <button
+              key={cat.slug}
+              onClick={() =>
+                onSelectL1({
+                  slug: cat.slug,
+                  name: cat.name,
+                  emoji: cat.emoji || "🏷️",
+                })
+              }
+              className="rounded-xl bg-white/5 border border-white/10 p-4 text-left hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] transition-all group cursor-pointer"
+            >
+              {/* Emoji */}
+              <p className="text-3xl mb-3">{cat.emoji || "🏷️"}</p>
+
+              {/* Name */}
+              <p className="font-medium text-sm text-white mb-2 line-clamp-2">
+                {cat.name}
+              </p>
+
+              {/* Count Badge */}
+              <p className="text-xs text-white/40">
+                {(cat.total_count || 0).toLocaleString("da-DK")} oplevelser
+              </p>
             </button>
-          </div>
-
-          {/* Search suggestions */}
-          {!search && (
-            <div className="ud-search-suggestions">
-              <p className="ud-label">{t('udforsk.what_catches_you')}</p>
-              <div className="ud-tag-suggestions">
-                {getParentCategories().map((dt) => (
-                  <button key={dt.tag} onClick={() => pickTag(dt.tag)} className="ud-chip">
-                    <span>{dt.emoji}</span> {dt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Search results */}
-          {search && (
-            <div className="ud-search-results">
-              {(() => {
-                const results = searchTags(search);
-                if (results.length === 0) return null;
-                return (
-                  <div className="ud-result-group">
-                    <p className="ud-label">{t('udforsk.categories')}</p>
-                    <div className="ud-tag-suggestions">
-                      {results.slice(0, 6).map((tr) => {
-                        const isParentCat = TAG_TREE.some(p => p.tag === tr.tag);
-                        return (
-                          <button key={tr.tag} onClick={() => pickTag(tr.tag)}
-                            className={`ud-chip ${isParentCat ? "highlighted" : ""}`}>
-                            <span>{tr.emoji}</span> {tr.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {filtered.length > 0 && (
-                <div className="ud-result-group">
-                  <p className="ud-label">{t('udforsk.search_events')}</p>
-                  <div className="ud-result-list">
-                    {filtered.slice(0, 3).map(e => (
-                      <Link key={e.id} href={`/event/${e.id}`} className="ud-cal-card">
-                        <div className="ud-cal-card-img-wrap">
-                          <img src={getEventImage(e)} alt={e.title} className="ud-cal-card-img" loading="lazy" />
-                        </div>
-                        <div className="ud-cal-card-body">
-                          <div className="ud-cal-card-meta">
-                            <span className="ud-cal-card-cat">{getCategoryEmoji(e.category || "")} {e.category}</span>
-                          </div>
-                          <h3 className="ud-cal-card-name">{e.title}</h3>
-                          <div className="ud-cal-card-info">
-                            <span>{formatDanishDate(e.date)}</span>
-                            {e.location && <span className="ud-cal-card-loc"><MapPin size={9} />{e.location.split(",")[0]}</span>}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(() => {
-                const q = search.toLowerCase();
-                const tagResults = searchTags(q);
-                const expandedPlaceTerms = [q, ...tagResults.map(tr => tr.tag.toLowerCase()), ...tagResults.map(tr => tr.label.toLowerCase())];
-                const matchedPlaces = ALL_PINS.filter(p => expandedPlaceTerms.some(term => p.name.toLowerCase().includes(term) || p.category.toLowerCase().includes(term) || (p.tags && p.tags.some(tag => tag.toLowerCase().includes(term))))).slice(0, 3);
-                if (matchedPlaces.length === 0) return null;
-                const catEmoji: Record<string, string> = { sport: "⚽", kultur: "🎭", natur: "🌿", musik: "🎵", mad: "🍽️", spil: "🎲", events: "🎉", mtb: "🚵", vandring: "🥾", loeb: "🏃", hund: "🐕", fiskeri: "🎣", badning: "🏊", shelter: "⛺", dyrespot: "🦌", kreativt: "🖌️", fitness: "💪", outdoor: "🌲", socialt: "❤️", karriere: "💼", tech: "💻", rejser: "🚆", logi: "🏕️", wellness: "🧘", communities: "👥", ture: "🥾", aktiv: "⚽" };
-                return (
-                  <div className="ud-result-group">
-                    <p className="ud-label">{t('udforsk.search_places')}</p>
-                    <div className="ud-result-list">
-                      {matchedPlaces.map(p => (
-                        <Link key={p.id} href="/kort" className="ud-result-row">
-                          <div className="ud-result-row-icon">{catEmoji[p.category] || "📍"}</div>
-                          <div className="ud-result-row-text">
-                            <span className="ud-result-row-name">{p.name}</span>
-                            <span className="ud-result-row-cat">{p.category}</span>
-                          </div>
-                          <MapPin size={12} className="ud-result-row-pin" />
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {(() => {
-                const q = search.toLowerCase();
-                const matchedUsers = BRUGERE.filter(b => b.name.toLowerCase().includes(q)).slice(0, 3);
-                if (matchedUsers.length === 0) return null;
-                return (
-                  <div className="ud-result-group">
-                    <p className="ud-label">{t('udforsk.search_users')}</p>
-                    <div className="ud-result-list">
-                      {matchedUsers.map(b => (
-                        <div key={b.name} className="ud-result-row">
-                          <img src={b.avatar} alt={b.name} className="ud-result-row-avatar" loading="lazy" />
-                          <span className="ud-result-row-name">{b.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {filtered.length === 0 && searchTags(search).length === 0 && (
-                <div className="ud-no-results">
-                  <span>🔍</span>
-                  <p>{t('udforsk.no_results', {query: search})}</p>
-                </div>
-              )}
-            </div>
-          )}
+          ))}
         </div>
-      )}
-
-      {/* ═══ BENTO DASHBOARD ═══ */}
-      {!showSearch && (
-        <div className="ud-bento">
-
-          {activeCategory && (
-            <div className="ud-active-cat" style={{ gridColumn: '1 / -1' }}>
-              <span>{getCategoryEmoji(activeCategory)} {t('events.showing', {category: activeCategory})}</span>
-              <button onClick={() => setActiveCategory(null)}>{t('events.show_all')}</button>
-            </div>
-          )}
-
-          {/* ──── ROW 1: Featured Event + Right sidebar ──── */}
-          {featuredEvent && (
-            <Link href={`/event/${featuredEvent.id}`} className="ud-feat">
-              {/* Inset image with rounded corners */}
-              <div className="ud-feat-thumb">
-                <img src={getEventImage(featuredEvent)} alt={featuredEvent.title} className="ud-feat-thumb-img" loading="lazy" />
-              </div>
-              {/* Event details */}
-              <div className="ud-feat-info">
-                <div className="ud-feat-header">
-                  <div className="ud-feat-logo">B</div>
-                  <span className="ud-feat-accent">#4ECDC4</span>
-                </div>
-                <h2 className="ud-feat-title">{featuredEvent.title}</h2>
-                <div className="ud-feat-rows">
-                  <div className="ud-feat-row">
-                    <span>{formatDanishDate(featuredEvent.date)}</span>
-                    <span className="ud-feat-highlight">12.5Tus</span>
-                  </div>
-                  <div className="ud-feat-row">
-                    <span>{featuredEvent.location ? featuredEvent.location.split(",")[0] : "Danmark"}</span>
-                    <span>{!featuredEvent.price || featuredEvent.price === 0 ? "Gratis" : `${featuredEvent.price} kr`}</span>
-                  </div>
-                  {featuredEvent.location && (
-                    <div className="ud-feat-venue">
-                      <MapPin size={10} /> {featuredEvent.location.split(",")[0]}
-                    </div>
-                  )}
-                </div>
-                {/* Platform icons row */}
-                <div className="ud-feat-icons">
-                  <div className="ud-feat-icon" style={{ background: '#3b82f6' }}>🎫</div>
-                  <div className="ud-feat-icon" style={{ background: '#ef4444' }}>TiV</div>
-                  <div className="ud-feat-icon" style={{ background: '#f59e0b' }}>🎵</div>
-                  <div className="ud-feat-icon" style={{ background: '#8b5cf6' }}>🎪</div>
-                  <div className="ud-feat-icon" style={{ background: '#ec4899' }}>❤️</div>
-                  <span className="ud-feat-icons-label">Smukfest</span>
-                </div>
-              </div>
-            </Link>
-          )}
-
-          <div className="ud-sidebar">
-            {/* Trending kategorier */}
-            <div className="ud-card">
-              <h3 className="ud-card-title">Trending kategorier</h3>
-              <div className="ud-trend-chips">
-                {ALL_CATEGORIES.slice(0, 10).map((cat) => {
-                  const color = CAT_COLORS[cat.key] || "#4ECDC4";
-                  return (
-                    <button
-                      key={cat.key}
-                      onClick={() => pickTag(cat.key)}
-                      className={`ud-tchip ${activeCategory === cat.key ? "active" : ""}`}
-                      style={{ '--cc': color } as React.CSSProperties}
-                      data-testid={`cat-chip-${cat.key}`}
-                    >
-                      {cat.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Venner deltager */}
-            <div className="ud-card ud-friends-card">
-              <h3 className="ud-card-title">Venner deltager</h3>
-              <div className="ud-friends">
-                <div className="ud-friends-avatars">
-                  {BRUGERE.slice(0, 3).map((b, i) => (
-                    <img key={b.name} src={b.avatar} alt={b.name} className="ud-friends-ava" style={{ marginLeft: i > 0 ? -6 : 0, zIndex: 3 - i }} loading="lazy" />
-                  ))}
-                </div>
-                <span className="ud-friends-txt">{BRUGERE[0].name} deltager i {BRUGERE[0].action}</span>
-                <ChevronRight size={14} className="ud-friends-arrow" />
-              </div>
-            </div>
-          </div>
-
-          {/* ──── ROW 2: Populært + Redaktørens valg ──── */}
-          <div className="ud-card ud-pop">
-            <h3 className="ud-card-title">Populært lige nu</h3>
-            <div className="ud-pop-mosaic">
-              {popular.slice(0, 5).map((e, i) => (
-                <Link key={e.id} href={`/event/${e.id}`} className={`ud-pop-tile ${i === 0 ? 'ud-pop-big' : ''}`}>
-                  <img src={getEventImage(e)} alt={e.title} loading="lazy" />
-                  <div className="ud-pop-tile-grad" />
-                  <span className="ud-pop-tile-name">{e.title}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="ud-card ud-editor">
-            <h3 className="ud-card-title">
-              <Star size={13} className="ud-teal-icon" /> Redaktørens valg
-            </h3>
-            <div className="ud-editor-grid">
-              {popular.slice(1, 3).map((e) => (
-                <Link key={e.id} href={`/event/${e.id}`} className="ud-editor-tile">
-                  <img src={getEventImage(e)} alt={e.title} loading="lazy" />
-                  <div className="ud-pop-tile-grad" />
-                  <span className="ud-editor-tile-name">{e.title}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* ──── ROW 3: Country filter + Places ──── */}
-          <div className="ud-full">
-            <div className="ud-chip-scroll">
-              {COUNTRY_CHIP_ORDER.map((code) => {
-                const region = REGIONS[code];
-                if (!region) return null;
-                return (
-                  <button key={code} onClick={() => setActiveCountry(code)}
-                    className={`ud-chip ${activeCountry === code ? "active" : ""}`}
-                    data-testid={`country-chip-${code}`}>
-                    <span>{region.flag}</span> {region.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="ud-full">
-            <SupabasePlacesSection activeCountry={activeCountry} />
-          </div>
-
-          {/* ──── Nyeste events ──── */}
-          {newest.length > 0 && (
-            <div className="ud-full">
-              <section className="ud-newest-section">
-                <div className="ud-section-head">
-                  <div className="ud-section-head-left">
-                    <span>✨</span>
-                    <h2>Nyeste events</h2>
-                    <span className="ud-section-count">{newest.length}</span>
-                  </div>
-                </div>
-                <div className="ud-newest-scroll">
-                  {newest.map(e => (
-                    <Link key={e.id} href={`/event/${e.id}`} className="ud-newest-card">
-                      <div className="ud-newest-img-wrap">
-                        <img src={getEventImage(e)} alt={e.title} loading="lazy" className="ud-newest-img" />
-                      </div>
-                      <div className="ud-newest-body">
-                        <span className="ud-newest-cat">{getCategoryEmoji(e.category || '')} {e.category}</span>
-                        <h3 className="ud-newest-title">{e.title}</h3>
-                        <span className="ud-newest-date">{formatDanishDate(e.date)}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            </div>
-          )}
-
-          {activeCategory && filtered.length === 0 && (
-            <div className="ud-empty-state" style={{ gridColumn: '1 / -1' }}>
-              <span>🔍</span>
-              <p>{t('events.no_experiences_found')}</p>
-              <button onClick={() => setActiveCategory(null)} className="ud-btn-sm">{t('events.show_all_categories')}</button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Hidden search trigger button when search is closed */}
-      {!showSearch && (
-        <button className="ud-search-fab" onClick={() => setSearchFocused(true)} aria-label="Søg">
-          <Search size={18} />
-        </button>
       )}
     </div>
   );
 }
 
-/* ──────────────────────────────────────────────
-   Scoped CSS — ud- prefix
-   ────────────────────────────────────────────── */
-const udforskCSS = `
-${pageBase("ud")}
+/**
+ * Level 1: Category Detail
+ */
+function Level1View({
+  activeL1,
+  onBack,
+  onSelectL2,
+}: {
+  activeL1: { slug: string; name: string; emoji: string };
+  onBack: () => void;
+  onSelectL2: (cat: { slug: string; name: string; emoji: string }) => void;
+}) {
+  // Fetch L2 children
+  const { data: l2Children = [] } = useChildTags(activeL1.slug);
 
-.ud-root { position: relative; padding-bottom: 96px; opacity: 1 !important; animation: none !important; }
+  // Fetch events and places
+  const { data: events = [], isLoading: eventsLoading } = useEventsByTag(
+    activeL1.slug,
+    { limit: 8, descendants: true }
+  );
+  const { data: places = [], isLoading: placesLoading } = usePlacesByTag(
+    activeL1.slug,
+    { limit: 8, descendants: true }
+  );
 
-/* ═══════════════════════════════════════════
-   HERO — panoramic cover with glass frame
-   ═══════════════════════════════════════════ */
-.ud-hero {
-  position: relative; width: 100%; height: 190px; overflow: hidden;
-  border-radius: 16px; margin: 0 0 14px;
-  border: 1px solid rgba(255,255,255,0.12);
-}
-.ud-hero-img {
-  width: 100%; height: 100%; object-fit: cover; object-position: center 40%;
-  filter: brightness(0.65);
-}
-.ud-hero-gradient {
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(6,10,15,0.1) 0%, rgba(6,10,15,0.75) 100%);
-}
-.ud-hero-text {
-  position: absolute; bottom: 22px; left: 26px; z-index: 2;
-}
-.ud-hero-title {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 44px; font-weight: 400; color: var(--pg-white);
-  letter-spacing: -1px; line-height: 1; margin: 0;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.6);
-}
-.ud-hero-sub {
-  font-size: 14px; color: var(--teal); font-weight: 500;
-  margin: 5px 0 0; font-family: var(--sans);
-  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
-}
+  // Find total count from the active L1 category
+  const totalCount =
+    events.length > 0 || places.length > 0 ? events.length + places.length : 0;
 
-/* ═══════════════════════════════════════════
-   FLOATING SEARCH FAB
-   ═══════════════════════════════════════════ */
-.ud-search-fab {
-  position: fixed; bottom: 100px; right: 24px; z-index: 50;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--teal); color: var(--bg); border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: 0 4px 20px rgba(78,205,196,0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.ud-search-fab:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 28px rgba(78,205,196,0.5);
-}
+  return (
+    <div className="space-y-8">
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-4"
+      >
+        <ArrowLeft size={20} />
+        Tilbage
+      </button>
 
-/* ═══════════════════════════════════════════
-   SEARCH PANEL (overlay when active)
-   ═══════════════════════════════════════════ */
-.ud-search-wrap { padding: 0 0 16px; }
-.ud-search-bar { position: relative; max-width: 640px; margin-bottom: 12px; }
-.ud-search-icon {
-  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-  color: var(--pg-white-muted); pointer-events: none; z-index: 1;
-}
-.ud-search-input {
-  width: 100%; padding: 14px 44px 14px 44px;
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 14px; color: var(--pg-white); font-size: 14px;
-  font-family: var(--sans); outline: none; transition: all 0.25s;
-}
-.ud-search-input:focus { border-color: rgba(78,205,196,0.4); }
-.ud-search-input::placeholder { color: rgba(255,255,255,0.3); }
-.ud-search-clear {
-  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  color: var(--pg-white-muted); background: none; border: none;
-  cursor: pointer; transition: color 0.2s;
-}
-.ud-search-clear:hover { color: var(--pg-white); }
-.ud-search-suggestions, .ud-search-results { max-width: 640px; }
-.ud-tag-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
-.ud-result-group { margin-bottom: 20px; }
-.ud-result-list { display: flex; flex-direction: column; gap: 8px; }
-.ud-result-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px; border-radius: 14px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-  text-decoration: none; color: var(--pg-white); cursor: pointer; transition: background 0.2s;
-}
-.ud-result-row:hover { background: rgba(255,255,255,0.1); }
-.ud-result-row-icon {
-  width: 34px; height: 34px; border-radius: 10px;
-  background: rgba(255,255,255,0.08); display: flex;
-  align-items: center; justify-content: center; font-size: 15px;
-}
-.ud-result-row-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
-.ud-result-row-text { display: flex; flex-direction: column; }
-.ud-result-row-name { font-size: 13px; font-weight: 500; }
-.ud-result-row-cat { font-size: 11px; color: var(--pg-white-muted); }
-.ud-result-row-pin { margin-left: auto; color: var(--pg-white-muted); }
-.ud-no-results { text-align: center; padding: 40px 20px; }
-.ud-no-results span { font-size: 32px; display: block; margin-bottom: 10px; }
-.ud-no-results p { font-size: 14px; color: var(--pg-white-dim); }
+      {/* Hero Section */}
+      <div className="space-y-4">
+        <p className="text-6xl">{activeL1.emoji}</p>
+        <h1 className="text-3xl font-bold">{activeL1.name}</h1>
+      </div>
 
-/* ═══════════════════════════════════════════
-   BENTO GRID
-   ═══════════════════════════════════════════ */
-.ud-bento {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 12px;
-  width: 100%;
-  max-width: 1100px;
-}
-.ud-full { grid-column: 1 / -1; }
+      {/* L2 Subcategory Chips */}
+      {l2Children.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+            Underkategorier
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {l2Children.map((child) => (
+              <button
+                key={child.slug}
+                onClick={() =>
+                  onSelectL2({
+                    slug: child.slug,
+                    name: child.name,
+                    emoji: child.emoji || "🏷️",
+                  })
+                }
+                className="cursor-pointer"
+              >
+                <TagPill
+                  slug={child.slug}
+                  name={child.name}
+                  emoji={child.emoji}
+                  level={2}
+                  size="md"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-/* ═══════════════════════════════════════════
-   GLASS CARD (shared)
-   ═══════════════════════════════════════════ */
-.ud-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px;
-  padding: 20px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-.ud-card-title {
-  display: flex; align-items: center; gap: 6px;
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 18px; font-weight: 400; color: var(--pg-white);
-  margin: 0 0 14px; letter-spacing: -0.3px;
-}
-.ud-teal-icon { color: var(--teal); }
+      {/* Events & Places Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Events Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Events</h2>
+            {events.length > 0 && (
+              <Link
+                to={`/kategori/${activeL1.slug}`}
+                className="text-xs text-teal-400 hover:text-teal-300 font-medium transition-colors"
+              >
+                Se alle →
+              </Link>
+            )}
+          </div>
 
-/* ═══════════════════════════════════════════
-   FEATURED EVENT — inset image + details
-   ═══════════════════════════════════════════ */
-.ud-feat {
-  display: flex; gap: 0; text-decoration: none; color: var(--pg-white);
-  cursor: pointer; transition: all 0.35s ease;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  padding: 16px;
-  overflow: hidden;
-}
-.ud-feat:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255,255,255,0.2);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-/* Inset thumbnail */
-.ud-feat-thumb {
-  width: 38%; flex-shrink: 0; border-radius: 12px; overflow: hidden;
-  aspect-ratio: 4/3;
-}
-.ud-feat-thumb-img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform 0.5s ease;
-}
-.ud-feat:hover .ud-feat-thumb-img { transform: scale(1.04); }
-/* Info side */
-.ud-feat-info {
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 0 0 0 18px; flex: 1; min-width: 0; gap: 6px;
-}
-.ud-feat-header {
-  display: flex; align-items: center; gap: 8px;
-}
-.ud-feat-logo {
-  width: 24px; height: 24px; border-radius: 6px;
-  background: rgba(255,255,255,0.1); color: var(--pg-white);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800; font-family: var(--sans);
-}
-.ud-feat-accent {
-  font-size: 10px; color: var(--teal); font-family: monospace; opacity: 0.5;
-}
-.ud-feat-title {
-  font-size: 17px; font-weight: 700; line-height: 1.2; margin: 0;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.ud-feat-rows { display: flex; flex-direction: column; gap: 2px; }
-.ud-feat-row {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 11px; color: var(--pg-white-muted);
-}
-.ud-feat-highlight { color: var(--teal); font-weight: 600; }
-.ud-feat-venue {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 11px; color: rgba(78,205,196,0.7);
-}
-/* Platform icons row */
-.ud-feat-icons {
-  display: flex; align-items: center; gap: 6px; margin-top: 4px;
-}
-.ud-feat-icon {
-  width: 28px; height: 28px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: white; font-weight: 700;
-  font-family: var(--sans);
-}
-.ud-feat-icons-label {
-  font-size: 11px; color: var(--pg-white-muted); margin-left: 4px;
+          {eventsLoading ? (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-48 h-64 bg-white/5 rounded-xl animate-pulse"
+                />
+              ))}
+            </div>
+          ) : events.length === 0 ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-white/60 text-sm">
+              Ingen events fundet
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {events.slice(0, 8).map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Places Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Steder</h2>
+            {places.length > 0 && (
+              <Link
+                to={`/kort?tag=${activeL1.slug}`}
+                className="text-xs text-teal-400 hover:text-teal-300 font-medium transition-colors"
+              >
+                Se kort →
+              </Link>
+            )}
+          </div>
+
+          {placesLoading ? (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-48 h-40 bg-white/5 rounded-xl animate-pulse"
+                />
+              ))}
+            </div>
+          ) : places.length === 0 ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-white/60 text-sm">
+              Ingen steder fundet
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {places.slice(0, 8).map((place) => (
+                <PlaceCard key={place.id} place={place} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-/* ═══════════════════════════════════════════
-   RIGHT SIDEBAR STACK
-   ═══════════════════════════════════════════ */
-.ud-sidebar {
-  display: flex; flex-direction: column; gap: 12px;
+/**
+ * Level 2: Subcategory Detail
+ */
+function Level2View({
+  activeL2,
+  onBack,
+}: {
+  activeL2: { slug: string; name: string; emoji: string };
+  onBack: () => void;
+}) {
+  // Fetch L3 children
+  const { data: l3Children = [] } = useChildTags(activeL2.slug);
+
+  // Fetch events and places
+  const { data: events = [], isLoading: eventsLoading } = useEventsByTag(
+    activeL2.slug,
+    { limit: 8, descendants: true }
+  );
+  const { data: places = [], isLoading: placesLoading } = usePlacesByTag(
+    activeL2.slug,
+    { limit: 8, descendants: true }
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-4"
+      >
+        <ArrowLeft size={20} />
+        Tilbage
+      </button>
+
+      {/* Hero Section */}
+      <div className="space-y-4">
+        <p className="text-6xl">{activeL2.emoji}</p>
+        <h1 className="text-3xl font-bold">{activeL2.name}</h1>
+      </div>
+
+      {/* L3 Subcategory Chips (if any) */}
+      {l3Children.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+            Underkategorier
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {l3Children.map((child) => (
+              <TagPill
+                key={child.slug}
+                slug={child.slug}
+                name={child.name}
+                emoji={child.emoji}
+                level={3}
+                size="md"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Events & Places Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Events Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Events</h2>
+            {events.length > 0 && (
+              <Link
+                to={`/kategori/${activeL2.slug}`}
+                className="text-xs text-teal-400 hover:text-teal-300 font-medium transition-colors"
+              >
+                Se alle →
+              </Link>
+            )}
+          </div>
+
+          {eventsLoading ? (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-48 h-64 bg-white/5 rounded-xl animate-pulse"
+                />
+              ))}
+            </div>
+          ) : events.length === 0 ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-white/60 text-sm">
+              Ingen events fundet
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {events.slice(0, 8).map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Places Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Steder</h2>
+            {places.length > 0 && (
+              <Link
+                to={`/kort?tag=${activeL2.slug}`}
+                className="text-xs text-teal-400 hover:text-teal-300 font-medium transition-colors"
+              >
+                Se kort →
+              </Link>
+            )}
+          </div>
+
+          {placesLoading ? (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-48 h-40 bg-white/5 rounded-xl animate-pulse"
+                />
+              ))}
+            </div>
+          ) : places.length === 0 ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-white/60 text-sm">
+              Ingen steder fundet
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {places.slice(0, 8).map((place) => (
+                <PlaceCard key={place.id} place={place} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-/* ── Trending chips (colored) ── */
-.ud-trend-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.ud-tchip {
-  padding: 5px 12px; border-radius: 100px;
-  background: var(--cc);
-  border: none;
-  color: white;
-  font-size: 11px; font-weight: 600; cursor: pointer;
-  transition: all 0.2s; font-family: var(--sans);
-  opacity: 0.85;
-}
-.ud-tchip:hover { opacity: 1; transform: scale(1.05); }
-.ud-tchip.active { opacity: 1; box-shadow: 0 0 12px var(--cc); }
+/**
+ * Event Card Component
+ */
+function EventCard({
+  event,
+}: {
+  event: {
+    id: string;
+    title: string;
+    date: string;
+    location: string;
+    image_url?: string | null;
+    category?: string;
+    interest_tags?: string[] | null;
+  };
+}) {
+  const imageUrl = getEventImage(event);
 
-/* ── Friends ── */
-.ud-friends-card { padding: 16px 18px; }
-.ud-friends {
-  display: flex; align-items: center; gap: 8px;
-}
-.ud-friends-avatars {
-  display: flex; flex-shrink: 0;
-}
-.ud-friends-ava {
-  width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
-  border: 2px solid rgba(6,10,15,0.8);
-  position: relative;
-}
-.ud-friends-txt {
-  font-size: 12px; color: var(--pg-white-dim);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  flex: 1; min-width: 0;
-}
-.ud-friends-arrow { color: var(--pg-white-muted); flex-shrink: 0; }
+  const tagArray = useMemo(() => {
+    const tags = [];
+    if (event.category) {
+      const node = getTagNode(event.category);
+      tags.push({
+        slug: event.category,
+        name: node?.label || event.category,
+        emoji: node?.emoji,
+        level: node ? 2 : 3,
+      });
+    }
+    return tags;
+  }, [event.category]);
 
-/* ═══════════════════════════════════════════
-   POPULÆRT — mosaic image grid
-   ═══════════════════════════════════════════ */
-.ud-pop-mosaic {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 120px 120px;
-  gap: 8px;
-}
-.ud-pop-big {
-  grid-row: 1 / 3;
-}
-.ud-pop-tile {
-  position: relative; border-radius: 10px; overflow: hidden;
-  display: block; text-decoration: none; color: white; cursor: pointer;
-}
-.ud-pop-tile img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform 0.4s ease;
-}
-.ud-pop-tile:hover img { transform: scale(1.06); }
-.ud-pop-tile-grad {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 50%);
-}
-.ud-pop-tile-name {
-  position: absolute; bottom: 8px; left: 8px; right: 8px;
-  font-size: 11px; font-weight: 600; line-height: 1.2;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-}
+  return (
+    <Link to={`/event/${event.id}`}>
+      <div className="flex-shrink-0 w-56 rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-pointer group snap-start">
+        {/* Image */}
+        {imageUrl && (
+          <div className="h-32 overflow-hidden bg-white/5">
+            <img
+              src={imageUrl}
+              alt={event.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            />
+          </div>
+        )}
 
-/* ═══════════════════════════════════════════
-   REDAKTØRENS VALG — 2 image tiles with glow
-   ═══════════════════════════════════════════ */
-.ud-editor {
-  border-color: rgba(78,205,196,0.15);
-  box-shadow: 0 0 20px rgba(78,205,196,0.06), inset 0 0 20px rgba(78,205,196,0.03);
-}
-.ud-editor-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-}
-.ud-editor-tile {
-  position: relative; border-radius: 10px; overflow: hidden;
-  height: 140px; display: block; text-decoration: none; color: white; cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-.ud-editor-tile img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform 0.4s ease;
-}
-.ud-editor-tile:hover img { transform: scale(1.06); }
-.ud-editor-tile-name {
-  position: absolute; bottom: 8px; left: 10px; right: 10px;
-  font-size: 11px; font-weight: 600; line-height: 1.3;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+        {/* Content */}
+        <div className="p-3 space-y-2">
+          {/* Title */}
+          <h3 className="font-medium text-sm text-white truncate line-clamp-2">
+            {event.title}
+          </h3>
+
+          {/* Date */}
+          <p className="text-xs text-white/50">{formatDanishDate(event.date)}</p>
+
+          {/* Location */}
+          <p className="text-xs text-white/40 truncate">{event.location}</p>
+
+          {/* Tags */}
+          {tagArray.length > 0 && (
+            <div className="pt-1">
+              <TagRow tags={tagArray} maxVisible={1} size="sm" />
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
 }
 
-/* ═══════════════════════════════════════════
-   ACTIVE CATEGORY BAR
-   ═══════════════════════════════════════════ */
-.ud-active-cat {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px; border-radius: 12px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-}
-.ud-active-cat span { font-size: 13px; font-weight: 500; }
-.ud-active-cat button {
-  font-size: 12px; color: var(--teal); font-weight: 500;
-  background: none; border: none; cursor: pointer; font-family: var(--sans);
+/**
+ * Place Card Component
+ */
+function PlaceCard({
+  place,
+}: {
+  place: {
+    id: string;
+    name: string;
+    city?: string;
+    region?: string;
+    rating_avg?: number;
+    rating_count?: number;
+    interest_tags?: string[];
+  };
+}) {
+  const tagArray = useMemo(() => {
+    if (!place.interest_tags || place.interest_tags.length === 0) {
+      return [];
+    }
+    return place.interest_tags
+      .slice(0, 2)
+      .map((slug) => {
+        const node = getTagNode(slug);
+        return {
+          slug,
+          name: node?.label || slug,
+          emoji: node?.emoji,
+          level: node ? 2 : 3,
+        };
+      });
+  }, [place.interest_tags]);
+
+  return (
+    <Link to={`/sted/${place.id}`}>
+      <div className="flex-shrink-0 w-56 rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-pointer group snap-start p-4 h-fit">
+        {/* Name */}
+        <h3 className="font-medium text-sm text-white line-clamp-2 mb-2">
+          {place.name}
+        </h3>
+
+        {/* City/Region */}
+        {place.city && (
+          <p className="text-xs text-white/50 mb-2">{place.city}</p>
+        )}
+
+        {/* Rating */}
+        {place.rating_avg && place.rating_count && place.rating_count > 0 && (
+          <p className="text-xs text-white/60 mb-3 flex items-center gap-1">
+            <span>⭐</span>
+            {place.rating_avg.toFixed(1)} ({place.rating_count})
+          </p>
+        )}
+
+        {/* Tags */}
+        {tagArray.length > 0 && <TagRow tags={tagArray} maxVisible={2} size="sm" />}
+      </div>
+    </Link>
+  );
 }
 
-/* ═══════════════════════════════════════════
-   SHARED
-   ═══════════════════════════════════════════ */
-.ud-section-head {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-}
-.ud-section-head h2 { font-size: 14px; font-weight: 600; color: var(--pg-white); }
-.ud-section-head span { font-size: 14px; }
-.ud-section-head-left { display: flex; align-items: center; gap: 8px; flex: 1; }
-.ud-section-count {
-  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px;
-  background: var(--teal-dim); color: var(--teal);
-}
-.ud-section-link {
-  display: flex; align-items: center; gap: 3px;
-  font-size: 12px; color: var(--pg-white-muted); text-decoration: none;
-  cursor: pointer; transition: color 0.2s;
-}
-.ud-section-link:hover { color: var(--pg-white-dim); }
+/**
+ * Trending Section
+ */
+function TrendingSection() {
+  const { data: trendingTags = [], isLoading } = usePopularTags(12);
 
-.ud-chip-scroll {
-  display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
-  scrollbar-width: none;
-}
-.ud-chip-scroll::-webkit-scrollbar { display: none; }
-.ud-chip.highlighted {
-  background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);
-  color: var(--pg-white);
-}
-
-/* ═══════════════════════════════════════════
-   DRILL-DOWN FILTER
-   ═══════════════════════════════════════════ */
-.ud-wrap { margin-bottom: 14px; }
-.ud-compact .ud-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-.ud-compact .ud-row::-webkit-scrollbar { display: none; }
-.ud-loading { font-size: 12px; color: var(--pg-white-muted); padding: 8px 0; }
-.ud-breadcrumb {
-  display: flex; align-items: center; gap: 4px;
-  margin-bottom: 10px; font-size: 12px; color: var(--pg-white-dim);
-  font-family: var(--sans);
-}
-.ud-back {
-  background: none; border: none; color: var(--pg-white-muted);
-  cursor: pointer; padding: 2px; display: flex; align-items: center;
-  transition: color 0.2s;
-}
-.ud-back:hover { color: var(--pg-white); }
-.ud-crumb {
-  background: none; border: none; color: var(--pg-white-muted);
-  cursor: pointer; font-size: 12px; font-family: var(--sans);
-  padding: 2px 4px; transition: color 0.2s;
-}
-.ud-crumb:hover { color: var(--pg-white); }
-.ud-crumb-active { color: var(--teal); font-weight: 600; cursor: default; }
-.ud-crumb-sep { color: rgba(255,255,255,0.2); margin: 0 1px; }
-.ud-row {
-  display: flex; gap: 6px; flex-wrap: wrap;
-}
-.ud-row .ud-chip span { margin-right: 2px; }
-
-/* ═══════════════════════════════════════════
-   PLACES
-   ═══════════════════════════════════════════ */
-.ud-places-section { }
-.ud-places-loading {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--pg-white-muted);
-}
-.ud-filter-row {
-  display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px;
-  scrollbar-width: none;
-}
-.ud-filter-row::-webkit-scrollbar { display: none; }
-.ud-places-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.ud-place-card {
-  padding: 14px; border-radius: 14px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-  cursor: pointer; transition: all 0.25s; text-decoration: none; color: var(--pg-white);
-}
-.ud-place-card:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
-.ud-place-card-icon {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: rgba(255,255,255,0.06); display: flex;
-  align-items: center; justify-content: center; font-size: 18px;
-  margin-bottom: 10px;
-}
-.ud-place-card-name {
-  font-size: 12px; font-weight: 600; line-height: 1.3;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.ud-place-card-meta {
-  display: flex; align-items: center; gap: 6px;
-  margin-top: 6px; font-size: 12px;
-}
-.ud-place-card-rating { display: flex; align-items: center; gap: 3px; }
-.ud-star { color: #fbbf24; fill: #fbbf24; }
-.ud-place-card-rating span { color: var(--pg-white-dim); }
-.ud-place-card-sep { color: var(--pg-white-muted); }
-.ud-place-card-city { color: var(--pg-white-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ud-empty-places { padding: 16px 0; text-align: center; font-size: 12px; color: var(--pg-white-muted); }
-
-/* ═══════════════════════════════════════════
-   CALENDAR CARDS (search)
-   ═══════════════════════════════════════════ */
-.ud-cal-card {
-  display: flex; gap: 12px; padding-right: 14px;
-  border-radius: 14px; overflow: hidden;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-  text-decoration: none; color: var(--pg-white); cursor: pointer;
-  transition: all 0.25s;
-}
-.ud-cal-card:hover { background: rgba(255,255,255,0.1); }
-.ud-cal-card-img-wrap { width: 80px; height: 80px; flex-shrink: 0; overflow: hidden; }
-.ud-cal-card-img { width: 100%; height: 100%; object-fit: cover; }
-.ud-cal-card-body { display: flex; flex-direction: column; justify-content: center; padding: 8px 0; min-width: 0; flex: 1; }
-.ud-cal-card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
-.ud-cal-card-cat { font-size: 11px; color: var(--pg-white-dim); }
-.ud-cal-card-name {
-  font-size: 13px; font-weight: 600; line-height: 1.3;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.ud-cal-card-info {
-  display: flex; align-items: center; gap: 8px;
-  margin-top: 3px; font-size: 11px; color: var(--pg-white-muted);
-}
-.ud-cal-card-loc { display: flex; align-items: center; gap: 3px; }
-
-/* ═══════════════════════════════════════════
-   EMPTY STATE
-   ═══════════════════════════════════════════ */
-.ud-empty-state {
-  text-align: center; padding: 60px 20px;
-}
-.ud-empty-state span { font-size: 40px; display: block; margin-bottom: 12px; }
-.ud-empty-state p { font-size: 14px; color: var(--pg-white-dim); margin-bottom: 16px; }
-
-/* ═══════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════ */
-@media (max-width: 860px) {
-  .ud-bento {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: 100%;
+  if (isLoading || trendingTags.length === 0) {
+    return null;
   }
-  .ud-sidebar { order: -1; }
 
-  /* Featured card — stack on mobile */
-  .ud-feat {
-    flex-direction: column; padding: 14px;
-    min-width: 0; width: 100%;
-  }
-  .ud-feat-thumb {
-    width: 100%; aspect-ratio: 16/9;
-    margin-bottom: 12px;
-  }
-  .ud-feat-info { padding: 0; }
-  .ud-feat-title { font-size: 16px; }
+  return (
+    <section className="space-y-4">
+      <h2 className="text-2xl font-semibold flex items-center gap-2">
+        <span className="text-2xl">🔥</span>
+        Trending
+      </h2>
 
-  .ud-pop-mosaic {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 130px 130px;
-  }
-  .ud-pop-big { grid-row: auto; }
-  .ud-places-grid { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 480px) {
-  .ud-hero { height: 140px; border-radius: 14px; }
-  .ud-hero-title { font-size: 32px; }
-  .ud-hero-text { bottom: 14px; left: 16px; }
-  .ud-feat-title { font-size: 15px; }
-  .ud-feat-icons { flex-wrap: wrap; }
-  .ud-pop-mosaic {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 110px 110px;
-  }
-  .ud-editor-grid { grid-template-columns: 1fr; }
-  .ud-places-grid { grid-template-columns: 1fr; }
-  .ud-search-fab { bottom: 80px; right: 16px; }
-  .ud-newest-card { min-width: 150px; max-width: 150px; }
-  .ud-newest-img-wrap { height: 90px; }
+      <div className="flex flex-wrap gap-2">
+        {trendingTags.map((tag) => (
+          <Link key={tag.slug} to={`/kategori/${tag.slug}`}>
+            <TagPill
+              slug={tag.slug}
+              name={`${tag.name} (${(tag.total_count || 0).toLocaleString("da-DK")})`}
+              emoji={tag.emoji}
+              level={1}
+              size="sm"
+              clickable={false}
+            />
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
 }
 
-/* ═══ NEWEST EVENTS ═══ */
-.ud-newest-section { width: 100%; }
-.ud-newest-scroll {
-  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
-  scrollbar-width: none;
+/**
+ * Map Link Section
+ */
+function MapLink() {
+  return (
+    <section>
+      <Link to="/kort">
+        <div className="rounded-xl bg-gradient-to-r from-teal-500/20 to-blue-500/20 border border-teal-500/30 p-8 hover:border-teal-500/50 hover:bg-gradient-to-r hover:from-teal-500/30 hover:to-blue-500/30 transition-all cursor-pointer group">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Udforsk på Kort</h3>
+              <p className="text-white/60 text-sm">Se alle steder og events omkring dig</p>
+            </div>
+            <MapPin size={32} className="text-teal-400 group-hover:scale-110 transition-transform" />
+          </div>
+        </div>
+      </Link>
+    </section>
+  );
 }
-.ud-newest-scroll::-webkit-scrollbar { display: none; }
-.ud-newest-card {
-  min-width: 170px; max-width: 170px; border-radius: 14px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-  text-decoration: none; color: var(--pg-white); flex-shrink: 0;
-  overflow: hidden; transition: transform 0.2s;
-}
-.ud-newest-card:hover { transform: translateY(-2px); }
-.ud-newest-img-wrap { height: 100px; overflow: hidden; }
-.ud-newest-img { width: 100%; height: 100%; object-fit: cover; }
-.ud-newest-body { padding: 10px 12px; }
-.ud-newest-cat { font-size: 10px; color: var(--pg-accent); text-transform: uppercase; letter-spacing: 0.04em; }
-.ud-newest-title {
-  font-size: 12px; font-weight: 600; margin: 4px 0 5px; line-height: 1.35;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.ud-newest-date { font-size: 10px; color: rgba(255,255,255,0.45); }
-`;

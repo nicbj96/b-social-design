@@ -20,7 +20,38 @@ import { Search, X, Plus, Minus, Navigation, Star, ExternalLink, Users, MapPin a
 import DrillDownFilter from "@/components/DrillDownFilter";
 
 import { lazyLoadTagFunctions } from "@/lib/lazyDataLoader";
-import { type PinCategory, type MapPin, HARDCODED_PINS } from "@/data/kortPins";
+// Types inlined from deleted kortPins.ts
+export type PinCategory =
+  | "sport" | "kultur" | "natur" | "musik" | "mad" | "spil" | "events"
+  | "mtb" | "vandring" | "loeb" | "hund" | "fiskeri" | "badning" | "shelter"
+  | "dyrespot" | "kreativt" | "fitness" | "outdoor" | "socialt" | "karriere"
+  | "tech" | "aktiv_sport" | "mad_hangout" | "rejser" | "logi" | "wellness"
+  | "communities" | "ture" | "aktiv";
+
+export interface MapPin {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  category: PinCategory;
+  description?: string;
+  descriptionKey?: string;
+  rating: number;
+  ratingCount?: number;
+  isEvent?: boolean;
+  isSupabaseEvent?: boolean;
+  spots?: { current: number; total: number };
+  season?: string;
+  difficulty?: string;
+  difficultyKey?: string;
+  tags?: string[];
+  city?: string;
+  fromSupabase?: boolean;
+  image?: string;
+  date?: string;
+  price?: number | null;
+  eventId?: string;
+}
 import { useTags } from "@/context/TagContext";
 import { Link } from "wouter";
 
@@ -123,93 +154,237 @@ const CITY_COORDS: Record<string, [number, number]> = {
 const DEFAULT_LAT = 57.048;
 const DEFAULT_LNG = 9.9187;
 
-/* ── Supabase place/tag → PinCategory mapping ── */
-const SUPABASE_CAT_MAP: Record<string, PinCategory> = {
-  // Natur
-  natur: "natur", nature: "natur", park: "natur", skov: "natur", forest: "natur",
-  outdoor: "outdoor", friluftsliv: "natur", bakke: "natur", klit: "natur",
-  dyrespot: "dyrespot", dyrereservat: "dyrespot", fugle: "dyrespot", naturreservat: "natur",
+/* ── Helper: Determine place category from tags ── */
+function getPlaceCategory(place: Place): PinCategory {
+  // Default fallback
+  let category: PinCategory = "natur";
 
-  // Strand / Badning
-  strand: "badning", badning: "badning", vand: "badning", badestrand: "badning",
-  sø: "badning", lake: "badning", beach: "badning", hav: "badning", sea: "badning",
-  swimming: "badning", badesø: "badning",
+  // Define tag-to-category mapping (replace fuzzy matching)
+  const TAG_CATEGORY_MAP: Record<string, PinCategory> = {
+    // Natur (10 locked)
+    "natur": "natur",
+    "nature": "natur",
+    "park": "natur",
+    "skov": "natur",
+    "forest": "natur",
+    "outdoor": "outdoor",
+    "friluftsliv": "natur",
+    "bakke": "natur",
+    "klit": "natur",
+    "naturreservat": "natur",
 
-  // Vandring / Hiking
-  vandring: "vandring", hike: "vandring", hiking: "vandring", trail: "vandring",
-  ture: "ture", eventyr: "ture", kajak: "ture", kano: "ture", klatring: "ture",
-  shelter: "shelter",
+    // Badning
+    "strand": "badning",
+    "badning": "badning",
+    "vand": "badning",
+    "badestrand": "badning",
+    "sø": "badning",
+    "lake": "badning",
+    "beach": "badning",
+    "hav": "badning",
+    "sea": "badning",
+    "swimming": "badning",
+    "badesø": "badning",
 
-  // MTB / Cykling
-  mtb: "mtb", mountainbike: "mtb", cykling: "mtb", cycling: "mtb", bike: "mtb",
-  cykli: "mtb", cyklerute: "mtb", bikeparken: "mtb",
+    // Vandring
+    "vandring": "vandring",
+    "hike": "vandring",
+    "hiking": "vandring",
+    "trail": "vandring",
+    "ture": "ture",
+    "eventyr": "ture",
+    "kajak": "ture",
+    "kano": "ture",
+    "klatring": "ture",
+    "shelter": "shelter",
 
-  // Løb / Running
-  loeb: "loeb", running: "loeb", løb: "loeb", run: "loeb", jogging: "loeb",
-  motionssti: "loeb", løbesti: "loeb",
+    // MTB
+    "mtb": "mtb",
+    "mountainbike": "mtb",
+    "cykling": "mtb",
+    "cycling": "mtb",
+    "bike": "mtb",
+    "cykli": "mtb",
+    "cyklerute": "mtb",
+    "bikeparken": "mtb",
 
-  // Hund
-  hundeskov: "hund", hund: "hund", dog: "hund", hundeskoven: "hund", hundepark: "hund",
+    // Løb
+    "loeb": "loeb",
+    "running": "loeb",
+    "løb": "loeb",
+    "run": "loeb",
+    "jogging": "loeb",
+    "motionssti": "loeb",
+    "løbesti": "loeb",
 
-  // Fiskeri
-  fiskeri: "fiskeri", fishing: "fiskeri", lystfiskeri: "fiskeri",
+    // Hund
+    "hundeskov": "hund",
+    "hund": "hund",
+    "dog": "hund",
+    "hundeskoven": "hund",
+    "hundepark": "hund",
 
-  // Sport
-  sport: "sport", aktiv_sport: "aktiv_sport", aktiv: "aktiv",
-  fodbold: "sport", tennis: "sport", basketball: "sport", volleyball: "sport",
-  svømning: "sport", svømmeri: "sport", squash: "sport", padel: "sport",
-  bowling: "sport", golf: "sport", klatrevæg: "sport", skydning: "sport",
-  badminton: "sport", atletik: "sport",
+    // Fiskeri
+    "fiskeri": "fiskeri",
+    "fishing": "fiskeri",
+    "lystfiskeri": "fiskeri",
 
-  // Fitness
-  fitness: "fitness", gym: "fitness", træning: "fitness", crossfit: "fitness",
-  styrketræning: "fitness", motionscenter: "fitness",
+    // Sport
+    "sport": "sport",
+    "aktiv_sport": "aktiv_sport",
+    "aktiv": "aktiv",
+    "fodbold": "sport",
+    "tennis": "sport",
+    "basketball": "sport",
+    "volleyball": "sport",
+    "svømning": "sport",
+    "svømmeri": "sport",
+    "squash": "sport",
+    "padel": "sport",
+    "bowling": "sport",
+    "golf": "sport",
+    "klatrevæg": "sport",
+    "skydning": "sport",
+    "badminton": "sport",
+    "atletik": "sport",
 
-  // Musik / Koncert / Natteliv
-  musik: "musik", music: "musik", koncert: "musik", concert: "musik",
-  festival: "musik", live: "musik", scene: "musik", spillested: "musik",
-  musikhus: "musik", rockklub: "musik", jazzklub: "musik",
-  natteliv: "musik", klub: "musik",
+    // Fitness
+    "fitness": "fitness",
+    "gym": "fitness",
+    "træning": "fitness",
+    "crossfit": "fitness",
+    "styrketræning": "fitness",
+    "motionscenter": "fitness",
 
-  // Kultur / Kunst
-  kultur: "kultur", museum: "kultur", udstilling: "kultur", galleri: "kultur",
-  teater: "kultur", biograf: "kultur", cinema: "kultur", kunst: "kreativt",
-  kreativt: "kreativt", workshop: "kreativt", keramik: "kreativt", maleri: "kreativt",
-  underholdning: "kultur", forlystelse: "kultur",
+    // Musik
+    "musik": "musik",
+    "music": "musik",
+    "koncert": "musik",
+    "concert": "musik",
+    "festival": "musik",
+    "live": "musik",
+    "scene": "musik",
+    "spillested": "musik",
+    "musikhus": "musik",
+    "rockklub": "musik",
+    "jazzklub": "musik",
+    "natteliv": "musik",
+    "klub": "musik",
 
-  // Mad / Restaurant
-  mad: "mad", mad_hangout: "mad_hangout", restaurant: "mad", cafe: "mad",
-  bar: "mad_hangout", pub: "mad", spisested: "mad", madmarked: "mad", street_food: "mad",
-  takeaway: "mad", fastfood: "mad", brunch: "mad", bakery: "mad", bageri: "mad",
-  cocktailbar: "mad_hangout", vinbar: "mad_hangout", ølbar: "mad_hangout",
+    // Kultur
+    "kultur": "kultur",
+    "museum": "kultur",
+    "udstilling": "kultur",
+    "galleri": "kultur",
+    "teater": "kultur",
+    "biograf": "kultur",
+    "cinema": "kultur",
+    "kunst": "kreativt",
+    "underholdning": "kultur",
+    "forlystelse": "kultur",
 
-  // Logi / Overnatning
-  logi: "logi", camping: "logi", vandrerhjem: "logi", hytter: "logi", glamping: "logi",
-  hotel: "logi", hostel: "logi", bnb: "logi", feriehus: "logi", overnatning: "logi",
-  teltplads: "logi",
+    // Kreativt
+    "kreativt": "kreativt",
+    "workshop": "kreativt",
+    "keramik": "kreativt",
+    "maleri": "kreativt",
 
-  // Wellness
-  wellness: "wellness", yoga: "wellness", meditation: "wellness", sauna: "wellness",
-  spa: "wellness", massage: "wellness", mindfulness: "wellness", pilates: "wellness",
+    // Mad
+    "mad": "mad",
+    "mad_hangout": "mad_hangout",
+    "restaurant": "mad",
+    "cafe": "mad",
+    "bar": "mad_hangout",
+    "pub": "mad",
+    "spisested": "mad",
+    "madmarked": "mad",
+    "street_food": "mad",
+    "takeaway": "mad",
+    "fastfood": "mad",
+    "brunch": "mad",
+    "bakery": "mad",
+    "bageri": "mad",
+    "cocktailbar": "mad_hangout",
+    "vinbar": "mad_hangout",
+    "ølbar": "mad_hangout",
 
-  // Sport (additions)
-  zoo: "aktiv_sport", akvarium: "aktiv_sport", familie: "aktiv_sport", temapark: "aktiv_sport",
+    // Logi
+    "logi": "logi",
+    "camping": "logi",
+    "vandrerhjem": "logi",
+    "hytter": "logi",
+    "glamping": "logi",
+    "hotel": "logi",
+    "hostel": "logi",
+    "bnb": "logi",
+    "feriehus": "logi",
+    "overnatning": "logi",
+    "teltplads": "logi",
 
-  // Communities / Social
-  communities: "communities", bogklub: "communities", braetspil: "communities",
-  socialt: "socialt", mødested: "communities", foreningsliv: "communities",
+    // Wellness
+    "wellness": "wellness",
+    "yoga": "wellness",
+    "meditation": "wellness",
+    "sauna": "wellness",
+    "spa": "wellness",
+    "massage": "wellness",
+    "mindfulness": "wellness",
+    "pilates": "wellness",
 
-  // Old DB category names with spaces (legacy from early imports)
-  "Natur & friluftsliv": "natur",
-  "Ture & eventyr": "ture",
-  "Logi & base": "logi",
-  "Aktiv & sport": "aktiv_sport",
-  "Oplevelser & kultur": "kultur",
+    // Communities
+    "communities": "communities",
+    "bogklub": "communities",
+    "braetspil": "communities",
+    "socialt": "socialt",
+    "mødested": "communities",
+    "foreningsliv": "communities",
 
-  // Rejser / Transport
-  rejser: "rejser", transport: "rejser", tog: "rejser", bus: "rejser",
-  faerge: "rejser", færge: "rejser", lufthavn: "rejser",
-};
+    // Events & rejser
+    "events": "events",
+    "rejser": "rejser",
+    "transport": "rejser",
+    "tog": "rejser",
+    "bus": "rejser",
+    "faerge": "rejser",
+    "færge": "rejser",
+    "lufthavn": "rejser",
+
+    // Dyre/naturspot
+    "dyrespot": "dyrespot",
+    "dyrereservat": "dyrespot",
+    "fugle": "dyrespot",
+
+    // Family/theme park
+    "zoo": "aktiv_sport",
+    "akvarium": "aktiv_sport",
+    "familie": "aktiv_sport",
+    "temapark": "aktiv_sport",
+  };
+
+  // Check place tags (exact match in lowercase)
+  if (place.tags && place.tags.length > 0) {
+    for (const tag of place.tags) {
+      const tagLower = tag.toLowerCase().trim();
+      if (TAG_CATEGORY_MAP[tagLower]) {
+        category = TAG_CATEGORY_MAP[tagLower];
+        break;
+      }
+    }
+  }
+
+  // Fallback: check main_categories (if tags didn't yield)
+  if (category === "natur" && place.main_categories && place.main_categories.length > 0) {
+    for (const cat of place.main_categories) {
+      const catLower = cat.toLowerCase().trim();
+      if (TAG_CATEGORY_MAP[catLower]) {
+        category = TAG_CATEGORY_MAP[catLower];
+        break;
+      }
+    }
+  }
+
+  return category;
+}
 
 function placeToPin(place: Place): MapPin | null {
   // Guard: skip places with missing or invalid coordinates
@@ -218,15 +393,7 @@ function placeToPin(place: Place): MapPin | null {
   if (lat == null || lng == null || !isFinite(lat) || !isFinite(lng)) return null;
   if (lat === 0 && lng === 0) return null; // (0,0) is ocean — invalid placeholder
 
-  let cat: PinCategory = "natur";
-  const cats = [...(place.main_categories || []), ...(place.tags || [])];
-  for (const c of cats) {
-    const key = c.toLowerCase().replace(/[\s-]/g, "");
-    for (const [mapKey, val] of Object.entries(SUPABASE_CAT_MAP)) {
-      if (key.includes(mapKey) || mapKey.includes(key)) { cat = val; break; }
-    }
-    if (cat !== "natur") break;
-  }
+  const cat = getPlaceCategory(place);
   return {
     id: `sb-${place.id}`, name: place.name, lat, lng,
     category: cat, description: place.description, rating: place.rating_avg || 0,
@@ -1360,9 +1527,7 @@ export default function Kort() {
 
   const allPins = useMemo(() => {
     const sbPins = (supabasePlaces || []).map(placeToPin).filter((p): p is MapPin => p !== null);
-    const sbNames = new Set(sbPins.map(p => p.name.toLowerCase()));
-    const hardcodedFiltered = HARDCODED_PINS.filter(p => !sbNames.has(p.name.toLowerCase()));
-    return [...sbPins, ...hardcodedFiltered, ...eventPins, ...routePins];
+    return [...sbPins, ...eventPins, ...routePins];
   }, [supabasePlaces, eventPins, routePins]);
 
   // Sidebar category → filter pins (supports both legacy flat + hierarchical DrillDownFilter)
@@ -1375,15 +1540,9 @@ export default function Kort() {
         const pCat = p.category.toLowerCase();
         const pTags = (p.tags || []).map(t => t.toLowerCase());
         // A pin matches if its category OR any tag overlaps with selected slugs
-        // Also check via SUPABASE_CAT_MAP: if any slug maps to the pin's category
         const slugSet = new Set(mapFilterSlugs.map(s => s.toLowerCase()));
         const catMatch = slugSet.has(pCat) || pTags.some(t => slugSet.has(t));
-        // Also check reverse: if pin's category is a mapped value from any selected slug
-        const reverseMatch = mapFilterSlugs.some(slug => {
-          const mapped = SUPABASE_CAT_MAP[slug.toLowerCase()];
-          return mapped && mapped === pCat;
-        });
-        if (!catMatch && !reverseMatch) return false;
+        if (!catMatch) return false;
       }
 
       // Text search
