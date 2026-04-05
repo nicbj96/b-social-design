@@ -8,14 +8,16 @@ export default function StatsPage() {
   const { data: categories } = useL1Categories();
   const { data: popularTags } = usePopularTags(10);
 
+  // L1 categories come from useL1Categories (all are level 1)
+  // Use hardcoded totals for the breakdown since we only fetch L1s here
   const categoryCounts = {
-    l1: categories?.filter((c: any) => c.level === 1).length || 22,
-    l2: categories?.filter((c: any) => c.level === 2).length || 92,
-    l3: categories?.filter((c: any) => c.level === 3).length || 679,
-    aliases: categories?.filter((c: any) => c.is_alias).length || 176,
+    l1: categories?.length || 22,
+    l2: 92,
+    l3: 679,
+    aliases: 176,
   };
 
-  const maxCount = Math.max(...(popularTags?.map((t: any) => t.count) || [1]));
+  const maxCount = Math.max(...(popularTags?.map((t: any) => t.total_count || 0) || [1]));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
@@ -56,7 +58,7 @@ export default function StatsPage() {
                     <div key={idx} className="flex items-center justify-between gap-4">
                       <span className="text-white">{tag.name}</span>
                       <span className="text-sm font-semibold text-teal-400">
-                        {tag.count.toLocaleString('da-DK')}
+                        {(tag.total_count || 0).toLocaleString('da-DK')}
                       </span>
                     </div>
                   ))
@@ -80,7 +82,7 @@ export default function StatsPage() {
                   key={idx}
                   icon={getEmojiForTag(tag.name)}
                   name={tag.name}
-                  count={tag.count}
+                  count={tag.total_count}
                   maxCount={maxCount}
                 />
               ))

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 /* ─────────────────────────────────────────────
    B-Social Premium Landing Page
@@ -10,6 +12,29 @@ export default function Landing() {
   const [, navigate] = useLocation();
   const [navScrolled, setNavScrolled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Live stats from Supabase
+  const { data: liveStats } = useQuery({
+    queryKey: ["landingStats"],
+    queryFn: async () => {
+      const [placesRes, eventsRes, countriesRes] = await Promise.all([
+        supabase.from("places").select("id", { count: "exact", head: true }),
+        supabase.from("events").select("id", { count: "exact", head: true }),
+        supabase.from("places").select("country").not("country", "is", null),
+      ]);
+      const countries = new Set((countriesRes.data || []).map((r: any) => r.country)).size;
+      return {
+        places: placesRes.count || 95000,
+        events: eventsRes.count || 6400,
+        countries: countries || 117,
+      };
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+  const fmt = (n: number) => {
+    if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".", ",")}K`;
+    return n.toLocaleString("da-DK");
+  };
 
   /* ── parallax on scroll ── */
   useEffect(() => {
@@ -106,9 +131,9 @@ export default function Landing() {
         <div className="lp-parallax-bg" id="lp-hero-bg" style={{ backgroundImage: "url('/hero.jpg')" }} />
         <div className="lp-bg-overlay" style={{ background: "linear-gradient(to bottom,rgba(6,10,15,0.1) 0%,rgba(6,10,15,0.0) 30%,rgba(6,10,15,0.7) 70%,rgba(6,10,15,1) 100%)" }} />
         <div className="lp-stats-bar lp-fade-up lp-delay-4">
-          <div className="lp-stat-item"><div className="lp-stat-num">95K+</div><div className="lp-stat-label">Steder</div></div>
-          <div className="lp-stat-item"><div className="lp-stat-num">6.4K</div><div className="lp-stat-label">Events</div></div>
-          <div className="lp-stat-item"><div className="lp-stat-num">117</div><div className="lp-stat-label">Lande</div></div>
+          <div className="lp-stat-item"><div className="lp-stat-num">{fmt(liveStats?.places ?? 95000)}+</div><div className="lp-stat-label">Steder</div></div>
+          <div className="lp-stat-item"><div className="lp-stat-num">{fmt(liveStats?.events ?? 6400)}</div><div className="lp-stat-label">Events</div></div>
+          <div className="lp-stat-item"><div className="lp-stat-num">{liveStats?.countries ?? 117}</div><div className="lp-stat-label">Lande</div></div>
         </div>
         <div className="lp-hero-content">
           <div className="lp-hero-eyebrow lp-fade-up">
