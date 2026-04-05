@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import { supabase, fetchProfiles, type Profile } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
-import { TAG_TREE, type TagNode } from "@/lib/tagTree";
+import type { TagNode } from "@/lib/tagTree";
+import { lazyLoadTagTree } from "@/lib/lazyDataLoader";
 import { getTagNode, getRelatedTags } from "@/lib/tagEngine";
 import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
@@ -62,15 +63,7 @@ const STATUS_COLORS: Record<PositionStatus, string> = {
 };
 
 // Build selectable tag categories from TAG_TREE (use level-2 kategorier as options)
-function getTagCategories(): { title: string; emoji: string; tags: { tag: string; label: string; emoji: string }[] }[] {
-  return TAG_TREE.map((over) => ({
-    title: over.label,
-    emoji: over.emoji,
-    tags: (over.children || []).map((kat) => ({ tag: kat.tag, label: kat.label, emoji: kat.emoji })),
-  }));
-}
-
-const TAG_CATEGORIES = getTagCategories();
+// This will be loaded lazily within the component
 
 // Tag chip component
 function TagChip({ label, emoji, selected, onClick }: { label: string; emoji?: string; selected?: boolean; onClick?: () => void }) {
@@ -509,6 +502,7 @@ export default function FirmaRekruttering() {
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [filterType, setFilterType] = useState<EmploymentType | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [tagCategories, setTagCategories] = useState<{ title: string; emoji: string; tags: { tag: string; label: string; emoji: string }[] }[]>([]);
 
   // Create form state
   const [newTitle, setNewTitle] = useState("");
@@ -519,6 +513,23 @@ export default function FirmaRekruttering() {
 
   // Candidate search tags
   const [searchTags, setSearchTags] = useState<string[]>([]);
+
+  // Load tagCategories lazily on mount
+  useEffect(() => {
+    lazyLoadTagTree()
+      .then(TAG_TREE => {
+        const categories = TAG_TREE.map((over) => ({
+          title: over.label,
+          emoji: over.emoji,
+          tags: (over.children || []).map((kat) => ({ tag: kat.tag, label: kat.label, emoji: kat.emoji })),
+        }));
+        setTagCategories(categories);
+      })
+      .catch(err => {
+        console.error("[FirmaRekruttering] Failed to load tag categories:", err);
+        setTagCategories([]);
+      });
+  }, []);
 
   // Load positions from Supabase
   useEffect(() => {
@@ -817,7 +828,7 @@ export default function FirmaRekruttering() {
                 </h3>
                 <p className="fr-section-sub">{t('recruitment.searchCandidatesDescription')}</p>
                 <div className="fr-gap-4">
-                  {TAG_CATEGORIES.map((cat) => (
+                  {tagCategories.map((cat) => (
                     <TagCategorySelector
                       key={cat.title}
                       title={cat.title}
@@ -1006,7 +1017,7 @@ export default function FirmaRekruttering() {
                       {t('recruitment.form.tagsLabel')}
                     </label>
                     <div className="fr-gap-4">
-                      {TAG_CATEGORIES.map((cat) => (
+                      {tagCategories.map((cat) => (
                         <TagCategorySelector
                           key={cat.title}
                           title={cat.title}

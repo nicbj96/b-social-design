@@ -4,7 +4,7 @@
   via Superhjernen. Bruger egen Cloudflare Worker som CORS proxy.
 */
 
-import { TAG_TREE, type TagNode } from "./tagTree";
+import type { TagNode } from "./tagTree";
 import { getRelatedTags, getTagNode } from "./tagEngine";
 import { logger } from "./logger";
 
@@ -588,13 +588,14 @@ export function isNewsSaved(id: string): boolean {
 }
 
 // --- RSS Parser ---
-function parseRSS(xml: string, config: FeedConfig): NewsItem[] {
+async function parseRSS(xml: string, config: FeedConfig): Promise<NewsItem[]> {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xml, "application/xml");
   const items = doc.querySelectorAll("item");
   const results: NewsItem[] = [];
 
-  items.forEach((item, idx) => {
+  for (let idx = 0; idx < items.length; idx++) {
+    const item = items[idx];
     const title = item.querySelector("title")?.textContent?.trim() || "";
     const description = item.querySelector("description")?.textContent?.trim() || "";
     const link = item.querySelector("link")?.textContent?.trim() || "";
@@ -619,7 +620,7 @@ function parseRSS(xml: string, config: FeedConfig): NewsItem[] {
     }
 
     // Tag matching: scan title + description for tag keywords
-    const matchedTags = matchTagsToContent(title + " " + description, config.tags);
+    const matchedTags = await matchTagsToContent(title + " " + description, config.tags);
 
     results.push({
       id: `news-${config.source}-${idx}-${pubDate.getTime()}`,
@@ -633,7 +634,7 @@ function parseRSS(xml: string, config: FeedConfig): NewsItem[] {
       matchedTags,
       score: 0,
     });
-  });
+  }
 
   return results;
 }
@@ -653,8 +654,13 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-// --- Flatten all tags for keyword matching ---
-function flattenAllTags(): { tag: string; label: string; keywords: string[] }[] {
+// --- Flatten all tags for keyword matching (lazy loaded) ---
+let _allTagKeywords: { tag: string; label: string; keywords: string[] }[] | null = null;
+
+async function flattenAllTags(): Promise<{ tag: string; label: string; keywords: string[] }[]> {
+  if (_allTagKeywords) return _allTagKeywords;
+
+  const { TAG_TREE } = await import("./tagTree");
   const flat: { tag: string; label: string; keywords: string[] }[] = [];
   for (const parent of TAG_TREE) {
     flat.push({
@@ -672,13 +678,12 @@ function flattenAllTags(): { tag: string; label: string; keywords: string[] }[] 
       }
     }
   }
+  _allTagKeywords = flat;
   return flat;
 }
 
-const ALL_TAG_KEYWORDS = flattenAllTags();
-
-// --- Match content text against tags ---
-function matchTagsToContent(text: string, feedTags: string[]): string[] {
+// --- Match content text against tags (with lazy-loaded keywords) ---
+async function matchTagsToContent(text: string, feedTags: string[]): Promise<string[]> {
   const lower = text.toLowerCase();
   const matched = new Set<string>();
 
@@ -698,7 +703,8 @@ function matchTagsToContent(text: string, feedTags: string[]): string[] {
   }
 
   // Scan for specific tag keywords in content
-  for (const t of ALL_TAG_KEYWORDS) {
+  const allTagKeywords = await flattenAllTags();
+  for (const t of allTagKeywords) {
     for (const kw of t.keywords) {
       if (kw.length >= 3 && lower.includes(kw)) {
         matched.add(t.tag);
@@ -756,7 +762,7 @@ export async function fetchNews(): Promise<NewsItem[]> {
         return [];
       }
       const xml = await res.text();
-      const items = parseRSS(xml, config);
+      const items = await parseRSS(xml, config);
       // Log if major feed returns nothing
       if (items.length === 0 && ['GAFFA', 'DR Sporten', 'Nordjyske'].includes(config.source)) {
         logger.warn(`[NewsEngine] ${config.source} returned no items (may be endpoint/CORS issue)`);

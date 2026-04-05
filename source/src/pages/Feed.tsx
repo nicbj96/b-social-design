@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { Settings, Flame, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +14,8 @@ import { getTagNode, getOverkategoriForTag } from "@/lib/tagEngine";
 export default function Feed() {
   const { profile } = useAuth();
   const { selectedTags, setSelectedTags, getSelectedOverkategorier } = useTags();
+  // Set page meta tags
+  usePageMeta({ title: "Feed", description: "Dit personlige feed af events og oplevelser baseret på dine interesser." });
   const [tagEditorOpen, setTagEditorOpen] = useState(false);
 
   // Get unique L1 categories from selected tags

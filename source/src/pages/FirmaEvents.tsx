@@ -3,6 +3,9 @@ import { useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
 import {
   Plus,
   Search,
@@ -460,6 +463,7 @@ function BoostModal({ event, onClose }: { event: FirmaEvent; onClose: () => void
 
 export default function FirmaEvents() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const containerRef = useFadeUp("fe");
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("alle");
@@ -468,12 +472,125 @@ export default function FirmaEvents() {
   const [boostEvent, setBoostEvent] = useState<FirmaEvent | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [formData, setFormData] = useState({
+    title: "",
+    date: "",
+    location: "",
+    description: "",
+    tags: "",
+    category: "",
+    price: "",
+    maxSignups: "",
+  });
 
-  const filtered = MOCK_EVENTS.filter((e) => {
+  // Fetch user's events from Supabase
+  const { data: events = [], refetch: refetchEvents, isLoading } = useQuery({
+    queryKey: ["firma-events", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("created_by", user.id)
+        .order("date", { ascending: false });
+      if (error) {
+        console.error("Error fetching events:", error);
+        return [];
+      }
+      // Convert Supabase events to FirmaEvent format
+      return (data || []).map((e: any) => ({
+        id: parseInt(e.id) || Math.random(),
+        title: e.title,
+        date: e.date,
+        location: e.location,
+        status: e.status || "draft",
+        tags: e.interest_tags || [],
+        views: 0, // Not tracked in current schema
+        signups: 0, // Would need to query event_rsvps
+        maxSignups: e.max_participants || 0,
+        description: e.description,
+        image: e.image_url,
+      }));
+    },
+    enabled: !!user?.id,
+  });
+
+  // Use real events or fallback to mock
+  const eventsToDisplay = events.length > 0 ? events : MOCK_EVENTS;
+
+  const filtered = eventsToDisplay.filter((e) => {
     if (filterStatus !== "alle" && e.status !== filterStatus) return false;
     if (search && !e.title.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const handleCreateEvent = async () => {
+    if (!user?.id) {
+      alert("Du skal være logget ind for at oprette events");
+      return;
+    }
+    if (!formData.title || !formData.date || !formData.location) {
+      alert("Udfyld titel, dato og location");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("events").insert({
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        location: formData.location,
+        category: formData.category || "Diverse",
+        price: formData.price ? parseFloat(formData.price) : null,
+        max_participants: formData.maxSignups ? parseInt(formData.maxSignups) : null,
+        created_by: user.id,
+        interest_tags: formData.tags ? formData.tags.split(",").map(t => t.trim()) : [],
+        status: "draft",
+      });
+
+      if (!error) {
+        // Clear form and refresh
+        setFormData({
+          title: "",
+          date: "",
+          location: "",
+          description: "",
+          tags: "",
+          category: "",
+          price: "",
+          maxSignups: "",
+        });
+        setShowCreate(false);
+        refetchEvents();
+        alert("Event oprettet!");
+      } else {
+        alert("Fejl ved oprettelse: " + error.message);
+      }
+    } catch (e) {
+      console.error("Create event error:", e);
+      alert("Der skete en fejl");
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: number | string) => {
+    try {
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId);
+
+      if (!error) {
+        refetchEvents();
+        setConfirmDelete(null);
+        alert("Event slettet!");
+      } else {
+        alert("Fejl ved sletning: " + error.message);
+      }
+    } catch (e) {
+      console.error("Delete event error:", e);
+      alert("Der skete en fejl");
+    }
+  };
 
   const now = new Date(2026, 3, 1);
   const daysInMonth = new Date(2026, 4, 0).getDate();
@@ -521,28 +638,88 @@ export default function FirmaEvents() {
               <div className="fe-form-grid">
                 <div>
                   <label className="fe-form-label">{t('firma.events_label_title')}</label>
-                  <input type="text" placeholder={t('firma.events_placeholder_title')} className="fe-input" />
+                  <input
+                    type="text"
+                    placeholder={t('firma.events_placeholder_title')}
+                    className="fe-input"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="fe-form-label">{t('firma.events_label_date')}</label>
-                  <input type="date" className="fe-input" />
+                  <input
+                    type="date"
+                    className="fe-input"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="fe-form-label">{t('firma.events_label_location')}</label>
-                  <input type="text" placeholder={t('firma.events_placeholder_address')} className="fe-input" />
+                  <input
+                    type="text"
+                    placeholder={t('firma.events_placeholder_address')}
+                    className="fe-input"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="fe-form-label">{t('firma.events_label_tags')}</label>
-                  <input type="text" placeholder={t('firma.events_placeholder_tags')} className="fe-input" />
+                  <input
+                    type="text"
+                    placeholder={t('firma.events_placeholder_tags')}
+                    className="fe-input"
+                    value={formData.tags}
+                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="fe-form-label">Kategori</label>
+                  <input
+                    type="text"
+                    placeholder="f.eks. Fitness, Musik, Sport"
+                    className="fe-input"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="fe-form-label">Pris (kr)</label>
+                  <input
+                    type="number"
+                    placeholder="0 for gratis"
+                    className="fe-input"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="fe-form-label">Max deltagere</label>
+                  <input
+                    type="number"
+                    placeholder="f.eks. 50"
+                    className="fe-input"
+                    value={formData.maxSignups}
+                    onChange={(e) => setFormData({ ...formData, maxSignups: e.target.value })}
+                  />
                 </div>
                 <div className="fe-form-full">
                   <label className="fe-form-label">{t('firma.events_label_description')}</label>
-                  <textarea rows={3} placeholder={t('firma.events_placeholder_description')} className="fe-input" style={{ resize: "none" }} />
+                  <textarea
+                    rows={3}
+                    placeholder={t('firma.events_placeholder_description')}
+                    className="fe-input"
+                    style={{ resize: "none" }}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="fe-form-actions">
-                <button className="fe-btn-sm">{t('firma.events_save_draft')}</button>
-                <button className="fe-btn-publish">{t('firma.events_publish')}</button>
+                <button className="fe-btn-sm" onClick={handleCreateEvent}>{t('firma.events_save_draft')}</button>
+                <button className="fe-btn-publish" onClick={handleCreateEvent}>{t('firma.events_publish')}</button>
                 <button onClick={() => setShowCreate(false)} className="fe-btn-cancel">{t('firma.events_cancel')}</button>
               </div>
             </div>
@@ -619,7 +796,7 @@ export default function FirmaEvents() {
                         <div className="fe-event-info">
                           <span className="fe-event-name">{event.title}</span>
                           <div className="fe-event-tags">
-                            {event.tags.map((tag) => (
+                            {event.tags.map((tag: string) => (
                               <span key={tag} className="fe-tag">{tag}</span>
                             ))}
                           </div>
@@ -663,7 +840,7 @@ export default function FirmaEvents() {
                         <button className="fe-action-btn"><Copy size={12} /> {t('firma.events_duplicate')}</button>
                         {confirmDelete === event.id ? (
                           <>
-                            <button onClick={() => setConfirmDelete(null)} className="fe-confirm-del">{t('firma.events_confirm_delete')}</button>
+                            <button onClick={() => handleDeleteEvent(event.id)} className="fe-confirm-del">{t('firma.events_confirm_delete')}</button>
                             <button onClick={() => setConfirmDelete(null)} className="fe-btn-cancel">{t('firma.events_cancel')}</button>
                           </>
                         ) : (

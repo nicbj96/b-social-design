@@ -2,11 +2,14 @@
 
 import React from 'react';
 import { useL1Categories, usePopularTags } from '@/hooks/useTagData';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { StatsCounter } from '@/components/StatsCounter';
 
 export default function StatsPage() {
   const { data: categories } = useL1Categories();
   const { data: popularTags } = usePopularTags(10);
+  // Set page meta tags
+  usePageMeta({ title: "Statistik", description: "B-Social i tal - udforsk statistikker over vores globale platform med steder, events og kategorier." });
 
   // L1 categories come from useL1Categories (all are level 1)
   // Use hardcoded totals for the breakdown since we only fetch L1s here

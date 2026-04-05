@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { X, Search, ChevronDown, Check, Sparkles } from "lucide-react";
 import { useTags } from "@/context/TagContext";
 import type { PriceTier } from "@/context/TagContext";
-import { TAG_TREE, type TagNode } from "@/lib/tagTree";
+import type { TagNode } from "@/lib/tagTree";
+import { lazyLoadTagTree } from "@/lib/lazyDataLoader";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from 'react-i18next';
@@ -115,6 +116,21 @@ export function FeedTagEditor({ open, onClose }: FeedTagEditorProps) {
   const [localTags, setLocalTags] = useState<Set<string>>(new Set());
   const [localPrice, setLocalPrice] = useState<PriceTier>(priceTier);
   const [tagSearch, setTagSearch] = useState("");
+  const [tagTree, setTagTree] = useState<TagNode[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Load tag tree when component mounts (lazy load once)
+  useEffect(() => {
+    if (tagTree.length > 0) return; // Already loaded
+    setLoading(true);
+    lazyLoadTagTree()
+      .then(setTagTree)
+      .catch(err => {
+        console.error("[FeedTagEditor] Failed to load tag tree:", err);
+        setTagTree([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   // Sync from context when opening
   useEffect(() => {
@@ -137,13 +153,13 @@ export function FeedTagEditor({ open, onClose }: FeedTagEditorProps) {
 
   // Filter tag tree
   const filteredTree = useMemo(() => {
-    if (!tagSearch.trim()) return TAG_TREE;
+    if (!tagSearch.trim()) return tagTree;
     const q = tagSearch.toLowerCase();
-    return TAG_TREE.filter(parent => {
+    return tagTree.filter(parent => {
       if (parent.tag.includes(q) || parent.label.toLowerCase().includes(q)) return true;
       return parent.children?.some(c => c.tag.includes(q) || c.label.toLowerCase().includes(q));
     });
-  }, [tagSearch]);
+  }, [tagSearch, tagTree]);
 
   const toggleTag = useCallback((tag: string) => {
     setLocalTags(prev => {
@@ -161,7 +177,7 @@ export function FeedTagEditor({ open, onClose }: FeedTagEditorProps) {
     // Persist to Supabase if user is logged in
     if (user) {
       const tagArray = [...localTags];
-      const parentTagSet = new Set(TAG_TREE.map(p => p.tag));
+      const parentTagSet = new Set(tagTree.map(p => p.tag));
       const vibeKeys = tagArray.filter(item => parentTagSet.has(item));
 
       await supabase.from("profiles").update({

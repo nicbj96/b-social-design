@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, MapPin, Star, Share2, Bookmark, ExternalLink, Navigation, Clock, Accessibility, Info, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -48,9 +49,52 @@ const HERO_IMAGES: Record<string, string> = {
   logi:        "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop",
   aktiv:       "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&auto=format&fit=crop",
   wellness:    "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&auto=format&fit=crop",
+  yoga:        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop",
+  museum:      "https://images.unsplash.com/photo-1578321271385-cd66d387b246?w=800&auto=format&fit=crop",
+  teater:      "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?w=800&auto=format&fit=crop",
+  restaurant:  "https://images.unsplash.com/photo-1514432324607-2e467f4af445?w=800&auto=format&fit=crop",
+  café:        "https://images.unsplash.com/photo-1502661402884-bee194c3ebda?w=800&auto=format&fit=crop",
+  bar:         "https://images.unsplash.com/photo-1514432324607-2e467f4af445?w=800&auto=format&fit=crop",
+  hotel:       "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&auto=format&fit=crop",
+  havn:        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop",
+  bro:         "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop",
+  slot:        "https://images.unsplash.com/photo-1570129477492-45a003537e1f?w=800&auto=format&fit=crop",
+  kirke:       "https://images.unsplash.com/photo-1548013147-72caa4e41edd?w=800&auto=format&fit=crop",
+  zoo:         "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&auto=format&fit=crop",
+  akvarium:    "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&auto=format&fit=crop",
+  legeplads:   "https://images.unsplash.com/photo-1576169645919-51582a1b25c0?w=800&auto=format&fit=crop",
+  picnic:      "https://images.unsplash.com/photo-1414235077418-3a91e9be593f?w=800&auto=format&fit=crop",
+  grill:       "https://images.unsplash.com/photo-1555939594-58d7cb561404?w=800&auto=format&fit=crop",
+  skateboard:  "https://images.unsplash.com/photo-1488348695476-3596ee1aa0d5?w=800&auto=format&fit=crop",
+  golf:        "https://images.unsplash.com/photo-1459925456917-14bec96c68c6?w=800&auto=format&fit=crop",
+  vandglid:    "https://images.unsplash.com/photo-1553090254-d3a9b3a29bed?w=800&auto=format&fit=crop",
+  svømning:    "https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?w=800&auto=format&fit=crop",
+  surfer:      "https://images.unsplash.com/photo-1539874754509-aeb1d247e90f?w=800&auto=format&fit=crop",
+  ski:         "https://images.unsplash.com/photo-1551632440-ff5385277ffe?w=800&auto=format&fit=crop",
+  vandtur:     "https://images.unsplash.com/photo-1470252649378-9c29740ff023?w=800&auto=format&fit=crop",
+  båd:         "https://images.unsplash.com/photo-1552466835-d9404e9fb0e1?w=800&auto=format&fit=crop",
 };
 
-const DEFAULT_HERO = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop";
+/* ── City → hero image (secondary fallback) ── */
+const CITY_IMAGES: Record<string, string> = {
+  København:   "https://images.unsplash.com/photo-1512453681174-efc80e5dc0ae?w=800&auto=format&fit=crop",
+  Aarhus:      "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&auto=format&fit=crop",
+  Odense:      "https://images.unsplash.com/photo-1488747807830-63789f68bb65?w=800&auto=format&fit=crop",
+  Aalborg:     "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop",
+  Randers:     "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop",
+};
+
+/* ── Fallback rotation images (Danish landscapes) ── */
+const FALLBACK_HEROES = [
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1434725039152-f716dbb29458?w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&auto=format&fit=crop",
+];
+
+const DEFAULT_HERO = FALLBACK_HEROES[0];
 
 function getHeroImage(place: Place): string {
   const allTerms = [
@@ -59,12 +103,23 @@ function getHeroImage(place: Place): string {
     (place.metadata as any)?.facility_type || "",
   ].map(item => item.toLowerCase());
 
+  // Try to match by category/tag keywords
   for (const term of allTerms) {
     for (const [key, url] of Object.entries(HERO_IMAGES)) {
       if (term.includes(key) || key.includes(term)) return url;
     }
   }
-  return DEFAULT_HERO;
+
+  // Secondary fallback: check city for Denmark-specific images
+  if (place.city) {
+    const cityImage = CITY_IMAGES[place.city];
+    if (cityImage) return cityImage;
+  }
+
+  // Tertiary fallback: rotation-based fallback using place ID hash
+  const hash = place.id.split('').reduce((h, c) => ((h << 5) - h) + c.charCodeAt(0), 0);
+  const idx = Math.abs(hash) % FALLBACK_HEROES.length;
+  return FALLBACK_HEROES[idx];
 }
 
 const stedCSS = `
@@ -295,6 +350,12 @@ export default function StedDetail() {
   const [error, setError] = useState(false);
 
   const { data: placeTags } = useTagsForPlace(place?.id ?? "");
+  // Set dynamic page meta tags
+  usePageMeta({
+    title: place?.name || "Sted",
+    description: place?.description ? place.description.slice(0, 160) : undefined,
+    ogImage: place ? getHeroImage(place) : undefined,
+  });
 
   useEffect(() => {
     if (!placeId) { setLoading(false); setError(true); return; }

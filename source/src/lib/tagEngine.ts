@@ -4,7 +4,8 @@
  Forbinder tags på kryds og tværs af alle sider:
  Feed, Udforsk, Kort, Firma, Henvisning
 */
-import { TAG_TREE, type TagNode, getOverkategorier } from "./tagTree";
+import type { TagNode } from "./tagTree";
+import { lazyLoadTagTree } from "./lazyDataLoader";
 import type { Event } from "./data";
 
 // --- Tag Storage (localStorage) ---
@@ -47,9 +48,11 @@ function flattenTree(nodes: TagNode[]): TagNode[] {
   return flat;
 }
 
-const ALL_TAGS = flattenTree(TAG_TREE);
+// --- Lazy-loaded cache: Module-level cache for loaded TAG_TREE ---
+let _allTags: TagNode[] | null = null;
+let _tagInfoMap: Map<string, TagInfo> | null = null;
+let _initPromise: Promise<void> | null = null;
 
-// --- Pre-built lookup maps for fast hierarchy resolution ---
 type TagLevel = 1 | 2 | 3;
 interface TagInfo {
   level: TagLevel;
@@ -58,39 +61,63 @@ interface TagInfo {
   katTag: string | null;  // level-2 parent tag (null for level 1)
 }
 
-const TAG_INFO_MAP = new Map<string, TagInfo>();
-for (const over of TAG_TREE) {
-  TAG_INFO_MAP.set(over.tag, { level: 1, node: over, overTag: over.tag, katTag: null });
-  if (over.children) {
-    for (const kat of over.children) {
-      TAG_INFO_MAP.set(kat.tag, { level: 2, node: kat, overTag: over.tag, katTag: kat.tag });
-      if (kat.children) {
-        for (const under of kat.children) {
-          TAG_INFO_MAP.set(under.tag, { level: 3, node: under, overTag: over.tag, katTag: kat.tag });
+/**
+ * Ensure tags are loaded and initialize lookups if needed
+ * Called on first use, then cached
+ */
+async function ensureTags(): Promise<void> {
+  if (_allTags !== null) return;
+  if (_initPromise) return _initPromise;
+
+  _initPromise = (async () => {
+    const TAG_TREE = await lazyLoadTagTree();
+    _allTags = flattenTree(TAG_TREE);
+    _tagInfoMap = new Map<string, TagInfo>();
+
+    for (const over of TAG_TREE) {
+      _tagInfoMap.set(over.tag, { level: 1, node: over, overTag: over.tag, katTag: null });
+      if (over.children) {
+        for (const kat of over.children) {
+          _tagInfoMap.set(kat.tag, { level: 2, node: kat, overTag: over.tag, katTag: kat.tag });
+          if (kat.children) {
+            for (const under of kat.children) {
+              _tagInfoMap.set(under.tag, { level: 3, node: under, overTag: over.tag, katTag: kat.tag });
+            }
+          }
         }
       }
     }
-  }
+  })();
+
+  await _initPromise;
+}
+
+export async function ensureTagsLoaded(): Promise<void> {
+  await ensureTags();
 }
 
 export function getTagNode(tag: string): TagNode | undefined {
-  return TAG_INFO_MAP.get(tag.toLowerCase())?.node;
+  if (!_tagInfoMap) return undefined;
+  return _tagInfoMap.get(tag.toLowerCase())?.node;
 }
 
 // --- Get which overkategori a tag belongs to ---
 export function getOverkategoriForTag(tag: string): string | null {
-  const info = TAG_INFO_MAP.get(tag.toLowerCase());
+  if (!_tagInfoMap) return null;
+  const info = _tagInfoMap.get(tag.toLowerCase());
   return info ? info.overTag : null;
 }
 
 // --- Get tag level ---
 export function getTagLevel(tag: string): TagLevel | null {
-  return TAG_INFO_MAP.get(tag.toLowerCase())?.level ?? null;
+  if (!_tagInfoMap) return null;
+  return _tagInfoMap.get(tag.toLowerCase())?.level ?? null;
 }
 
 // --- Related tags: 3-level aware ---
 export function getRelatedTags(tag: string): string[] {
-  const info = TAG_INFO_MAP.get(tag.toLowerCase());
+  if (!_tagInfoMap) return [];
+  const info = _tagInfoMap.get(tag.toLowerCase());
   if (!info) return [];
   const related: string[] = [];
 
@@ -110,7 +137,7 @@ export function getRelatedTags(tag: string): string[] {
   } else if (info.level === 2) {
     // KATEGORI: return parent overkategori + sibling kategorier + all children underkategorier
     related.push(info.overTag);
-    const overNode = TAG_INFO_MAP.get(info.overTag)?.node;
+    const overNode = _tagInfoMap.get(info.overTag)?.node;
     if (overNode?.children) {
       for (const sibling of overNode.children) {
         if (sibling.tag !== tag.toLowerCase()) {
@@ -129,7 +156,7 @@ export function getRelatedTags(tag: string): string[] {
     related.push(info.overTag);
     if (info.katTag) {
       related.push(info.katTag);
-      const katNode = TAG_INFO_MAP.get(info.katTag)?.node;
+      const katNode = _tagInfoMap.get(info.katTag)?.node;
       if (katNode?.children) {
         for (const sibling of katNode.children) {
           if (sibling.tag !== tag.toLowerCase()) {
@@ -163,7 +190,7 @@ export function buildCoOccurrence(events: Event[]): Map<string, Map<string, numb
 
 // --- Scoring: rank events by tag match (3-level weighted) ---
 export function scoreEvent(event: Event, userTags: string[]): number {
-  if (userTags.length === 0) return 0;
+  if (userTags.length === 0 || !_tagInfoMap) return 0;
   const eventTags = new Set([
     ...(event.interest_tags || []),
     event.category?.toLowerCase()
@@ -177,11 +204,11 @@ export function scoreEvent(event: Event, userTags: string[]): number {
       continue;
     }
 
-    const utInfo = TAG_INFO_MAP.get(utLower);
+    const utInfo = _tagInfoMap.get(utLower);
     if (!utInfo) continue;
 
     for (const et of eventTags) {
-      const etInfo = TAG_INFO_MAP.get(et as string);
+      const etInfo = _tagInfoMap.get(et as string);
       if (!etInfo) continue;
 
       // Same overkategori?
@@ -299,9 +326,9 @@ export function filterEventsForMap(events: Event[], activeTags: string[]): Event
 
 // --- Search: fuzzy tag search across all 3 levels ---
 export function searchAllTags(query: string): TagNode[] {
-  if (!query.trim()) return [];
+  if (!query.trim() || !_allTags) return [];
   const q = query.toLowerCase();
-  return ALL_TAGS.filter(t =>
+  return _allTags.filter(t =>
     t.tag.includes(q) || t.label.toLowerCase().includes(q)
   ).slice(0, 20);
 }
@@ -322,7 +349,9 @@ export function getReferralTagMatch(referrerTags: string[], newUserTags: string[
   return Math.min(100, Math.round((matches / Math.max(newUserTags.length, 1)) * 100));
 }
 
-export { ALL_TAGS };
+export function getAllTags(): TagNode[] {
+  return _allTags || [];
+}
 
 // --- Trending tags: count tag frequency across events ---
 export function getTrendingTags(events: Event[], limit = 15): { tag: string; count: number }[] {
@@ -351,6 +380,7 @@ export function filterByTag(events: Event[], tag: string): Event[] {
 
 // --- Unified tagEngine object for convenient imports ---
 export const tagEngine = {
+  ensureTagsLoaded,
   getUserTags,
   setUserTags,
   getFirmaTags,
@@ -372,4 +402,5 @@ export const tagEngine = {
   estimateFirmaReach,
   getReferralTagMatch,
   buildCoOccurrence,
+  getAllTags,
 };

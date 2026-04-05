@@ -10,7 +10,7 @@
  */
 
 import { supabase } from "./supabase";
-import { TAG_TREE, type TagNode } from "./tagTree";
+import type { TagNode } from "./tagTree";
 
 /* ── Types ── */
 
@@ -74,8 +74,9 @@ function tagNodeToHierarchy(node: TagNode, level: number): HierarchyNode {
 
 let _staticFallback: HierarchyNode[] | null = null;
 
-function getStaticFallback(): HierarchyNode[] {
+async function getStaticFallback(): Promise<HierarchyNode[]> {
   if (!_staticFallback) {
+    const { TAG_TREE } = await import("./tagTree");
     _staticFallback = TAG_TREE.map(n => tagNodeToHierarchy(n, 1));
   }
   return _staticFallback;
@@ -148,13 +149,13 @@ export async function fetchTagTree(): Promise<HierarchyNode[]> {
   } catch {
     // Supabase unreachable — use bundled static TAG_TREE as fallback
     console.warn("[tagApi] Supabase unavailable, falling back to static TAG_TREE");
-    return getStaticFallback();
+    return await getStaticFallback();
   }
 
   // If we got no data (e.g. tables empty), also fall back
   if (tags.length === 0) {
     console.warn("[tagApi] tags_normalized empty, falling back to static TAG_TREE");
-    return getStaticFallback();
+    return await getStaticFallback();
   }
 
   // Index tags by id for parent lookup

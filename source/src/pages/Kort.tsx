@@ -7,11 +7,12 @@ import { MapContainer, TileLayer, Marker, useMap, CircleMarker, useMapEvents } f
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
-import { fetchPlacesInViewport, fetchEvents, fetchRoutesForMap, type Place, type Event as SupabaseEvent, type MapBounds, type RouteWithPlace } from "@/lib/supabase";
+import { supabase, fetchPlacesInViewport, fetchEvents, fetchRoutesForMap, type Place, type Event as SupabaseEvent, type MapBounds, type RouteWithPlace } from "@/lib/supabase";
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { pageBase } from "@/lib/pageCSSBase";
 
+import { usePageMeta } from "@/hooks/usePageMeta";
 // Prevent Leaflet from injecting default marker image (red pin)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: '', iconRetinaUrl: '', shadowUrl: '' });
@@ -1476,6 +1477,8 @@ export default function Kort() {
   const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
   const [flyTo, setFlyTo] = useState<{ center: [number, number]; zoom: number } | null>(null);
   // sidebarCat removed — replaced by mapFilterSlugs from DrillDownFilter
+  // Set page meta tags
+  usePageMeta({ title: "Kort", description: "Interaktivt kort over steder og events i Danmark - find restauranter, koncerter, sport og oplevelser nær dig." });
   const [mapFilterSlugs, setMapFilterSlugs] = useState<string[] | null>(null);
   const [tagSearchCache, setTagSearchCache] = useState<{ [query: string]: any[] }>({});
   const [mapCountry] = useState<string>('DK');
@@ -1499,6 +1502,7 @@ export default function Kort() {
   const [USER_LAT, USER_LNG] = CITY_COORDS[city] || [DEFAULT_LAT, DEFAULT_LNG];
 
   // Viewport-based loading state
+  const MAX_CACHED_PLACES = 5000;
   const [supabasePlaces, setSupabasePlaces] = useState<Place[]>([]);
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [isLoadingViewport, setIsLoadingViewport] = useState(false);
@@ -1521,7 +1525,16 @@ export default function Kort() {
       setSupabasePlaces((prevPlaces) => {
         const existingIds = new Set(prevPlaces.map(p => p.id));
         const newUnique = newPlaces.filter(p => !existingIds.has(p.id));
-        return [...prevPlaces, ...newUnique];
+        const combined = [...prevPlaces, ...newUnique];
+
+        // Evict oldest places if cache exceeds MAX_CACHED_PLACES
+        if (combined.length > MAX_CACHED_PLACES) {
+          const kept = combined.slice(combined.length - MAX_CACHED_PLACES);
+          // Rebuild cachedPlaceIdsRef with only kept place IDs
+          cachedPlaceIdsRef.current = new Set(kept.map(p => p.id));
+          return kept;
+        }
+        return combined;
       });
       newPlaces.forEach(p => cachedPlaceIdsRef.current.add(p.id));
     } catch (error) {

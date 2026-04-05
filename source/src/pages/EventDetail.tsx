@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { useParams, useLocation, Link } from "wouter";
 import { ArrowLeft, Share2, Heart, MapPin, Users, Calendar, ExternalLink, Ticket, BedDouble, Star, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -337,6 +338,12 @@ export default function EventDetail() {
   });
 
   const { data: eventTags } = useTagsForEvent(event?.id ?? "");
+  // Set dynamic page meta tags
+  usePageMeta({
+    title: event?.title || "Event",
+    description: event?.description ? event.description.slice(0, 160) : undefined,
+    ogImage: event?.image_url ?? undefined,
+  });
 
   useEffect(() => {
     if (!user || !id) return;
@@ -366,6 +373,28 @@ export default function EventDetail() {
       console.error(e);
     } finally {
       setJoining(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: event?.title ?? "Event",
+          text: event?.description || event?.title || "Event",
+          url: window.location.href,
+        });
+      } catch (e) {
+        console.log("Share cancelled");
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Event link copied to clipboard!');
+      } catch (e) {
+        console.error("Copy failed:", e);
+      }
     }
   };
 
@@ -426,7 +455,7 @@ export default function EventDetail() {
             <div className="ed-icon-btn-row">
               <button
                 className="ed-icon-btn"
-                onClick={() => { if (navigator.share) navigator.share({ title: event.title, url: window.location.href }); }}
+                onClick={handleShare}
                 data-testid="button-share"
               >
                 <Share2 />
@@ -477,7 +506,27 @@ export default function EventDetail() {
                 <span>{t('events.up_to_participants', { count: event.max_participants })}</span>
               </div>
             )}
+            {/* Price display */}
+            <div className="ed-info-item">
+              <Ticket />
+              <span>
+                {!event.price || event.price === 0
+                  ? 'Gratis'
+                  : `fra ${event.price} kr`
+                }
+              </span>
+            </div>
           </div>
+
+          {/* Map mini-pin */}
+          {event.latitude && event.longitude && (
+            <div className="ed-desc-card ed-fade-up ed-d2">
+              <div className="ed-desc-title">Placering</div>
+              <Link href={`/kort?lat=${event.latitude}&lng=${event.longitude}`} className="ed-related-link" style={{ display: 'inline-flex', textDecoration: 'none' }}>
+                <MapPin size={14} /> Vis på kort
+              </Link>
+            </div>
+          )}
 
           {/* Description */}
           {event.description && (

@@ -1,4 +1,5 @@
 'use client';
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 import React, { useState } from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
@@ -51,6 +52,11 @@ export default function CategoryDetail() {
       return data as TagInfo | null;
     },
     enabled: !!category,
+  });
+  // Set dynamic page meta tags
+  usePageMeta({
+    title: tagInfo?.name || category || "Kategori",
+    description: `Udforsk ${tagInfo?.name || category} - find events og steder på B-Social`,
   });
 
   // Fetch child tags

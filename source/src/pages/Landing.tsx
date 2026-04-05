@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 /* ─────────────────────────────────────────────
    B-Social Premium Landing Page
@@ -49,6 +50,8 @@ export default function Landing() {
     if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".", ",")}K`;
     return n.toLocaleString("da-DK");
   };
+  // Set page meta tags
+  usePageMeta({ title: "", description: "Oplev Danmark sammen på B-Social - find steder, events og oplevelser i dit område." });
 
   /* ── parallax on scroll ── */
   useEffect(() => {

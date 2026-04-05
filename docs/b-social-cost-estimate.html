@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B-Social — High-End Development Cost Estimate</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #060a0f; --surface: #0d1117; --surface2: #161b22; --surface3: #1c2333;
+    --border: #21262d; --text: #e6edf3; --text-dim: #8b949e;
+    --teal: #4ecdc4; --accent: #58a6ff; --accent2: #bc8cff;
+    --green: #3fb950; --orange: #d29922; --red: #f85149; --pink: #f778ba;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .hero { padding: 60px 20px 30px; text-align: center; }
+  .hero h1 {
+    font-size: clamp(1.6rem, 5vw, 2.8rem); font-weight: 900; letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px;
+  }
+  .hero .sub { font-size: 1rem; color: var(--text-dim); font-weight: 300; }
+  .hero .date { font-size: 0.75rem; color: var(--text-dim); margin-top: 8px; opacity: 0.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  .total-box {
+    background: linear-gradient(135deg, rgba(78,205,196,0.08), rgba(88,166,255,0.05));
+    border: 2px solid rgba(78,205,196,0.25); border-radius: 20px; padding: 32px;
+    text-align: center; margin: 30px auto 40px; max-width: 700px;
+    position: relative; overflow: hidden;
+  }
+  .total-box::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, var(--teal), var(--accent), var(--accent2)); }
+  .total-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dim); margin-bottom: 8px; }
+  .total-amount {
+    font-size: clamp(2rem, 7vw, 3.5rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--teal), #fff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .total-range { font-size: 0.95rem; color: var(--text-dim); margin-top: 8px; font-weight: 300; }
+  .total-note { font-size: 0.75rem; color: var(--text-dim); margin-top: 12px; opacity: 0.7; }
+  .scope-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 30px 0; }
+  .scope-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+  .scope-num { font-size: 1.6rem; font-weight: 800; color: var(--teal); }
+  .scope-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+  .tech-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+  .tech-tag { padding: 4px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 500; background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); }
+  .section { margin: 40px 0; }
+  .section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .badge { font-size: 0.6rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .badge-cost { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-scope { background: rgba(78,205,196,0.15); color: var(--teal); }
+  .badge-time { background: rgba(188,140,255,0.15); color: var(--accent2); }
+  .cost-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .cost-table thead { background: var(--surface2); }
+  .cost-table th { padding: 12px 16px; text-align: left; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+  .cost-table td { padding: 12px 16px; font-size: 0.82rem; border-bottom: 1px solid var(--border); }
+  .cost-table tr:last-child td { border-bottom: none; }
+  .feature-name { font-weight: 600; }
+  .complexity { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; }
+  .cx-high { background: rgba(248,81,73,0.15); color: var(--red); }
+  .cx-med { background: rgba(210,153,34,0.15); color: var(--orange); }
+  .cx-low { background: rgba(63,185,80,0.15); color: var(--green); }
+  .cost-range { font-weight: 600; color: var(--teal); white-space: nowrap; }
+  .hours { color: var(--text-dim); font-size: 0.75rem; }
+  .cat-row td { background: var(--surface2); font-weight: 700; font-size: 0.88rem; padding: 10px 16px; color: var(--accent); }
+  .subtotal-row td { background: rgba(78,205,196,0.04); font-weight: 700; border-top: 2px solid var(--border); }
+  .compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 24px 0; }
+  .compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; position: relative; overflow: hidden; }
+  .compare-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .compare-card.high::before { background: linear-gradient(90deg, var(--red), var(--orange)); }
+  .compare-card.mid::before { background: linear-gradient(90deg, var(--orange), var(--accent)); }
+  .compare-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
+  .compare-card .price { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+  .compare-card.high .price { color: var(--red); }
+  .compare-card.mid .price { color: var(--orange); }
+  .compare-card p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; }
+  .compare-card ul { list-style: none; margin-top: 12px; }
+  .compare-card ul li { font-size: 0.78rem; color: var(--text-dim); padding: 3px 0 3px 18px; position: relative; }
+  .compare-card.high ul li::before { content:'→'; position:absolute; left:0; color:var(--red); font-weight:700; }
+  .compare-card.mid ul li::before { content:'→'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+  .notes { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 24px 0; }
+  .notes h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; }
+  .notes p { font-size: 0.78rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 6px; }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 40px auto; max-width: 600px; }
+  @media (max-width: 600px) { .cost-table th:nth-child(3), .cost-table td:nth-child(3) { display: none; } }
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>B-Social — Cost Estimate</h1>
+  <p class="sub">What agencies would charge to build this from scratch — High-End & Mid-Range</p>
+  <p class="date">Full codebase analysis — April 4, 2026</p>
+</div>
+<div class="container">
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin:30px auto 40px; max-width:900px;">
+    <div class="total-box" style="margin:0;">
+      <div class="total-label">High-End Agency</div>
+      <div class="total-amount">€420K – €680K</div>
+      <div class="total-range">$455K – $735K USD</div>
+      <div class="total-note">€140–200/h &nbsp;|&nbsp; 2,800–4,100 hours &nbsp;|&nbsp; 6–10 months</div>
+    </div>
+    <div class="total-box" style="margin:0; border-color:rgba(210,153,34,0.25); background:linear-gradient(135deg, rgba(210,153,34,0.08), rgba(88,166,255,0.05));">
+      <div class="total-label">Mid-Range Agency</div>
+      <div class="total-amount" style="background:linear-gradient(135deg, var(--orange), #fff); -webkit-background-clip:text;">€180K – €320K</div>
+      <div class="total-range">$195K – $345K USD</div>
+      <div class="total-note">€80–130/h &nbsp;|&nbsp; 2,200–3,200 hours &nbsp;|&nbsp; 5–8 months</div>
+    </div>
+  </div>
+  <div class="scope-grid">
+    <div class="scope-card"><div class="scope-num">43K+</div><div class="scope-label">Lines of Code</div></div>
+    <div class="scope-card"><div class="scope-num">35</div><div class="scope-label">Pages / Routes</div></div>
+    <div class="scope-card"><div class="scope-num">20</div><div class="scope-label">DB Tables</div></div>
+    <div class="scope-card"><div class="scope-num">191K</div><div class="scope-label">Places</div></div>
+    <div class="scope-card"><div class="scope-num">9.4K</div><div class="scope-label">Events</div></div>
+    <div class="scope-card"><div class="scope-num">10</div><div class="scope-label">Edge Functions</div></div>
+  </div>
+  <div class="tech-row">
+    <span class="tech-tag">React 18</span><span class="tech-tag">TypeScript</span><span class="tech-tag">Supabase</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">Cloudflare Pages</span><span class="tech-tag">WebRTC</span><span class="tech-tag">Leaflet Maps</span><span class="tech-tag">TailwindCSS</span><span class="tech-tag">Radix UI / shadcn</span><span class="tech-tag">i18next (DA/EN)</span><span class="tech-tag">Framer Motion</span><span class="tech-tag">Express.js</span><span class="tech-tag">Drizzle ORM</span><span class="tech-tag">PWA</span><span class="tech-tag">Claude AI Chatbot</span>
+  </div>
+  <div class="divider"></div>
+  <div class="section">
+    <h2 class="section-title">Detailed Breakdown <span class="badge badge-cost">Itemized</span></h2>
+    <table class="cost-table">
+      <thead><tr><th>Feature</th><th>Complexity</th><th>Hours</th><th>Cost (€)</th></tr></thead>
+      <tbody>
+        <tr class="cat-row"><td colspan="4">🎨 UX/UI Design & Prototyping</td></tr>
+        <tr><td class="feature-name">UX Research & Wireframing (35 pages)</td><td><span class="complexity cx-med">Med</span></td><td class="hours">120–160h</td><td class="cost-range">€17K–32K</td></tr>
+        <tr><td class="feature-name">Visual Design System (premium dark theme)</td><td><span class="complexity cx-high">High</span></td><td class="hours">80–120h</td><td class="cost-range">€11K–24K</td></tr>
+        <tr><td class="feature-name">Landing Page (parallax, animations)</td><td><span class="complexity cx-high">High</span></td><td class="hours">40–60h</td><td class="cost-range">€6K–12K</td></tr>
+        <tr><td class="feature-name">Responsive & Mobile Design</td><td><span class="complexity cx-med">Med</span></td><td class="hours">60–80h</td><td class="cost-range">€8K–16K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">🔐 Authentication & Users</td></tr>
+        <tr><td class="feature-name">Auth (login, signup, OAuth, PKCE)</td><td><span class="complexity cx-med">Med</span></td><td class="hours">60–80h</td><td class="cost-range">€8K–16K</td></tr>
+        <tr><td class="feature-name">User Profiles & Settings</td><td><span class="complexity cx-med">Med</span></td><td class="hours">80–100h</td><td class="cost-range">€11K–20K</td></tr>
+        <tr><td class="feature-name">Onboarding + Role-Based Access</td><td><span class="complexity cx-med">Med</span></td><td class="hours">70–100h</td><td class="cost-range">€10K–20K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">⚡ Core Platform</td></tr>
+        <tr><td class="feature-name">Feed / Discovery (Udforsk)</td><td><span class="complexity cx-high">High</span></td><td class="hours">100–140h</td><td class="cost-range">€14K–28K</td></tr>
+        <tr><td class="feature-name">Interactive Map (Kort) + Clustering</td><td><span class="complexity cx-high">High</span></td><td class="hours">120–160h</td><td class="cost-range">€17K–32K</td></tr>
+        <tr><td class="feature-name">Event System (detail, calendar, RSVP)</td><td><span class="complexity cx-high">High</span></td><td class="hours">120–160h</td><td class="cost-range">€17K–32K</td></tr>
+        <tr><td class="feature-name">Place System (detail, reviews, ratings)</td><td><span class="complexity cx-med">Med</span></td><td class="hours">80–100h</td><td class="cost-range">€11K–20K</td></tr>
+        <tr><td class="feature-name">Category & Tag Engine + Search</td><td><span class="complexity cx-med">Med</span></td><td class="hours">120–160h</td><td class="cost-range">€17K–32K</td></tr>
+        <tr><td class="feature-name">Notifications (push + in-app)</td><td><span class="complexity cx-med">Med</span></td><td class="hours">40–60h</td><td class="cost-range">€6K–12K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">📡 Real-Time & Communication</td></tr>
+        <tr><td class="feature-name">Messaging System (Beskeder)</td><td><span class="complexity cx-high">High</span></td><td class="hours">120–160h</td><td class="cost-range">€17K–32K</td></tr>
+        <tr><td class="feature-name">WebRTC Voice & Video Calls</td><td><span class="complexity cx-high">High</span></td><td class="hours">160–240h</td><td class="cost-range">€22K–48K</td></tr>
+        <tr><td class="feature-name">Social (friends, referrals)</td><td><span class="complexity cx-med">Med</span></td><td class="hours">60–80h</td><td class="cost-range">€8K–16K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">🤖 AI Integration</td></tr>
+        <tr><td class="feature-name">AI Chatbot (Claude, context-aware)</td><td><span class="complexity cx-high">High</span></td><td class="hours">80–120h</td><td class="cost-range">€11K–24K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">🏢 Company Module (B2B)</td></tr>
+        <tr><td class="feature-name">Dashboard + Analytics (Recharts)</td><td><span class="complexity cx-high">High</span></td><td class="hours">100–140h</td><td class="cost-range">€14K–28K</td></tr>
+        <tr><td class="feature-name">Event Mgmt + Targeting</td><td><span class="complexity cx-med">Med</span></td><td class="hours">120–160h</td><td class="cost-range">€17K–32K</td></tr>
+        <tr><td class="feature-name">Billing + Recruitment</td><td><span class="complexity cx-high">High</span></td><td class="hours">120–180h</td><td class="cost-range">€17K–36K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">🗄️ Backend & Data Pipeline</td></tr>
+        <tr><td class="feature-name">Database (20 tables, RLS, GIN indexes)</td><td><span class="complexity cx-high">High</span></td><td class="hours">80–120h</td><td class="cost-range">€11K–24K</td></tr>
+        <tr><td class="feature-name">10 Import Edge Functions (7 APIs)</td><td><span class="complexity cx-high">High</span></td><td class="hours">160–200h</td><td class="cost-range">€22K–40K</td></tr>
+        <tr><td class="feature-name">Express Backend + Supabase Layer</td><td><span class="complexity cx-med">Med</span></td><td class="hours">60–90h</td><td class="cost-range">€8K–18K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">🚀 Infrastructure & Polish</td></tr>
+        <tr><td class="feature-name">PWA + CI/CD + Security Headers</td><td><span class="complexity cx-med">Med</span></td><td class="hours">80–110h</td><td class="cost-range">€11K–22K</td></tr>
+        <tr><td class="feature-name">i18n (Danish + English, 120K chars)</td><td><span class="complexity cx-med">Med</span></td><td class="hours">60–80h</td><td class="cost-range">€8K–16K</td></tr>
+
+        <tr class="cat-row"><td colspan="4">🧪 QA & Project Management</td></tr>
+        <tr><td class="feature-name">Testing & QA (~15% of dev)</td><td><span class="complexity cx-high">High</span></td><td class="hours">200–280h</td><td class="cost-range">€28K–56K</td></tr>
+        <tr><td class="feature-name">Project Management (~10%)</td><td><span class="complexity cx-med">Med</span></td><td class="hours">160–200h</td><td class="cost-range">€22K–40K</td></tr>
+
+        <tr class="subtotal-row">
+          <td class="feature-name" style="font-size:1rem;">TOTAL</td><td></td>
+          <td class="hours" style="font-weight:700;color:var(--text);">2,800–4,100h</td>
+          <td class="cost-range" style="font-size:1rem;">€420K–680K</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="divider"></div>
+  <div class="section">
+    <h2 class="section-title">Agency Tier Comparison <span class="badge badge-scope">High vs Mid</span></h2>
+    <div class="compare-grid">
+      <div class="compare-card high">
+        <h3>🏢 High-End Agency</h3>
+        <div class="price">€420K – €680K</div>
+        <p>Premium Scandinavian/Western European firms (Netcompany, Trifork, Nodes, Reaktor-level)</p>
+        <ul>
+          <li>€140–200/hour senior rates</li>
+          <li>6–10 months, team of 8–10</li>
+          <li>1 Project Manager (~€80–100K)</li>
+          <li>1 UX/UI Designer (~€60–80K)</li>
+          <li>2 Senior Frontend Devs (~€120–160K)</li>
+          <li>1 Senior Backend Dev (~€60–80K)</li>
+          <li>1 DevOps Engineer (~€30–40K)</li>
+          <li>1 QA Engineer (~€40–60K)</li>
+          <li>Extensive planning phase (3–4 months)</li>
+          <li>Agency overhead: 30–50%</li>
+          <li>Changes = change requests = more cost</li>
+          <li>Custom design system, pixel-perfect</li>
+          <li>Full test coverage & code reviews</li>
+          <li>Dedicated account manager</li>
+        </ul>
+      </div>
+      <div class="compare-card mid">
+        <h3>🏗️ Mid-Range Agency</h3>
+        <div class="price">€180K – €320K</div>
+        <p>Competent mid-tier firms or smaller boutique studios (Eastern Europe, Iberia, or smaller Nordic shops)</p>
+        <ul>
+          <li>€80–130/hour mixed rates</li>
+          <li>5–8 months, team of 5–7</li>
+          <li>1 PM / Tech Lead combo (~€40–60K)</li>
+          <li>1 UX/UI Designer (~€30–50K)</li>
+          <li>2 Mid-Senior Frontend Devs (~€60–100K)</li>
+          <li>1 Backend Dev (~€30–50K)</li>
+          <li>Part-time QA (~€15–25K)</li>
+          <li>Shorter planning phase (1–2 months)</li>
+          <li>Less overhead: 15–25%</li>
+          <li>Template-based design, less custom</li>
+          <li>Functional testing, less code review</li>
+          <li>May use junior devs on some features</li>
+          <li>Good quality, but less polish</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="section">
+    <h2 class="section-title">Agency Rates <span class="badge badge-time">2026</span></h2>
+    <div class="notes">
+      <h3>Scandinavian / Western European Agency Rates</h3>
+      <p><strong>Junior Dev:</strong> €80–120/h (600–900 DKK)</p>
+      <p><strong>Senior Dev:</strong> €140–200/h (1,050–1,500 DKK)</p>
+      <p><strong>Lead / Architect:</strong> €180–250/h (1,350–1,875 DKK)</p>
+      <p><strong>UX/UI Designer:</strong> €120–180/h (900–1,350 DKK)</p>
+      <p><strong>Project Manager:</strong> €100–160/h (750–1,200 DKK)</p>
+      <p style="margin-top:12px; opacity:0.7;">Reference: Netcompany, Commentor, Trifork, Nodes, Shape (DK), Reaktor, Futurice (Nordics). US agencies charge $200–350/h.</p>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="notes">
+    <h3>What this estimate covers</h3>
+    <p>This is a <strong>from-scratch build estimate</strong> — the cost to recreate everything B-Social currently has if you walked into a high-end agency.</p>
+    <p>Includes: design, development, testing, PM, deployment, and data pipeline (10 edge functions, 7+ APIs).</p>
+    <p style="margin-top:12px;"><strong>NOT included:</strong> Ongoing maintenance (€2–5K/month), native mobile apps (+€150–300K), marketing, legal/GDPR audit (~€10–20K), future features.</p>
+  </div>
+  <div style="text-align:center; padding:40px 0 60px; color:var(--text-dim); font-size:0.7rem;">
+    Generated by Claude — Full analysis of b-social-pages &nbsp;|&nbsp; 191K places · 9.4K events · 43K+ LOC · 35 pages · 20 tables · 10 edge functions
+  </div>
+</div>
+</body>
+</html>

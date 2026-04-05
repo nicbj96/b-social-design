@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { Link } from "wouter";
 import {
   useL1Categories,
@@ -28,6 +29,8 @@ export default function Udforsk() {
     emoji: string;
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  // Set page meta tags
+  usePageMeta({ title: "Udforsk", description: "Udforsk 22 kategorier af oplevelser og events i Danmark - koncerter, restauranter, sport, natur og meget mere." });
 
   // Fetch L1 categories
   const { data: l1Categories = [], isLoading: l1Loading } = useL1Categories();

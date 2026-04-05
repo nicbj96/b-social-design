@@ -2,7 +2,8 @@ import FirmaLayout from "@/components/FirmaLayout";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from 'react-i18next';
 import { Target, Users, Search, ChevronRight, Check, X, Sparkles, MapPin, Info, Save, Download, Loader2 } from "lucide-react";
-import { TAG_TREE } from "@/lib/tagTree";
+import type { TagNode } from "@/lib/tagTree";
+import { lazyLoadTagTree } from "@/lib/lazyDataLoader";
 import { estimateFirmaReach } from "@/lib/tagEngine";
 import { supabase } from "@/lib/supabase";
 import { useFadeUp } from "@/lib/useFadeUp";
@@ -256,53 +257,57 @@ export default function FirmaTargeting() {
   const [allUserTags, setAllUserTags] = useState<string[][]>([]);
   const [matchingPersonas, setMatchingPersonas] = useState<MatchingPersona[]>([]);
 
-  // Fetch real profile data from Supabase and build categories from TAG_TREE
+  // Fetch real profile data from Supabase and build categories from lazily-loaded TAG_TREE
   useEffect(() => {
     async function loadData() {
       setLoading(true);
 
-      // Fetch all profiles with their interests
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select("id, name, interests, city, avatar_url");
+      try {
+        // Load TAG_TREE lazily
+        const TAG_TREE = await lazyLoadTagTree();
 
-      if (error) {
-        console.error("FirmaTargeting: error fetching profiles", error);
-        setLoading(false);
-        return;
-      }
+        // Fetch all profiles with their interests
+        const { data: profiles, error } = await supabase
+          .from("profiles")
+          .select("id, name, interests, city, avatar_url");
 
-      const allProfiles = profiles || [];
-      setTotalUsers(allProfiles.length);
-
-      // Collect all user tag arrays for reach estimation
-      const userTagArrays = allProfiles
-        .map(p => p.interests as string[] | null)
-        .filter((tags): tags is string[] => Array.isArray(tags) && tags.length > 0);
-      setAllUserTags(userTagArrays);
-
-      // Count how many profiles have each tag in their interests
-      const tagCounts = new Map<string, number>();
-      for (const tags of userTagArrays) {
-        for (const tag of tags) {
-          const key = tag.toLowerCase();
-          tagCounts.set(key, (tagCounts.get(key) || 0) + 1);
+        if (error) {
+          console.error("FirmaTargeting: error fetching profiles", error);
+          setLoading(false);
+          return;
         }
-      }
 
-      // Build categories from TAG_TREE with real reach counts
-      const built: TagCategory[] = TAG_TREE.map(parent => ({
-        name: parent.label,
-        emoji: parent.emoji,
-        tag: parent.tag,
-        tags: (parent.children || []).map(child => ({
-          name: child.label,
-          tag: child.tag,
-          emoji: child.emoji,
-          reach: tagCounts.get(child.tag.toLowerCase()) || 0,
-          selected: false,
-        })),
-      }));
+        const allProfiles = profiles || [];
+        setTotalUsers(allProfiles.length);
+
+        // Collect all user tag arrays for reach estimation
+        const userTagArrays = allProfiles
+          .map(p => p.interests as string[] | null)
+          .filter((tags): tags is string[] => Array.isArray(tags) && tags.length > 0);
+        setAllUserTags(userTagArrays);
+
+        // Count how many profiles have each tag in their interests
+        const tagCounts = new Map<string, number>();
+        for (const tags of userTagArrays) {
+          for (const tag of tags) {
+            const key = tag.toLowerCase();
+            tagCounts.set(key, (tagCounts.get(key) || 0) + 1);
+          }
+        }
+
+        // Build categories from loaded TAG_TREE with real reach counts
+        const built: TagCategory[] = TAG_TREE.map(parent => ({
+          name: parent.label,
+          emoji: parent.emoji,
+          tag: parent.tag,
+          tags: (parent.children || []).map(child => ({
+            name: child.label,
+            tag: child.tag,
+            emoji: child.emoji,
+            reach: tagCounts.get(child.tag.toLowerCase()) || 0,
+            selected: false,
+          })),
+        }));
 
       setCategories(built);
 
@@ -324,7 +329,11 @@ export default function FirmaTargeting() {
       if (firstWithReach) setExpandedCat(firstWithReach.name);
       else if (built.length > 0) setExpandedCat(built[0].name);
 
-      setLoading(false);
+        setLoading(false);
+      } catch (err) {
+        console.error("FirmaTargeting: error loading data", err);
+        setLoading(false);
+      }
     }
 
     loadData();

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B-Social Tag System Migration</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0f; color: #e2e8f0; min-height: 100vh; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 28px; margin-bottom: 4px; background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: #94a3b8; margin-bottom: 20px; font-size: 14px; }
+  .instructions { background: linear-gradient(135deg, #1e3a2f, #1e2a3f); border: 1px solid #10b981; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .instructions h2 { font-size: 16px; color: #10b981; margin-bottom: 10px; }
+  .instructions ol { padding-left: 20px; line-height: 1.8; font-size: 14px; }
+  .instructions a { color: #3b82f6; text-decoration: none; }
+  .instructions a:hover { text-decoration: underline; }
+  .copy-all-bar { display: flex; gap: 12px; margin-bottom: 24px; position: sticky; top: 0; z-index: 10; background: #0a0a0f; padding: 12px 0; border-bottom: 1px solid #1e293b; }
+  .btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+  .btn-primary { background: #10b981; color: #000; }
+  .btn-primary:hover { background: #34d399; }
+  .btn-copy { background: #334155; color: #e2e8f0; padding: 6px 14px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; }
+  .btn-copy:hover { background: #475569; }
+  .btn-copy.copied { background: #10b981; color: #000; }
+  .steps { display: flex; flex-direction: column; gap: 16px; }
+  .step { background: #1e1e2e; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
+  .step.done { border-color: #10b981; }
+  .step-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; cursor: pointer; user-select: none; }
+  .step-left { display: flex; align-items: center; gap: 12px; }
+  .step-num { width: 30px; height: 30px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .step.done .step-num { background: #10b981; color: #000; }
+  .step-title { font-weight: 600; font-size: 15px; }
+  .step-desc { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .step-actions { display: flex; gap: 8px; align-items: center; }
+  .step-sql { display: none; padding: 0 18px 18px; }
+  .step.open .step-sql { display: block; }
+  .sql-box { background: #0a0a0f; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.5; max-height: 300px; overflow-y: auto; white-space: pre-wrap; color: #94a3b8; }
+  .sql-box .keyword { color: #c084fc; }
+  .sql-box .string { color: #10b981; }
+  .sql-box .comment { color: #475569; }
+  .checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #10b981; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0; }
+  .stat { background: #1e1e2e; border: 1px solid #334155; border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-value { font-size: 22px; font-weight: 700; color: #10b981; }
+  .stat-label { font-size: 11px; color: #94a3b8; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag-create { background: #1e3a5f; color: #60a5fa; }
+  .tag-insert { background: #1e3a2f; color: #34d399; }
+  .tag-view { background: #3a2f1e; color: #fbbf24; }
+  .tag-verify { background: #3a1e3a; color: #c084fc; }
+  .arrow { transition: transform 0.2s; color: #94a3b8; }
+  .step.open .arrow { transform: rotate(90deg); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #10b981; color: #000; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚡ B-Social Tag System Migration</h1>
+  <p class="subtitle">13 trin · 61K events · 194K steder · 150+ aliases · Intelligent auto-tagging</p>
+
+  <div class="instructions">
+    <h2>📋 Sådan kører du migreringen</h2>
+    <ol>
+      <li>Åbn <a href="https://supabase.com/dashboard/project/rbengtfrthqdfbcdcugp/sql/new" target="_blank">Supabase SQL Editor →</a> (i din browser hvor du er logget ind)</li>
+      <li>Klik <strong>"Kopiér Alt"</strong> herunder for at kopiere hele SQL-migreringen</li>
+      <li>Indsæt i SQL Editoren og tryk <strong>Run</strong> (Ctrl+Enter)</li>
+      <li>Tjek af hvert trin herunder når det er kørt ✓</li>
+    </ol>
+  </div>
+
+  <div class="copy-all-bar">
+    <button class="btn btn-primary" onclick="copyAll()">📋 Kopiér Alt (alle 13 trin)</button>
+    <button class="btn btn-copy" onclick="copyVerification()">📊 Kopiér kun verifikation</button>
+    <span id="progress-text" style="color:#94a3b8; font-size:13px; margin-left:auto;">0 / 13 trin afkrydset</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-value">61,212</div><div class="stat-label">Events at tagge</div></div>
+    <div class="stat"><div class="stat-value">194,097</div><div class="stat-label">Steder at tagge</div></div>
+    <div class="stat"><div class="stat-value">793</div><div class="stat-label">Tags i hierarki</div></div>
+    <div class="stat"><div class="stat-value">150+</div><div class="stat-label">Alias-mappings</div></div>
+  </div>
+
+  <div class="steps" id="stepsContainer"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STEPS = [
+  {
+    title: 'Opret tag_aliases tabel',
+    desc: 'Alias-tabel der mapper varianter → kanoniske tags',
+    type: 'create',
+    sql: `-- STEP 1: Create tag_aliases table
+CREATE TABLE IF NOT EXISTS tag_aliases (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  alias       text NOT NULL,
+  canonical   text NOT NULL,
+  created_at  timestamptz DEFAULT now(),
+  UNIQUE(alias)
+);
+CREATE INDEX IF NOT EXISTS idx_tag_aliases_alias ON tag_aliases (lower(alias));
+CREATE INDEX IF NOT EXISTS idx_tag_aliases_canonical ON tag_aliases (canonical);
+ALTER TABLE tag_aliases ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "tag_aliases_read" ON tag_aliases FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;`
+  },
+  {
+    title: 'Populer tag_aliases (150+ mappings)',
+    desc: 'bilshow→bil-show, racing→circuit-racing, mc→motorcykler osv.',
+    type: 'insert',
+    sql: `-- STEP 2: Populate tag_aliases
+INSERT INTO tag_aliases (alias, canonical) VALUES
+  ('bilshow','bil-show'),('bil show','bil-show'),('autoshow','bil-show'),('auto show','bil-show'),
+  ('racing','circuit-racing'),('race','circuit-racing'),('formel','circuit-racing'),('f1','circuit-racing'),
+  ('le mans','circuit-racing'),('drift','drifting'),('driftning','drifting'),
+  ('go-kart','karting-aktiv'),('gokart','karting-aktiv'),('karting','karting-aktiv'),
+  ('motorcykel','motorcykler'),('mc','motorcykler'),('motorcycle','motorcykler'),
+  ('mc-træf','mc-klub'),('mc-traef','mc-klub'),('mc træf','mc-klub'),
+  ('veteran-bil','klassiske-biler'),('veteran bil','klassiske-biler'),('veteranbil','klassiske-biler'),
+  ('oldtimer','klassiske-biler'),('klassisk bil','klassiske-biler'),
+  ('rally','rally-aktiv'),('supercar','tuning'),('roadtrip','roadtrip-bil'),('road trip','roadtrip-bil'),
+  ('el-bil','elbiler'),('elbil','elbiler'),('tesla','elbiler'),
+  ('endurance','circuit-racing'),('24h','circuit-racing'),('motorsport','motorsport-aktiv'),
+  ('custom','custom-mc'),('båd','båd'),('boat','båd'),('jetski','jetski'),('jet ski','jetski'),
+  ('speedbåd','speedbåd'),('sejlads','sejlads-sport'),('sailing','sejlads-sport'),('scooter','scooter'),
+  ('koncert','koncerter'),('concert','koncerter'),('live musik','koncerter'),('live-musik','koncerter'),
+  ('rock','rock-metal'),('metal','rock-metal'),('pop','pop-mainstream'),
+  ('hiphop','hiphop-rap'),('hip-hop','hiphop-rap'),('rap','hiphop-rap'),
+  ('jazz','jazz-blues'),('blues','jazz-blues'),
+  ('elektronisk','elektronisk-musik'),('electronic','elektronisk-musik'),('techno','elektronisk-musik'),('dj','elektronisk-musik'),
+  ('klassisk','klassisk-musik'),('classical','klassisk-musik'),('orkester','klassisk-musik'),
+  ('kor','kor-sang'),('sang','kor-sang'),
+  ('fodbold','fodbold'),('football','fodbold'),('soccer','fodbold'),
+  ('hockey','ishockey'),('is hockey','ishockey'),('basketball','basketball'),
+  ('håndbold','håndbold'),('handball','håndbold'),('tennis','tennis'),('badminton','badminton'),
+  ('svømning','svømning'),('swimming','svømning'),
+  ('teater','teater-drama'),('theater','teater-drama'),('theatre','teater-drama'),
+  ('comedy','comedy-improv'),('standup','comedy-improv'),('stand-up','comedy-improv'),('improv','comedy-improv'),
+  ('kunst','kunst'),('art','kunst'),('museum','museer'),('galleri','gallerier'),('gallery','gallerier'),
+  ('udstilling','udstillinger'),('exhibition','udstillinger'),('messe','udstillinger'),
+  ('dans','dans-performance'),('dance','dans-performance'),('ballet','dans-performance'),
+  ('film','film-visning'),('biograf','film-visning'),('cinema','film-visning'),
+  ('løb','løb'),('running','løb'),('marathon','marathon'),
+  ('cykling','cykling'),('cycling','cykling'),('bike','cykling'),
+  ('mountainbike','mountainbike'),('mtb','mountainbike'),
+  ('yoga','yoga'),('fitness','fitness-center'),('gym','fitness-center'),('crossfit','crossfit'),
+  ('triathlon','triathlon'),('vandring','vandring'),('hiking','vandring'),('hike','vandring'),('walking','vandring'),
+  ('camping','camping'),('teltning','camping'),
+  ('fiskeri','fiskeri'),('fishing','fiskeri'),('lystfiskeri','fiskeri'),
+  ('kano','kano-kajak'),('kajak','kano-kajak'),('kayak','kano-kajak'),
+  ('surf','surfing'),('surfing','surfing'),('klatring','klatring'),('climbing','klatring'),('bouldering','klatring'),
+  ('ridning','ridning'),('horse riding','ridning'),('hest','ridning'),('ryttersti','ridning'),
+  ('børn','børn-aktiviteter'),('children','børn-aktiviteter'),('kids','børn-aktiviteter'),
+  ('familie','familie-oplevelser'),('family','familie-oplevelser'),
+  ('forlystelsespark','forlystelsespark'),('temapark','forlystelsespark'),
+  ('zoo','dyrehaver'),('dyr','dyrehaver'),('akvarium','dyrehaver'),
+  ('mad','madlavning'),('food','madlavning'),('restaurant','restauranter'),
+  ('café','caféer'),('cafe','caféer'),('kaffe','caféer'),('coffee','caféer'),
+  ('vin','vin-smagning'),('wine','vin-smagning'),('øl','øl-bryggeri'),('beer','øl-bryggeri'),
+  ('cocktail','cocktails'),('bar','barer'),
+  ('rejse','rejser'),('travel','rejser'),('backpacking','backpacking'),
+  ('gaming','gaming'),('esport','esport'),('e-sport','esport'),
+  ('coding','kodning'),('programmering','kodning'),('ai','ai-ml'),
+  ('festival','musikfestival'),('musikfestival','musikfestival'),
+  ('madfestival','madfestival'),('food festival','madfestival'),
+  ('meditation','meditation'),('mindfulness','meditation'),('spa','spa-wellness'),('wellness','spa-wellness'),
+  ('frivillig','frivilligt-arbejde'),('volunteer','frivilligt-arbejde'),('velgørenhed','velgørenhed')
+ON CONFLICT (alias) DO NOTHING;`
+  },
+  {
+    title: 'Opret place_tags junction tabel',
+    desc: 'Ligesom event_tags_normalized, men for steder + tilføj source/confidence kolonner',
+    type: 'create',
+    sql: `-- STEP 3: Create place_tags + add columns to event_tags_normalized
+CREATE TABLE IF NOT EXISTS place_tags (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  place_id    uuid NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+  tag_id      uuid NOT NULL REFERENCES tags_normalized(id) ON DELETE CASCADE,
+  source      text DEFAULT 'auto',
+  confidence  real DEFAULT 1.0,
+  created_at  timestamptz DEFAULT now(),
+  UNIQUE(place_id, tag_id)
+);
+CREATE INDEX IF NOT EXISTS idx_place_tags_place ON place_tags (place_id);
+CREATE INDEX IF NOT EXISTS idx_place_tags_tag ON place_tags (tag_id);
+CREATE INDEX IF NOT EXISTS idx_place_tags_source ON place_tags (source);
+ALTER TABLE place_tags ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "place_tags_read" ON place_tags FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'event_tags_normalized' AND column_name = 'source') THEN
+    ALTER TABLE event_tags_normalized ADD COLUMN source text DEFAULT 'auto';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'event_tags_normalized' AND column_name = 'confidence') THEN
+    ALTER TABLE event_tags_normalized ADD COLUMN confidence real DEFAULT 1.0;
+  END IF;
+END $$;`
+  },
+  {
+    title: 'Auto-tag events: Category → L1',
+    desc: 'Mapper event.category (musik, kultur, sport, motor...) → L1 overkategorier',
+    type: 'insert',
+    sql: `-- STEP 4: Auto-tag events by category → L1
+INSERT INTO event_tags_normalized (event_id, tag_id, source, confidence)
+SELECT DISTINCT e.id, tn.id, 'auto-category', 0.9
+FROM events e
+JOIN (VALUES
+  ('musik','musik-lyd'),('kultur','kultur-kunst'),('sport','motion-fitness'),
+  ('motor','motor-køretøjer'),('familie','børn-familie'),('festival','musik-lyd'),
+  ('arrangement','social-hobby'),('mad','mad-drikke')
+) AS cat_map(cat, l1_slug) ON lower(e.category) = cat_map.cat
+JOIN tags_normalized tn ON tn.slug = cat_map.l1_slug AND tn.level = 1
+ON CONFLICT (event_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Auto-tag events: Title keywords → L2/L3',
+    desc: 'Scanner 61K event-titler for nøgleord og mapper til specifikke tags',
+    type: 'insert',
+    sql: `-- STEP 5: Auto-tag events by title keyword → L2/L3
+INSERT INTO event_tags_normalized (event_id, tag_id, source, confidence)
+SELECT DISTINCT e.id, tn.id, 'auto-keyword', kw.conf
+FROM events e
+JOIN (VALUES
+  ('bilshow','bil-show',0.95),('bil show','bil-show',0.95),('autoshow','bil-show',0.95),
+  ('racing','circuit-racing',0.9),('race','circuit-racing',0.8),('formel','circuit-racing',0.9),
+  ('le mans','circuit-racing',0.95),('drift','drifting',0.85),
+  ('go-kart','karting-aktiv',0.95),('gokart','karting-aktiv',0.95),('karting','karting-aktiv',0.95),
+  ('rally','rally-aktiv',0.9),('motorcykel','motorcykler',0.95),
+  ('mc-træf','mc-klub',0.95),('mc træf','mc-klub',0.95),('mc-tur','mc-tur',0.95),
+  ('veteran bil','klassiske-biler',0.9),('veteranbil','klassiske-biler',0.9),
+  ('oldtimer','klassiske-biler',0.9),('tuning','tuning',0.9),('supercar','tuning',0.85),
+  ('elbil','elbiler',0.9),('autocamper','autocamper',0.95),('enduro','enduro',0.95),
+  ('båd','båd',0.85),('speedbåd','speedbåd',0.9),('jetski','jetski',0.9),('sejlads','sejlads-sport',0.85),
+  ('koncert','koncerter',0.95),('concert','koncerter',0.9),('live musik','koncerter',0.9),
+  ('rock','rock-metal',0.8),('metal','rock-metal',0.85),('punk','rock-metal',0.8),
+  ('pop','pop-mainstream',0.75),('hiphop','hiphop-rap',0.9),('hip-hop','hiphop-rap',0.9),
+  ('jazz','jazz-blues',0.9),('blues','jazz-blues',0.85),
+  ('elektronisk','elektronisk-musik',0.85),('techno','elektronisk-musik',0.9),
+  ('klassisk musik','klassisk-musik',0.95),('orkester','klassisk-musik',0.9),('opera','opera',0.95),
+  ('festival','musikfestival',0.7),
+  ('fodbold','fodbold',0.95),('hockey','ishockey',0.9),('basketball','basketball',0.95),
+  ('håndbold','håndbold',0.95),('tennis','tennis',0.95),
+  ('løb','løb',0.85),('marathon','marathon',0.95),('halvmarathon','marathon',0.9),
+  ('cykling','cykling',0.9),('cykelløb','cykling',0.95),('mountainbike','mountainbike',0.95),
+  ('triathlon','triathlon',0.95),('yoga','yoga',0.9),('crossfit','crossfit',0.9),
+  ('teater','teater-drama',0.95),('comedy','comedy-improv',0.9),
+  ('standup','comedy-improv',0.95),('stand-up','comedy-improv',0.95),
+  ('museum','museer',0.9),('udstilling','udstillinger',0.9),('galleri','gallerier',0.9),
+  ('dans','dans-performance',0.85),('ballet','dans-performance',0.95),
+  ('film','film-visning',0.75),('biograf','film-visning',0.9),
+  ('vandring','vandring',0.95),('hiking','vandring',0.95),('camping','camping',0.9),
+  ('fiskeri','fiskeri',0.9),('kano','kano-kajak',0.9),('kajak','kano-kajak',0.9),
+  ('surfing','surfing',0.9),('klatring','klatring',0.9),('ridning','ridning',0.9),
+  ('børn','børn-aktiviteter',0.85),('familie','familie-oplevelser',0.8),
+  ('zoo','dyrehaver',0.9),('tivoli','forlystelsespark',0.95),
+  ('madfestival','madfestival',0.95),('street food','street-food',0.95),
+  ('meditation','meditation',0.9),('spa','spa-wellness',0.9),
+  ('gaming','gaming',0.9),('esport','esport',0.9),('hackathon','kodning',0.9)
+) AS kw(keyword, tag_slug, conf) ON lower(e.title) LIKE '%' || kw.keyword || '%'
+JOIN tags_normalized tn ON tn.slug = kw.tag_slug
+ON CONFLICT (event_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Migrer interest_tags → junction table',
+    desc: 'Overfører eksisterende interest_tags arrays via direkte match + alias-opslag',
+    type: 'insert',
+    sql: `-- STEP 6: Migrate interest_tags array → junction table
+INSERT INTO event_tags_normalized (event_id, tag_id, source, confidence)
+SELECT DISTINCT e.id, tn.id, 'migrate-direct', 1.0
+FROM events e, unnest(e.interest_tags) AS tag_str
+JOIN tags_normalized tn ON lower(tn.slug) = lower(tag_str)
+WHERE e.interest_tags IS NOT NULL AND array_length(e.interest_tags, 1) > 0
+ON CONFLICT (event_id, tag_id) DO NOTHING;
+
+INSERT INTO event_tags_normalized (event_id, tag_id, source, confidence)
+SELECT DISTINCT e.id, tn.id, 'migrate-alias', 0.85
+FROM events e, unnest(e.interest_tags) AS tag_str
+JOIN tag_aliases ta ON lower(ta.alias) = lower(tag_str)
+JOIN tags_normalized tn ON lower(tn.slug) = lower(ta.canonical)
+WHERE e.interest_tags IS NOT NULL AND array_length(e.interest_tags, 1) > 0
+ON CONFLICT (event_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Auto-tag steder: main_categories → L1',
+    desc: 'Mapper 194K steders main_categories (natur, aktiv_sport, kultur...) → L1',
+    type: 'insert',
+    sql: `-- STEP 7: Auto-tag places by main_categories → L1
+INSERT INTO place_tags (place_id, tag_id, source, confidence)
+SELECT DISTINCT p.id, tn.id, 'auto-main-cat', 0.9
+FROM places p, unnest(p.main_categories) AS cat_str
+JOIN (VALUES
+  ('natur','natur-outdoor'),('aktiv_sport','motion-fitness'),('kultur','kultur-kunst'),
+  ('underholdning','social-hobby'),('overnatning','rejser-eventyr'),
+  ('familie','børn-familie'),('natteliv','mad-drikke')
+) AS pc(cat, l1_slug) ON lower(pc.cat) = lower(cat_str)
+JOIN tags_normalized tn ON tn.slug = pc.l1_slug AND tn.level = 1
+WHERE p.main_categories IS NOT NULL AND array_length(p.main_categories, 1) > 0
+ON CONFLICT (place_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Auto-tag steder: smart_tags → L2/L3',
+    desc: 'Mapper NATUR, CAMPING, HIKING, ZOO osv. til specifikke tags',
+    type: 'insert',
+    sql: `-- STEP 8: Auto-tag places by smart_tags → specific tags
+INSERT INTO place_tags (place_id, tag_id, source, confidence)
+SELECT DISTINCT p.id, tn.id, 'auto-smart-tag', st.conf
+FROM places p, unnest(p.smart_tags) AS smart_str
+JOIN (VALUES
+  ('NATUR','natur-outdoor',0.95),('CAMPING','camping',0.95),('KULTUR','kultur-kunst',0.9),
+  ('KONCERT','koncerter',0.9),('SPORT','motion-fitness',0.85),('AKTIV_SPORT','motion-fitness',0.9),
+  ('RUTE','vandring',0.8),('HIKING','vandring',0.95),('RIDNING','ridning',0.95),
+  ('FAMILIE','børn-familie',0.85),('FORLYSTELSESPARK','forlystelsespark',0.95),
+  ('UNDERHOLDNING','social-hobby',0.8),('ZOO','dyrehaver',0.95),
+  ('STRAND','strand-kyst',0.9),('SO','søer',0.9),('SHELTER','camping',0.85),
+  ('FRILUFTSLIV','natur-outdoor',0.9),('NATTELIV','natklubber',0.85),
+  ('BAR','barer',0.9),('KLUB','natklubber',0.85),('MUSEUM','museer',0.95),
+  ('GALLERI','gallerier',0.95),('TEATER','teater-drama',0.95),
+  ('RESTAURANT','restauranter',0.9),('CAFÉ','caféer',0.9)
+) AS st(smart, tag_slug, conf) ON upper(st.smart) = upper(smart_str)
+JOIN tags_normalized tn ON tn.slug = st.tag_slug
+WHERE p.smart_tags IS NOT NULL AND array_length(p.smart_tags, 1) > 0
+ON CONFLICT (place_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Migrer steder: tags array → place_tags',
+    desc: 'Overfører places.tags til junction table via direkte match + alias',
+    type: 'insert',
+    sql: `-- STEP 9: Migrate places.tags array → place_tags
+INSERT INTO place_tags (place_id, tag_id, source, confidence)
+SELECT DISTINCT p.id, tn.id, 'migrate-tags', 0.85
+FROM places p, unnest(p.tags) AS tag_str
+JOIN tags_normalized tn ON lower(tn.slug) = lower(tag_str)
+WHERE p.tags IS NOT NULL AND array_length(p.tags, 1) > 0
+ON CONFLICT (place_id, tag_id) DO NOTHING;
+
+INSERT INTO place_tags (place_id, tag_id, source, confidence)
+SELECT DISTINCT p.id, tn.id, 'migrate-tags-alias', 0.75
+FROM places p, unnest(p.tags) AS tag_str
+JOIN tag_aliases ta ON lower(ta.alias) = lower(tag_str)
+JOIN tags_normalized tn ON lower(tn.slug) = lower(ta.canonical)
+WHERE p.tags IS NOT NULL AND array_length(p.tags, 1) > 0
+ON CONFLICT (place_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Auto-tag steder: Navn-keywords',
+    desc: 'Finder motor/sport/kultur-steder fra stednavne (racerbane, svømmehal, museum...)',
+    type: 'insert',
+    sql: `-- STEP 10: Auto-tag places by name keywords
+INSERT INTO place_tags (place_id, tag_id, source, confidence)
+SELECT DISTINCT p.id, tn.id, 'auto-name-keyword', kw.conf
+FROM places p
+JOIN (VALUES
+  ('racerbane','circuit-racing',0.95),('gokartbane','karting-aktiv',0.95),('go-kart','karting-aktiv',0.95),
+  ('kartbane','karting-aktiv',0.95),('bilmuseum','klassiske-biler',0.9),('automuseum','klassiske-biler',0.9),
+  ('mc-klub','mc-klub',0.95),('motorcykel','motorcykler',0.9),
+  ('ladestation','elbiler',0.9),('marina','båd',0.9),('lystbådehavn','båd',0.95),
+  ('bådklub','båd',0.95),('sejlklub','sejlads-sport',0.95),
+  ('stadion','motion-fitness',0.85),('svømmehal','svømning',0.95),
+  ('tennisbane','tennis',0.95),('golfbane','golf',0.95),('golfklub','golf',0.95),
+  ('rideskole','ridning',0.95),('ridecenter','ridning',0.95),('rideklub','ridning',0.95),
+  ('skatepark','skateboard',0.95),('klatrehal','klatring',0.95),('boulderhal','klatring',0.95),
+  ('fitnesscenter','fitness-center',0.95),('museum','museer',0.9),('teater','teater-drama',0.9),
+  ('biograf','film-visning',0.9),('spillested','koncerter',0.9),('koncertsal','koncerter',0.95),
+  ('galleri','gallerier',0.9),('strand','strand-kyst',0.85),('naturcenter','natur-outdoor',0.9),
+  ('campingplads','camping',0.95),('bryggeri','øl-bryggeri',0.95),('vingård','vin-smagning',0.95)
+) AS kw(keyword, tag_slug, conf) ON lower(p.name) LIKE '%' || kw.keyword || '%'
+JOIN tags_normalized tn ON tn.slug = kw.tag_slug
+ON CONFLICT (place_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Cascade parent-tags (L3→L2→L1)',
+    desc: 'Sikrer at L3 tags også har L2 og L1 parents — for events og steder',
+    type: 'insert',
+    sql: `-- STEP 11: Cascade parent tags upward
+-- Events: L3→L2
+INSERT INTO event_tags_normalized (event_id, tag_id, source, confidence)
+SELECT DISTINCT etn.event_id, parent.id, 'auto-cascade-l2', 0.8
+FROM event_tags_normalized etn
+JOIN tags_normalized child ON child.id = etn.tag_id AND child.level = 3
+JOIN tags_normalized parent ON parent.id = child.parent_id AND parent.level = 2
+ON CONFLICT (event_id, tag_id) DO NOTHING;
+
+-- Events: L2→L1
+INSERT INTO event_tags_normalized (event_id, tag_id, source, confidence)
+SELECT DISTINCT etn.event_id, parent.id, 'auto-cascade-l1', 0.7
+FROM event_tags_normalized etn
+JOIN tags_normalized child ON child.id = etn.tag_id AND child.level = 2
+JOIN tags_normalized parent ON parent.id = child.parent_id AND parent.level = 1
+ON CONFLICT (event_id, tag_id) DO NOTHING;
+
+-- Places: L3→L2
+INSERT INTO place_tags (place_id, tag_id, source, confidence)
+SELECT DISTINCT pt.place_id, parent.id, 'auto-cascade-l2', 0.8
+FROM place_tags pt
+JOIN tags_normalized child ON child.id = pt.tag_id AND child.level = 3
+JOIN tags_normalized parent ON parent.id = child.parent_id AND parent.level = 2
+ON CONFLICT (place_id, tag_id) DO NOTHING;
+
+-- Places: L2→L1
+INSERT INTO place_tags (place_id, tag_id, source, confidence)
+SELECT DISTINCT pt.place_id, parent.id, 'auto-cascade-l1', 0.7
+FROM place_tags pt
+JOIN tags_normalized child ON child.id = pt.tag_id AND child.level = 2
+JOIN tags_normalized parent ON parent.id = child.parent_id AND parent.level = 1
+ON CONFLICT (place_id, tag_id) DO NOTHING;`
+  },
+  {
+    title: 'Opret views + resolve_tag() funktion',
+    desc: 'event_tag_slugs, place_tag_slugs, tag_usage_counts + alias-aware resolve',
+    type: 'view',
+    sql: `-- STEP 12: Create useful views + helper function
+CREATE OR REPLACE VIEW event_tag_slugs AS
+SELECT etn.event_id, tn.slug, tn.name, tn.level, tn.emoji, etn.confidence
+FROM event_tags_normalized etn JOIN tags_normalized tn ON tn.id = etn.tag_id;
+
+CREATE OR REPLACE VIEW place_tag_slugs AS
+SELECT pt.place_id, tn.slug, tn.name, tn.level, tn.emoji, pt.confidence
+FROM place_tags pt JOIN tags_normalized tn ON tn.id = pt.tag_id;
+
+CREATE OR REPLACE VIEW tag_usage_counts AS
+SELECT tn.id, tn.slug, tn.name, tn.emoji, tn.level,
+  COALESCE(ec.event_count, 0) AS event_count,
+  COALESCE(pc.place_count, 0) AS place_count,
+  COALESCE(ec.event_count, 0) + COALESCE(pc.place_count, 0) AS total_count
+FROM tags_normalized tn
+LEFT JOIN (SELECT tag_id, COUNT(*) AS event_count FROM event_tags_normalized GROUP BY tag_id) ec ON ec.tag_id = tn.id
+LEFT JOIN (SELECT tag_id, COUNT(*) AS place_count FROM place_tags GROUP BY tag_id) pc ON pc.tag_id = tn.id
+ORDER BY total_count DESC;
+
+CREATE OR REPLACE FUNCTION resolve_tag(input_tag text) RETURNS uuid LANGUAGE plpgsql STABLE AS $$
+DECLARE result_id uuid; canonical_slug text;
+BEGIN
+  SELECT id INTO result_id FROM tags_normalized WHERE lower(slug) = lower(input_tag) LIMIT 1;
+  IF result_id IS NOT NULL THEN RETURN result_id; END IF;
+  SELECT ta.canonical INTO canonical_slug FROM tag_aliases ta WHERE lower(ta.alias) = lower(input_tag) LIMIT 1;
+  IF canonical_slug IS NOT NULL THEN
+    SELECT id INTO result_id FROM tags_normalized WHERE lower(slug) = lower(canonical_slug) LIMIT 1;
+  END IF;
+  RETURN result_id;
+END; $$;`
+  },
+  {
+    title: 'Verifikation',
+    desc: 'Kør denne query for at se resultaterne af hele migreringen',
+    type: 'verify',
+    sql: `-- STEP 13: Verification — run this to see results!
+SELECT
+  (SELECT COUNT(*) FROM event_tags_normalized) AS event_tags_total,
+  (SELECT COUNT(DISTINCT event_id) FROM event_tags_normalized) AS events_tagged,
+  (SELECT COUNT(*) FROM place_tags) AS place_tags_total,
+  (SELECT COUNT(DISTINCT place_id) FROM place_tags) AS places_tagged,
+  (SELECT COUNT(*) FROM tag_aliases) AS aliases_total,
+  (SELECT COUNT(DISTINCT etn.event_id) FROM event_tags_normalized etn
+    JOIN tags_normalized tn ON tn.id = etn.tag_id
+    WHERE tn.slug IN ('motor-køretøjer','biler','motorcykler','motorsport-aktiv','vandfartøjer',
+    'bil-show','circuit-racing','drifting','karting-aktiv','rally-aktiv','tuning','elbiler',
+    'klassiske-biler','mc-klub','mc-tur','enduro','custom-mc','scooter','båd','jetski','speedbåd','sejlads-sport')
+  ) AS motor_events,
+  (SELECT COUNT(DISTINCT pt.place_id) FROM place_tags pt
+    JOIN tags_normalized tn ON tn.id = pt.tag_id
+    WHERE tn.slug IN ('motor-køretøjer','biler','motorcykler','motorsport-aktiv','vandfartøjer',
+    'bil-show','circuit-racing','drifting','karting-aktiv','rally-aktiv','tuning','elbiler',
+    'klassiske-biler','mc-klub','mc-tur','enduro','custom-mc','scooter','båd','jetski','speedbåd','sejlads-sport')
+  ) AS motor_places;
+
+-- Also check source breakdown:
+SELECT source, COUNT(*) AS cnt FROM event_tags_normalized GROUP BY source ORDER BY cnt DESC;
+SELECT source, COUNT(*) AS cnt FROM place_tags GROUP BY source ORDER BY cnt DESC;
+
+-- Top 20 most-used tags across events+places:
+SELECT slug, name, emoji, level, event_count, place_count, total_count
+FROM tag_usage_counts LIMIT 20;`
+  }
+];
+
+const TYPE_LABELS = { create: 'CREATE', insert: 'INSERT', view: 'VIEW', verify: 'VERIFY' };
+const TYPE_CLASSES = { create: 'tag-create', insert: 'tag-insert', view: 'tag-view', verify: 'tag-verify' };
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Kopieret!'));
+}
+
+function copyAll() {
+  const allSQL = STEPS.map(s => s.sql).join('\n\n');
+  copyToClipboard(allSQL);
+}
+
+function copyVerification() {
+  copyToClipboard(STEPS[STEPS.length - 1].sql);
+}
+
+function copyStep(i, btn) {
+  copyToClipboard(STEPS[i].sql);
+  btn.textContent = '✓ Kopieret';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Kopiér'; btn.classList.remove('copied'); }, 2000);
+}
+
+function toggleStep(i) {
+  document.getElementById(`step-${i}`).classList.toggle('open');
+}
+
+function toggleDone(i, cb) {
+  const el = document.getElementById(`step-${i}`);
+  if (cb.checked) el.classList.add('done');
+  else el.classList.remove('done');
+  updateProgress();
+}
+
+function updateProgress() {
+  const checked = document.querySelectorAll('.checkbox:checked').length;
+  document.getElementById('progress-text').textContent = `${checked} / ${STEPS.length} trin afkrydset`;
+}
+
+function render() {
+  const container = document.getElementById('stepsContainer');
+  container.innerHTML = '';
+  STEPS.forEach((step, i) => {
+    const div = document.createElement('div');
+    div.className = 'step';
+    div.id = `step-${i}`;
+    div.innerHTML = `
+      <div class="step-header">
+        <div class="step-left" onclick="toggleStep(${i})">
+          <div class="step-num">${i + 1}</div>
+          <div>
+            <div class="step-title">${step.title} <span class="tag ${TYPE_CLASSES[step.type]}">${TYPE_LABELS[step.type]}</span></div>
+            <div class="step-desc">${step.desc}</div>
+          </div>
+        </div>
+        <div class="step-actions">
+          <button class="btn-copy" onclick="copyStep(${i}, this)">Kopiér</button>
+          <span class="arrow" onclick="toggleStep(${i})">▶</span>
+          <input type="checkbox" class="checkbox" onchange="toggleDone(${i}, this)" title="Markér som kørt">
+        </div>
+      </div>
+      <div class="step-sql">
+        <div class="sql-box">${escapeHtml(step.sql.trim())}</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+render();
+</script>
+</body>
+</html>

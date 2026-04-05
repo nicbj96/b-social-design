@@ -1,4 +1,6 @@
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 
@@ -8,10 +10,10 @@ import { pageBase } from "@/lib/pageCSSBase";
    ───────────────────────────────────────────── */
 
 const STATS = [
-  { value: "188.000+", label: "Steder i databasen" },
-  { value: "9.400+", label: "Aktive events" },
-  { value: "144", label: "Lande dækket" },
-  { value: "10+", label: "Kategorier" },
+  { key: "places", label: "Steder i databasen" },
+  { key: "events", label: "Aktive events" },
+  { key: "countries", label: "Lande dækket" },
+  { key: "categories", label: "Kategorier" },
 ];
 
 const FEATURES = [
@@ -23,7 +25,7 @@ const FEATURES = [
   {
     icon: "🗺️",
     title: "Interaktivt verdenskort",
-    desc: "Live kortvisning med geo-clustering af 188.000+ steder fordelt over hele verden — filtreret efter land, kategori og tags.",
+    desc: "Live kortvisning med geo-clustering af steder fordelt over hele verden — filtreret efter land, kategori og tags.",
   },
   {
     icon: "📡",
@@ -288,6 +290,44 @@ export default function WhitelabelLanding() {
   const [, setLocation] = useLocation();
   const containerRef = useFadeUp("wl");
 
+  // Live stats from Supabase
+  const { data: liveStats } = useQuery({
+    queryKey: ["whitelabelStats"],
+    queryFn: async () => {
+      const [placesRes, eventsRes] = await Promise.all([
+        supabase.from("places").select("id", { count: "exact", head: true }),
+        supabase.from("events").select("id", { count: "exact", head: true }),
+      ]);
+      // Fetch distinct countries by paginating in chunks to avoid the default 1000-row cap
+      const allCountries = new Set<string>();
+      let from = 0;
+      const PAGE = 5000;
+      while (true) {
+        const { data } = await supabase
+          .from("places")
+          .select("country")
+          .not("country", "is", null)
+          .range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        data.forEach((r: any) => allCountries.add(r.country));
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      return {
+        places: placesRes.count || 95000,
+        events: eventsRes.count || 6400,
+        countries: allCountries.size || 117,
+        categories: 10,
+      };
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const fmt = (n: number) => {
+    if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".", ",")}K`;
+    return n.toLocaleString("da-DK");
+  };
+
   return (
     <>
       <style>{whitelabelCSS}</style>
@@ -321,7 +361,7 @@ export default function WhitelabelLanding() {
             </h1>
             <p className="wl-hero-sub wl-fade-up wl-d2">
               Få en komplet social oplevelses-platform i dit eget navn — bygget på B-Socials
-              kraftfulde infrastruktur med 95.000+ steder og 6.400+ events på tværs af 100+ lande.
+              kraftfulde infrastruktur med {fmt(liveStats?.places ?? 95000)}+ steder og {fmt(liveStats?.events ?? 6400)}+ events på tværs af {liveStats?.countries ?? 117} lande.
             </p>
             <div className="wl-hero-btns wl-fade-up wl-d3">
               <a href="mailto:kontakt@b-social.net" className="wl-btn">
@@ -337,12 +377,20 @@ export default function WhitelabelLanding() {
         {/* ── STATS ── */}
         <div className="wl-stats">
           <div className="wl-stats-grid">
-            {STATS.map((s, i) => (
-              <div key={s.label} className={`wl-stat-card wl-fade-up wl-d${i % 4 + 1}`}>
-                <div className="wl-stat-value">{s.value}</div>
-                <div className="wl-stat-desc">{s.label}</div>
-              </div>
-            ))}
+            {STATS.map((s, i) => {
+              let value = "";
+              if (s.key === "places") value = `${fmt(liveStats?.places ?? 95000)}+`;
+              else if (s.key === "events") value = `${fmt(liveStats?.events ?? 6400)}+`;
+              else if (s.key === "countries") value = `${liveStats?.countries ?? 117}`;
+              else if (s.key === "categories") value = `${liveStats?.categories ?? 10}+`;
+
+              return (
+                <div key={s.label} className={`wl-stat-card wl-fade-up wl-d${i % 4 + 1}`}>
+                  <div className="wl-stat-value">{value}</div>
+                  <div className="wl-stat-desc">{s.label}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -357,7 +405,7 @@ export default function WhitelabelLanding() {
             <p className="wl-text">
               Bag hver skærm ligger en kompleks relationsdatabase der i realtid håndterer
               tusindvis af datapunkter — fra personaliserede feeds til live kortvisning
-              med 95.000+ steder over hele verden.
+              med {fmt(liveStats?.places ?? 95000)}+ steder over hele verden.
             </p>
           </div>
           <div className="wl-feat-grid">
