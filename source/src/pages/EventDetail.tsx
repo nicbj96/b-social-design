@@ -16,6 +16,7 @@ import { gradients } from "@/lib/designTokens";
 import { useTagsForEvent } from "@/hooks/useTagData";
 import { useFavorites } from "@/hooks/useFavorites";
 import TagPill from "@/components/TagPill";
+import CommentsSection from "@/components/CommentsSection";
 
 /* ─────────────────────────────────────────────
    B-Social Event Detail — Premium Redesign
@@ -692,6 +693,13 @@ export default function EventDetail() {
                   {attendees.length > 3 && ` og ${attendees.length - 3} andre`}
                 </span>
               </div>
+            </div>
+          )}
+
+          {/* Comments */}
+          {id && (
+            <div className="ed-fade-up ed-d3">
+              <CommentsSection entityType="event" entityId={id} />
             </div>
           )}
 

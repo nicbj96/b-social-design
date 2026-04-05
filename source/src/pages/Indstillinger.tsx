@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { MinSideSubNav } from "@/components/MinSideSubNav";
 import { pageBase } from "@/lib/pageCSSBase";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 /* ── Scoped CSS ── */
 const indstillingerCSS = `${pageBase("is")}
@@ -408,8 +409,13 @@ export default function Indstillinger() {
   const { t, i18n } = useTranslation();
   const { signOut, user, profile } = useAuth();
 
+  /* ── Push notifications (real) ── */
+  const { state: pushState, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications();
+  const pushEnabled = pushState === "subscribed";
+  const pushDisabled = pushState === "loading" || pushState === "unsupported" || pushState === "denied";
+
   /* ── Local toggle states ── */
-  const [pushNotif, setPushNotif] = useState(true);
+  // pushNotif replaced by real hook above
   const [emailNotif, setEmailNotif] = useState(true);
   const [smsNotif, setSmsNotif] = useState(true);
   const [profilSynlig, setProfilSynlig] = useState(true);
@@ -494,7 +500,16 @@ export default function Indstillinger() {
           <div className="is-fade-up is-d1">
             <div className="is-card">
               <p className="is-card-title">Notifikationer</p>
-              <ToggleRow id="tgl-push" label="Push-notifikationer" enabled={pushNotif} onToggle={() => setPushNotif(!pushNotif)} />
+              <ToggleRow
+                id="tgl-push"
+                label={
+                  pushState === "denied" ? "Push-notifikationer (blokeret i browser)" :
+                  pushState === "unsupported" ? "Push-notifikationer (ikke understøttet)" :
+                  "Push-notifikationer"
+                }
+                enabled={pushEnabled}
+                onToggle={pushDisabled ? () => {} : (pushEnabled ? pushUnsubscribe : pushSubscribe)}
+              />
               <ToggleRow id="tgl-email" label="E-mailnotifikationer" enabled={emailNotif} onToggle={() => setEmailNotif(!emailNotif)} />
               <ToggleRow id="tgl-sms" label="SMS-notifikationer" enabled={smsNotif} onToggle={() => setSmsNotif(!smsNotif)} />
             </div>

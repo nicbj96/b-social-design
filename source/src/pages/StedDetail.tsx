@@ -10,6 +10,7 @@ import { pageBase } from "@/lib/pageCSSBase";
 import { supabase, type Place } from "@/lib/supabase";
 import { useTagsForPlace } from "@/hooks/useTagData";
 import TagPill from "@/components/TagPill";
+import CommentsSection from "@/components/CommentsSection";
 
 /* ── Category → hero image ── */
 const HERO_IMAGES: Record<string, string> = {
@@ -541,6 +542,11 @@ export default function StedDetail() {
           {meta.attribution && (
             <p className="sd-attribution">{meta.attribution}</p>
           )}
+
+          {/* Comments */}
+          <div className="sd-fade-up sd-d4" style={{ paddingBottom: 32 }}>
+            <CommentsSection entityType="place" entityId={place.id} />
+          </div>
         </div>
       </div>
     </>

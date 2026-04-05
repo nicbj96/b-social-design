@@ -25,6 +25,8 @@ import {
   X,
   Calendar,
   List,
+  Upload,
+  Loader2,
 } from "lucide-react";
 
 type EventStatus = "draft" | "aktiv" | "afsluttet" | "promoted";
@@ -463,6 +465,48 @@ ${pageBase("fe")}
   display: flex; flex-direction: column; gap: 4px;
 }
 
+/* ── Image upload ── */
+.fe-img-zone {
+  position: relative; border-radius: 14px;
+  border: 2px dashed rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+  transition: all 0.25s; cursor: pointer; overflow: hidden;
+  min-height: 120px; display: flex; align-items: center; justify-content: center;
+}
+.fe-img-zone:hover {
+  border-color: rgba(78,205,196,0.4); background: rgba(78,205,196,0.04);
+}
+.fe-img-zone-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 20px; text-align: center;
+}
+.fe-img-zone-inner svg { color: var(--teal); opacity: 0.7; }
+.fe-img-zone-text { font-size: 13px; color: var(--pg-white-muted); }
+.fe-img-zone-sub { font-size: 11px; color: rgba(255,255,255,0.25); }
+.fe-img-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+}
+.fe-img-preview {
+  position: relative; border-radius: 14px; overflow: hidden;
+  height: 120px; background: rgba(0,0,0,0.3);
+}
+.fe-img-preview img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.fe-img-preview-clear {
+  position: absolute; top: 8px; right: 8px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(0,0,0,0.6); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.8); transition: all 0.2s;
+}
+.fe-img-preview-clear:hover { background: rgba(239,68,68,0.7); }
+.fe-img-uploading {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--teal); gap: 6px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .fe-header { flex-direction: column; align-items: flex-start; }
@@ -564,6 +608,9 @@ export default function FirmaEvents() {
     isFree: false,
   });
   const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imageUploading, setImageUploading] = useState(false);
 
   // Fetch user's events from Supabase
   const { data: events = [], refetch: refetchEvents, isLoading } = useQuery({
@@ -626,6 +673,24 @@ export default function FirmaEvents() {
     }
 
     try {
+      // Upload image if one was selected
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        setImageUploading(true);
+        const ext = imageFile.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("event-images")
+          .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+        setImageUploading(false);
+        if (uploadErr) {
+          alert("Fejl ved upload af billede: " + uploadErr.message);
+          return;
+        }
+        const { data: urlData } = supabase.storage.from("event-images").getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+      }
+
       const { error } = await supabase.from("events").insert({
         title: formData.title,
         description: formData.description,
@@ -637,6 +702,7 @@ export default function FirmaEvents() {
         created_by: user.id,
         interest_tags: formData.tags ? formData.tags.split(",").map(t => t.trim()) : [],
         status: "draft",
+        image_url: imageUrl,
       });
 
       if (!error) {
@@ -653,6 +719,8 @@ export default function FirmaEvents() {
           isFree: false,
         });
         setFormErrors({});
+        setImageFile(null);
+        setImagePreview("");
         setShowCreate(false);
         refetchEvents();
         alert("Event oprettet!");
@@ -661,6 +729,7 @@ export default function FirmaEvents() {
       }
     } catch (e) {
       console.error("Create event error:", e);
+      setImageUploading(false);
       alert("Der skete en fejl");
     }
   };
@@ -756,6 +825,53 @@ export default function FirmaEvents() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
+                </div>
+
+                {/* Image upload - Optional, Full width */}
+                <div className="fe-form-full fe-form-field">
+                  <label className="fe-form-label">
+                    <Image size={12} style={{ display: 'inline', marginRight: 4 }} />
+                    Billedet til eventet
+                  </label>
+                  {imagePreview ? (
+                    <div className="fe-img-preview">
+                      <img src={imagePreview} alt="Preview" />
+                      {imageUploading && (
+                        <div className="fe-img-uploading">
+                          <Loader2 size={14} className="animate-spin" /> Uploader…
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className="fe-img-preview-clear"
+                        onClick={() => { setImageFile(null); setImagePreview(""); }}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="fe-img-zone">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 5 * 1024 * 1024) {
+                            alert("Billedet må maks. være 5 MB");
+                            return;
+                          }
+                          setImageFile(file);
+                          setImagePreview(URL.createObjectURL(file));
+                        }}
+                      />
+                      <div className="fe-img-zone-inner">
+                        <Upload size={24} />
+                        <span className="fe-img-zone-text">Klik eller træk et billede hertil</span>
+                        <span className="fe-img-zone-sub">JPG, PNG, WebP · maks. 5 MB</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Date & Time - Required */}
