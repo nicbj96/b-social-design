@@ -354,6 +354,26 @@ export const TAG_TREE: TagNode[] = [
           { tag: "arkitektur", emoji: "🏗️", label: "Arkitektur" },
           { tag: "design", emoji: "🖊️", label: "Design" },
           { tag: "mode-show", emoji: "👗", label: "Modeshow" },
+          { tag: "biennale", emoji: "🖼️", label: "Biennale" },
+          { tag: "documenta", emoji: "🎨", label: "Documenta" },
+          { tag: "åben-huse", emoji: "🏠", label: "Åbne Huse" },
+          { tag: "kunstauktion", emoji: "🔨", label: "Kunstauktion" },
+          { tag: "perform-art", emoji: "🎭", label: "Performance Art" },
+          { tag: "residency", emoji: "🎨", label: "Artist Residency" },
+        ],
+      },
+      {
+        tag: "globale-kultursteder", emoji: "🌍", label: "Globale Kultursteder", children: [
+          { tag: "louvre-paris", emoji: "🗼", label: "Louvre" },
+          { tag: "moma-nyc", emoji: "🗽", label: "MoMA" },
+          { tag: "british-museum", emoji: "🇬🇧", label: "British Museum" },
+          { tag: "rijksmuseum", emoji: "🇳🇱", label: "Rijksmuseum" },
+          { tag: "uffizi-galleri", emoji: "🇮🇹", label: "Uffizi" },
+          { tag: "hermitage", emoji: "🇷🇺", label: "Hermitage" },
+          { tag: "opera-sydney", emoji: "🎶", label: "Sydney Opera House" },
+          { tag: "alhambra", emoji: "🕌", label: "Alhambra" },
+          { tag: "guggenheim", emoji: "🏛️", label: "Guggenheim" },
+          { tag: "tate-modern", emoji: "🇬🇧", label: "Tate Modern" },
         ],
       },
     ],
@@ -425,6 +445,30 @@ export const TAG_TREE: TagNode[] = [
           { tag: "fuglekiggeri", emoji: "🦅", label: "Fuglekiggeri" },
           { tag: "botanik", emoji: "🌸", label: "Botanik" },
           { tag: "stjerneobservation", emoji: "⭐", label: "Stjerneobservation" },
+          { tag: "fossiljagt", emoji: "🦕", label: "Fossiljagt" },
+          { tag: "hvalobservation", emoji: "🐋", label: "Hvalobservation" },
+          { tag: "wildlife-safari", emoji: "🦁", label: "Wildlife Safari" },
+          { tag: "havørn-safari", emoji: "🦅", label: "Havørnssafari" },
+          { tag: "midnatssol", emoji: "☀️", label: "Midnatssol" },
+          { tag: "skovbad-natur", emoji: "🌲", label: "Skovbad" },
+          { tag: "geysir-besøg", emoji: "💧", label: "Gejsere" },
+          { tag: "glaciervandring", emoji: "🧊", label: "Gletsjervandring" },
+          { tag: "ørken-eventyr", emoji: "🏜️", label: "Ørkeneventyr" },
+          { tag: "coral-reef", emoji: "🐠", label: "Koralrev" },
+        ],
+      },
+      {
+        tag: "nationalparker", emoji: "🏔️", label: "Nationalparker", children: [
+          { tag: "yellowstone", emoji: "🦌", label: "Yellowstone" },
+          { tag: "serengeti", emoji: "🦁", label: "Serengeti" },
+          { tag: "galapagos", emoji: "🐢", label: "Galapagos" },
+          { tag: "amazonen", emoji: "🌿", label: "Amazonas" },
+          { tag: "great-barrier-reef-tag", emoji: "🐠", label: "Great Barrier Reef" },
+          { tag: "yosemite", emoji: "🌲", label: "Yosemite" },
+          { tag: "patagonia-np", emoji: "🏔️", label: "Patagonia" },
+          { tag: "fjordnorge", emoji: "⛰️", label: "Norske Fjorde" },
+          { tag: "rebild-np", emoji: "🌲", label: "Rebild Nationalpark" },
+          { tag: "mols-bjerge", emoji: "🏞️", label: "Mols Bjerge" },
         ],
       },
     ],
@@ -842,9 +886,13 @@ export const TAG_TREE: TagNode[] = [
           { tag: "elbiler", emoji: "⚡", label: "Elbiler" },
           { tag: "tuning", emoji: "🔧", label: "Tuning" },
           { tag: "bil-show", emoji: "🚗", label: "Bilshow" },
+          { tag: "bil-traef", emoji: "🚗", label: "Biltræf" },
+          { tag: "cars-coffee", emoji: "☕", label: "Cars & Coffee" },
           { tag: "roadtrip-bil", emoji: "🛣️", label: "Road Trip" },
           { tag: "autocamper", emoji: "🚐", label: "Autocamper" },
           { tag: "bil-klub", emoji: "🏁", label: "Bilklub" },
+          { tag: "veteran-bil", emoji: "🏎️", label: "Veteranbiler" },
+          { tag: "supercar", emoji: "🏎️", label: "Supercars" },
         ],
       },
       {
@@ -853,15 +901,22 @@ export const TAG_TREE: TagNode[] = [
           { tag: "rally-aktiv", emoji: "🚗", label: "Rally" },
           { tag: "circuit-racing", emoji: "🏁", label: "Circuit Racing" },
           { tag: "drifting", emoji: "💨", label: "Drifting" },
+          { tag: "trackday", emoji: "🏁", label: "Track Day" },
+          { tag: "drag-racing", emoji: "🔥", label: "Drag Racing" },
+          { tag: "speedway", emoji: "🏟️", label: "Speedway" },
         ],
       },
       {
         tag: "motorcykler", emoji: "🏍️", label: "Motorcykler", children: [
           { tag: "mc-tur", emoji: "🏍️", label: "MC-tur" },
           { tag: "mc-klub", emoji: "🏍️", label: "MC-klub" },
+          { tag: "mc-traef", emoji: "🏍️", label: "MC-træf" },
+          { tag: "mc-rally", emoji: "🏍️", label: "MC Rally" },
           { tag: "enduro", emoji: "🌲", label: "Enduro" },
           { tag: "scooter", emoji: "🛵", label: "Scooter" },
           { tag: "custom-mc", emoji: "🔧", label: "Custom MC" },
+          { tag: "harley", emoji: "🦅", label: "Harley-Davidson" },
+          { tag: "motocross", emoji: "🏍️", label: "Motocross" },
         ],
       },
       {
@@ -870,6 +925,76 @@ export const TAG_TREE: TagNode[] = [
           { tag: "sejlads-sport", emoji: "⛵", label: "Sejlads" },
           { tag: "speedbåd", emoji: "🚤", label: "Speedbåd" },
           { tag: "jetski", emoji: "🌊", label: "Jetski" },
+        ],
+      },
+      {
+        tag: "vandsport-aktiv", emoji: "🏄", label: "Vandsport", children: [
+          { tag: "surfing", emoji: "🏄", label: "Surfing" },
+          { tag: "windsurfing", emoji: "🏄‍♂️", label: "Windsurfing" },
+          { tag: "kitesurfing", emoji: "🪁", label: "Kitesurfing" },
+          { tag: "sup-aktiv", emoji: "🛶", label: "SUP" },
+          { tag: "dykning-aktiv", emoji: "🤿", label: "Dykning" },
+          { tag: "apnea", emoji: "🤿", label: "Apnea / Freediving" },
+          { tag: "vandski-aktiv", emoji: "🎿", label: "Vandski" },
+          { tag: "wakeboard", emoji: "🎿", label: "Wakeboard" },
+          { tag: "kajak-aktiv", emoji: "🛶", label: "Kajak" },
+          { tag: "svømning-hav", emoji: "🏊", label: "Havsvømning" },
+        ],
+      },
+      {
+        tag: "ekstremsport-aktiv", emoji: "🪂", label: "Ekstremsport", children: [
+          { tag: "faldskærm", emoji: "🪂", label: "Faldskærm" },
+          { tag: "base-jump", emoji: "🦅", label: "BASE Jump" },
+          { tag: "bungee-jump", emoji: "⚡", label: "Bungee Jump" },
+          { tag: "klatring-ekstrem", emoji: "🧗", label: "Klatring" },
+          { tag: "via-ferrata", emoji: "🧗", label: "Via Ferrata" },
+          { tag: "parkour-aktiv", emoji: "🏃", label: "Parkour" },
+          { tag: "bmx-aktiv", emoji: "🚲", label: "BMX" },
+          { tag: "mtb-downhill", emoji: "🚵", label: "MTB Downhill" },
+          { tag: "freeride-ski", emoji: "⛷️", label: "Freeride Ski" },
+          { tag: "snowboard-park", emoji: "🏂", label: "Snowboard" },
+          { tag: "canyoning", emoji: "💧", label: "Canyoning" },
+          { tag: "highlining", emoji: "🎗️", label: "Highlining" },
+          { tag: "wingsuit", emoji: "🦅", label: "Wingsuit" },
+          { tag: "ice-climbing", emoji: "🧊", label: "Is-klatring" },
+          { tag: "slack-line", emoji: "🎗️", label: "Slacklining" },
+          { tag: "speed-riding", emoji: "🪂", label: "Speed Riding" },
+          { tag: "xc-ski-ekstrem", emoji: "⛷️", label: "Langrend Ekstrem" },
+          { tag: "obstacle-race", emoji: "🏃", label: "OCR / Spartan" },
+          { tag: "ultra-trail", emoji: "🏔️", label: "Ultra Trail" },
+        ],
+      },
+      {
+        tag: "wellness-aktiv", emoji: "🧘", label: "Wellness & Mindfulness", children: [
+          { tag: "yoga-flow", emoji: "🧘", label: "Vinyasa Yoga" },
+          { tag: "yin-yoga", emoji: "🌙", label: "Yin Yoga" },
+          { tag: "meditaion-guided", emoji: "✨", label: "Guidet Meditation" },
+          { tag: "breathwork-aktiv", emoji: "💨", label: "Breathwork" },
+          { tag: "vinterbadning-aktiv", emoji: "🥶", label: "Vinterbadning" },
+          { tag: "sauna-aktiv", emoji: "🔥", label: "Sauna" },
+          { tag: "spa-wellness", emoji: "💆", label: "Spa" },
+          { tag: "qigong-aktiv", emoji: "🌿", label: "Qigong" },
+          { tag: "tai-chi-aktiv", emoji: "🌿", label: "Tai Chi" },
+          { tag: "sound-healing", emoji: "🎵", label: "Lydhealing" },
+          { tag: "cacao-ceremony", emoji: "🍫", label: "Kakaoceremoni" },
+          { tag: "forest-bathing", emoji: "🌲", label: "Skovbad / Shinrin-yoku" },
+          { tag: "retreat-aktiv", emoji: "🏡", label: "Retreat" },
+          { tag: "ayurveda", emoji: "🌿", label: "Ayurveda" },
+          { tag: "reiki", emoji: "✨", label: "Reiki" },
+        ],
+      },
+      {
+        tag: "rejse-aktiv", emoji: "✈️", label: "Rejser & Eventyr", children: [
+          { tag: "backpacking", emoji: "🎒", label: "Backpacking" },
+          { tag: "interrail-aktiv", emoji: "🚂", label: "InterRail" },
+          { tag: "roadtrip-aktiv", emoji: "🚗", label: "Roadtrip" },
+          { tag: "cruise-aktiv", emoji: "🚢", label: "Cruise" },
+          { tag: "solo-travel", emoji: "🧳", label: "Solo-rejse" },
+          { tag: "vanlife", emoji: "🚐", label: "Vanlife" },
+          { tag: "couchsurfing", emoji: "🛋️", label: "Couchsurfing" },
+          { tag: "workaway", emoji: "🌍", label: "Workaway" },
+          { tag: "pilgrimsvandring-aktiv", emoji: "⛪", label: "Pilgrimsvandring" },
+          { tag: "expedition-aktiv", emoji: "🗺️", label: "Ekspedition" },
         ],
       },
     ],
@@ -1296,6 +1421,331 @@ export const TAG_TREE: TagNode[] = [
           { tag: "broderi", emoji: "🌸", label: "Broderi" },
           { tag: "quilting", emoji: "🟦", label: "Quilting" },
           { tag: "weaving", emoji: "🟩", label: "Vævning" },
+        ],
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════
+  // 23. DIGITAL & GAMING
+  // ══════════════════════════════════════════════
+  {
+    tag: "digital-gaming",
+    emoji: "🎮",
+    label: "Digital & Gaming",
+    children: [
+      {
+        tag: "videospil", emoji: "🎮", label: "Videospil", children: [
+          { tag: "esport", emoji: "🏆", label: "Esport" },
+          { tag: "fps-spil", emoji: "🔫", label: "FPS" },
+          { tag: "moba", emoji: "⚔️", label: "MOBA" },
+          { tag: "battle-royale", emoji: "🎯", label: "Battle Royale" },
+          { tag: "rpg-spil", emoji: "🧙", label: "RPG" },
+          { tag: "simulator", emoji: "✈️", label: "Simulator" },
+          { tag: "racing-game", emoji: "🏎️", label: "Racing Games" },
+          { tag: "retro-gaming", emoji: "👾", label: "Retro Gaming" },
+          { tag: "indie-spil", emoji: "🎨", label: "Indie Spil" },
+        ],
+      },
+      {
+        tag: "vr-ar", emoji: "🥽", label: "VR & AR", children: [
+          { tag: "vr-gaming", emoji: "🥽", label: "VR Gaming" },
+          { tag: "ar-apps", emoji: "📱", label: "AR Apps" },
+          { tag: "mixed-reality", emoji: "🌐", label: "Mixed Reality" },
+          { tag: "virtual-worlds", emoji: "🌍", label: "Virtuelle Verdener" },
+        ],
+      },
+      {
+        tag: "streaming-content", emoji: "📺", label: "Streaming & Content", children: [
+          { tag: "twitch-streaming", emoji: "📡", label: "Twitch" },
+          { tag: "youtube-gaming", emoji: "▶️", label: "YouTube Gaming" },
+          { tag: "podcast-produktion", emoji: "🎙️", label: "Podcast" },
+          { tag: "content-creation", emoji: "🎬", label: "Content Creation" },
+        ],
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════
+  // 24. SPIRITUALITET & PERSONLIG VÆKST
+  // ══════════════════════════════════════════════
+  {
+    tag: "spiritualitet-vækst",
+    emoji: "✨",
+    label: "Spiritualitet & Personlig Vækst",
+    children: [
+      {
+        tag: "meditation-mindfulness", emoji: "🧘", label: "Meditation & Mindfulness", children: [
+          { tag: "vipassana", emoji: "🕊️", label: "Vipassana" },
+          { tag: "zen-meditation", emoji: "⭕", label: "Zen" },
+          { tag: "transcendental-meditation", emoji: "🌀", label: "TM" },
+          { tag: "mindfulness-mbsr", emoji: "🧠", label: "MBSR" },
+          { tag: "bodyscan", emoji: "👁️", label: "Body Scan" },
+          { tag: "loving-kindness", emoji: "💗", label: "Loving Kindness" },
+          { tag: "gåmeditation-tag", emoji: "🚶", label: "Gåmeditation" },
+        ],
+      },
+      {
+        tag: "åndelig-praksis", emoji: "🌙", label: "Åndelig Praksis", children: [
+          { tag: "astrologilab", emoji: "♈", label: "Astrologi" },
+          { tag: "tarot-kort", emoji: "🃏", label: "Tarot" },
+          { tag: "kristendom-gruppe", emoji: "✝️", label: "Kristendom" },
+          { tag: "buddhisme-gruppe", emoji: "☸️", label: "Buddhisme" },
+          { tag: "natur-spiritualitet", emoji: "🌲", label: "Naturåndelighed" },
+          { tag: "shamanisme", emoji: "🦅", label: "Shamanisme" },
+          { tag: "tantra-yoga", emoji: "☯️", label: "Tantra Yoga" },
+        ],
+      },
+      {
+        tag: "personlig-udvikling", emoji: "📈", label: "Personlig Udvikling", children: [
+          { tag: "coaching-tag", emoji: "🎯", label: "Coaching" },
+          { tag: "nlp-tag", emoji: "🧩", label: "NLP" },
+          { tag: "selvhjælpsbøger", emoji: "📚", label: "Selvhjælp" },
+          { tag: "journaling-tag", emoji: "📓", label: "Journaling" },
+          { tag: "habit-tracking", emoji: "✅", label: "Vaner & Rutiner" },
+          { tag: "stoicisme", emoji: "🏛️", label: "Stoicisme" },
+          { tag: "deep-work", emoji: "🔬", label: "Deep Work" },
+        ],
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════
+  // 25. MAD & GASTRONOMI (UDVIDET)
+  // ══════════════════════════════════════════════
+  {
+    tag: "gastronomi-udvidet",
+    emoji: "🍽️",
+    label: "Gastronomi & Madkultur",
+    children: [
+      {
+        tag: "verdenskøkkener", emoji: "🌍", label: "Verdens Køkkener", children: [
+          { tag: "japansk-køkken", emoji: "🍱", label: "Japansk" },
+          { tag: "italiensk-køkken", emoji: "🍝", label: "Italiensk" },
+          { tag: "mexikansk-køkken", emoji: "🌮", label: "Mexikansk" },
+          { tag: "indisk-køkken", emoji: "🍛", label: "Indisk" },
+          { tag: "thai-køkken", emoji: "🍜", label: "Thailandsk" },
+          { tag: "nordisk-køkken", emoji: "🐟", label: "Nordisk Køkken" },
+          { tag: "mellemøstlig-mad", emoji: "🧆", label: "Mellemøstlig" },
+          { tag: "koreansk-køkken", emoji: "🥢", label: "Koreansk" },
+          { tag: "peruansk-køkken", emoji: "🫙", label: "Peruansk" },
+          { tag: "etiopisk-køkken", emoji: "🫓", label: "Etiopisk" },
+        ],
+      },
+      {
+        tag: "drikke-kultur", emoji: "🍷", label: "Drikke & Smagning", children: [
+          { tag: "naturvin", emoji: "🍇", label: "Naturvin" },
+          { tag: "craft-øl", emoji: "🍺", label: "Craft Øl" },
+          { tag: "whisky-tag", emoji: "🥃", label: "Whisky" },
+          { tag: "cocktail-bar", emoji: "🍸", label: "Cocktails" },
+          { tag: "specialty-kaffe", emoji: "☕", label: "Specialty Kaffe" },
+          { tag: "te-ceremoni", emoji: "🍵", label: "Te Ceremoni" },
+          { tag: "kombucha-tag", emoji: "🧃", label: "Kombucha" },
+          { tag: "mezcal", emoji: "🌵", label: "Mezcal & Tequila" },
+        ],
+      },
+      {
+        tag: "madproduktion", emoji: "🌾", label: "Madproduktion & Håndværk", children: [
+          { tag: "brødbagning", emoji: "🍞", label: "Brødbagning" },
+          { tag: "ostemageri-tag", emoji: "🧀", label: "Ostemageri" },
+          { tag: "fermentering-tag", emoji: "🫙", label: "Fermentering" },
+          { tag: "hjemmebrygning", emoji: "🍺", label: "Hjemmebrygning" },
+          { tag: "konditori", emoji: "🥐", label: "Konditori" },
+          { tag: "charcuteri", emoji: "🥩", label: "Charcuteri" },
+          { tag: "syltetøj-konservering", emoji: "🫙", label: "Konservering" },
+          { tag: "chokoladefremstilling", emoji: "🍫", label: "Chokolade" },
+        ],
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════
+  // 26. FRILUFTSLIV AVANCERET
+  // ══════════════════════════════════════════════
+  {
+    tag: "friluftsliv-avanceret",
+    emoji: "🏕️",
+    label: "Friluftsliv & Ekspedition",
+    children: [
+      {
+        tag: "ekspeditioner", emoji: "🗺️", label: "Ekspeditioner", children: [
+          { tag: "polekspedition", emoji: "🧊", label: "Polarekspedition" },
+          { tag: "jungel-ekspedition", emoji: "🌴", label: "Jungelekspedition" },
+          { tag: "ørken-tur", emoji: "🏜️", label: "Ørken" },
+          { tag: "bjerg-ekspedition", emoji: "🏔️", label: "Bjergstigning" },
+          { tag: "arktis-tur", emoji: "❄️", label: "Arktis" },
+          { tag: "amazonas-tur", emoji: "🐊", label: "Amazonas" },
+        ],
+      },
+      {
+        tag: "bushcraft-survival", emoji: "🪓", label: "Bushcraft & Survival", children: [
+          { tag: "ildtænding", emoji: "🔥", label: "Ildtænding" },
+          { tag: "shelterbyg", emoji: "🏕️", label: "Shelter Bygning" },
+          { tag: "vandfiltrering", emoji: "💧", label: "Vandfiltrering" },
+          { tag: "vildt-mad", emoji: "🍖", label: "Vild Madlavning" },
+          { tag: "navigation-kompas", emoji: "🧭", label: "Navigation" },
+          { tag: "primitive-tools", emoji: "🗿", label: "Primitive Redskaber" },
+          { tag: "tracking-spor", emoji: "👣", label: "Sporing" },
+        ],
+      },
+      {
+        tag: "lange-vandreruter", emoji: "🥾", label: "Lange Vandreruter", children: [
+          { tag: "e1-rute", emoji: "🇪🇺", label: "E1 (Europa)" },
+          { tag: "camino-tag", emoji: "⛩️", label: "Camino de Santiago" },
+          { tag: "appalachian-trail", emoji: "🌲", label: "Appalachian Trail" },
+          { tag: "pct-trail", emoji: "🏔️", label: "Pacific Crest Trail" },
+          { tag: "haervejen-tag", emoji: "🐂", label: "Hærvejen" },
+          { tag: "pilgrimsrute", emoji: "🕊️", label: "Pilgrimsruter" },
+          { tag: "kystvejen", emoji: "🌊", label: "Kystvejen DK" },
+        ],
+      },
+    ],
+  },
+
+  /* ═══ 27. VELVÆRE & KROP ═══ */
+  {
+    tag: "velvære-krop", emoji: "🧖", label: "Velvære & Krop", children: [
+      {
+        tag: "kroppen-pleje", emoji: "💆", label: "Kropspleje", children: [
+          { tag: "massage-krop", emoji: "🤲", label: "Massage" },
+          { tag: "hudpleje-terapi", emoji: "🧴", label: "Hudpleje" },
+          { tag: "aromaterapi", emoji: "🌸", label: "Aromaterapi" },
+          { tag: "reflexologi", emoji: "🦶", label: "Reflexologi" },
+          { tag: "akupunktur", emoji: "📍", label: "Akupunktur" },
+          { tag: "kraniosaeral", emoji: "🫁", label: "Kraniosakral Terapi" },
+          { tag: "lymphdræn", emoji: "💧", label: "Lymfedræning" },
+        ],
+      },
+      {
+        tag: "krop-motion-wellness", emoji: "🏋️", label: "Krop & Motion", children: [
+          { tag: "funktionel-fitness", emoji: "⚡", label: "Funktionel Fitness" },
+          { tag: "mobility-stretch", emoji: "🤸", label: "Mobilitets-træning" },
+          { tag: "balance-kerne", emoji: "🎯", label: "Balance & Kerne" },
+          { tag: "pilates-krop", emoji: "🧘", label: "Pilates" },
+          { tag: "barre-workout", emoji: "🩰", label: "Barre Workout" },
+          { tag: "foam-rolling", emoji: "🔄", label: "Foam Rolling" },
+        ],
+      },
+      {
+        tag: "mentalt-velvære", emoji: "🧠", label: "Mentalt Velvære", children: [
+          { tag: "kognitiv-terapi", emoji: "💭", label: "Kognitiv Terapi" },
+          { tag: "art-terapi", emoji: "🎨", label: "Kunstterapi" },
+          { tag: "musik-terapi", emoji: "🎵", label: "Musikterapi" },
+          { tag: "natur-terapi", emoji: "🌿", label: "Naturterapi" },
+          { tag: "drama-terapi", emoji: "🎭", label: "Dramaterapi" },
+          { tag: "skrivning-terapi", emoji: "✍️", label: "Skriveprocesser" },
+        ],
+      },
+    ],
+  },
+
+  /* ═══ 28. SPORT & KONKURRENCE ═══ */
+  {
+    tag: "sport-konkurrence", emoji: "🏆", label: "Sport & Konkurrence", children: [
+      {
+        tag: "holdssport-konkurrence", emoji: "👥", label: "Holdsport", children: [
+          { tag: "fodbold-hold", emoji: "⚽", label: "Fodbold Hold" },
+          { tag: "basketball-hold", emoji: "🏀", label: "Basketball" },
+          { tag: "volleyball-hold", emoji: "🏐", label: "Volleyball" },
+          { tag: "handball-hold", emoji: "🤾", label: "Håndbold" },
+          { tag: "hockey-hold", emoji: "🏒", label: "Hockey" },
+          { tag: "rugby-hold", emoji: "🏉", label: "Rugby" },
+          { tag: "baseball-hold", emoji: "⚾", label: "Baseball" },
+        ],
+      },
+      {
+        tag: "individuel-sport-konkurrence", emoji: "🥇", label: "Individuel Sport", children: [
+          { tag: "svomning-konkurrence", emoji: "🏊", label: "Svømning" },
+          { tag: "tennis-konkurrence", emoji: "🎾", label: "Tennis" },
+          { tag: "badminton-konkurrence", emoji: "🏸", label: "Badminton" },
+          { tag: "bordtennis-konkurrence", emoji: "🏓", label: "Bordtennis" },
+          { tag: "squash-konkurrence", emoji: "🎾", label: "Squash" },
+          { tag: "boksning-konkurrence", emoji: "🥊", label: "Boksning" },
+          { tag: "judo-konkurrence", emoji: "🥋", label: "Judo" },
+          { tag: "brydning-konkurrence", emoji: "🤼", label: "Brydning" },
+        ],
+      },
+      {
+        tag: "udholdenhedssport", emoji: "🏃", label: "Udholdenhed", children: [
+          { tag: "maraton-konkurrence", emoji: "🏅", label: "Maraton" },
+          { tag: "triathlon-konkurrence", emoji: "🚴", label: "Triathlon" },
+          { tag: "ironman-tag", emoji: "💪", label: "Ironman" },
+          { tag: "ultra-maraton", emoji: "🦅", label: "Ultra Maraton" },
+          { tag: "spartan-race", emoji: "🛡️", label: "Spartan Race" },
+          { tag: "ocr-race", emoji: "🏕️", label: "Obstacle Race" },
+        ],
+      },
+    ],
+  },
+
+  /* ═══ 29. DANS & BEVÆGELSESKUNST ═══ */
+  {
+    tag: "dans-bevaegelse", emoji: "💃", label: "Dans & Bevægelseskunst", children: [
+      {
+        tag: "sociale-danse", emoji: "🕺", label: "Sociale Danse", children: [
+          { tag: "salsa-dans", emoji: "🌶️", label: "Salsa" },
+          { tag: "bachata-dans", emoji: "💃", label: "Bachata" },
+          { tag: "tango-dans", emoji: "🥀", label: "Tango" },
+          { tag: "swing-dans", emoji: "🎷", label: "Swing" },
+          { tag: "linedance", emoji: "🤠", label: "Line Dance" },
+          { tag: "folkdans", emoji: "🌻", label: "Folkdans" },
+        ],
+      },
+      {
+        tag: "scenedans", emoji: "🩰", label: "Scenedans", children: [
+          { tag: "ballet-tag", emoji: "🩰", label: "Ballet" },
+          { tag: "contemporarydans", emoji: "🌊", label: "Contemporary" },
+          { tag: "hiphop-dans", emoji: "🎤", label: "Hip-Hop Dans" },
+          { tag: "breakdance", emoji: "🌀", label: "Breakdance" },
+          { tag: "moderne-dans", emoji: "🎭", label: "Moderne Dans" },
+        ],
+      },
+      {
+        tag: "bevaegelsespraksis", emoji: "🤸", label: "Bevægelsespraksis", children: [
+          { tag: "feldenkrais", emoji: "🫀", label: "Feldenkrais" },
+          { tag: "alexander-teknik", emoji: "🎯", label: "Alexander Teknik" },
+          { tag: "somatic-movement", emoji: "🌿", label: "Somatisk Bevægelse" },
+          { tag: "contact-improvisation", emoji: "🤝", label: "Contact Improvisation" },
+          { tag: "5rhythms", emoji: "🌀", label: "5Rhythms Dans" },
+          { tag: "ecstatic-dance", emoji: "✨", label: "Ecstatic Dance" },
+        ],
+      },
+    ],
+  },
+
+  /* ═══ 30. HÅNDVÆRK & SKABELSE ═══ */
+  {
+    tag: "haandværk-skabelse", emoji: "🔨", label: "Håndværk & Skabelse", children: [
+      {
+        tag: "traditionelt-haandvaerk", emoji: "🪵", label: "Traditionelt Håndværk", children: [
+          { tag: "traebearbejdning", emoji: "🪚", label: "Træbearbejdning" },
+          { tag: "smedning-tag", emoji: "⚒️", label: "Smedning" },
+          { tag: "keramik-tag", emoji: "🏺", label: "Keramik" },
+          { tag: "glas-pust", emoji: "🫧", label: "Glasblæsning" },
+          { tag: "fletning-kurv", emoji: "🧺", label: "Kurvefletning" },
+          { tag: "læderarbejde", emoji: "👝", label: "Læderarbejde" },
+          { tag: "strikke-tag", emoji: "🧶", label: "Strikning" },
+          { tag: "vaevning-tag", emoji: "🪡", label: "Vævning" },
+        ],
+      },
+      {
+        tag: "moderne-making", emoji: "⚙️", label: "Moderne Making", children: [
+          { tag: "3d-print-making", emoji: "🖨️", label: "3D-print" },
+          { tag: "elektronik-diy", emoji: "⚡", label: "Elektronik DIY" },
+          { tag: "arduino-tag", emoji: "🔌", label: "Arduino" },
+          { tag: "raspberry-pi", emoji: "🍓", label: "Raspberry Pi" },
+          { tag: "laser-cutting", emoji: "✂️", label: "Laserskæring" },
+          { tag: "cnc-fabrication", emoji: "🏭", label: "CNC Fabrikation" },
+        ],
+      },
+      {
+        tag: "tekstil-mode", emoji: "👗", label: "Tekstil & Mode", children: [
+          { tag: "syning-tag", emoji: "🧵", label: "Syning" },
+          { tag: "broderi-tag", emoji: "🌹", label: "Broderi" },
+          { tag: "print-textil", emoji: "🎨", label: "Tekstilprint" },
+          { tag: "batik-tag", emoji: "🌈", label: "Batik" },
+          { tag: "upcycling-mode", emoji: "♻️", label: "Upcycling Mode" },
+          { tag: "slow-fashion", emoji: "🌱", label: "Slow Fashion" },
         ],
       },
     ],
