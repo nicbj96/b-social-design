@@ -1,6 +1,21 @@
 User-agent: *
 Allow: /
-Sitemap: https://b-social.pages.dev/sitemap.xml
+Disallow: /auth
+Disallow: /indstillinger
+Disallow: /min-side
+Disallow: /beskeder
+Disallow: /overblik
+Disallow: /noter
+Disallow: /historik
+Disallow: /notifikationer
+Disallow: /firma/
+Sitemap: https://b-social.net/sitemap.xml
 
 User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
 Disallow: /

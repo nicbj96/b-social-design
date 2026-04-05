@@ -17,6 +17,7 @@ import { useTagsForEvent } from "@/hooks/useTagData";
 import { useFavorites } from "@/hooks/useFavorites";
 import TagPill from "@/components/TagPill";
 import CommentsSection from "@/components/CommentsSection";
+import { sendRsvpConfirmation, sendNewRsvpNotification } from "@/lib/email";
 
 /* ─────────────────────────────────────────────
    B-Social Event Detail — Premium Redesign
@@ -412,6 +413,45 @@ export default function EventDetail() {
     ogImage: event?.image_url ?? undefined,
   });
 
+  // Inject JSON-LD structured data for Google rich results
+  useEffect(() => {
+    if (!event) return;
+    const existing = document.getElementById('jsonld-event');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.id = 'jsonld-event';
+    script.type = 'application/ld+json';
+    const ld: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: event.title,
+      description: event.description?.slice(0, 500) ?? undefined,
+      startDate: event.date ?? undefined,
+      url: `https://b-social.net/event/${event.id}`,
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      organizer: { '@type': 'Organization', name: 'B-Social', url: 'https://b-social.net' },
+    };
+    if (event.location) {
+      ld.location = { '@type': 'Place', name: event.location };
+    }
+    if (event.image_url) {
+      ld.image = [event.image_url];
+    }
+    if (event.price !== undefined && event.price !== null) {
+      ld.offers = {
+        '@type': 'Offer',
+        price: event.price,
+        priceCurrency: 'DKK',
+        availability: 'https://schema.org/InStock',
+        url: `https://b-social.net/event/${event.id}`,
+      };
+    }
+    script.textContent = JSON.stringify(ld);
+    document.head.appendChild(script);
+    return () => { document.getElementById('jsonld-event')?.remove(); };
+  }, [event?.id]);
+
   useEffect(() => {
     if (!user || !id) return;
     supabase.from("event_rsvps").select("status").eq("event_id", id).eq("user_id", user.id).single()
@@ -455,6 +495,39 @@ export default function EventDetail() {
       if (!error) {
         setJoined(true);
         await loadAttendees();
+
+        // Fire-and-forget emails (best effort, never block UI)
+        if (event && user.email) {
+          const userName = user.email.split('@')[0];
+          // Confirmation to the joining user
+          sendRsvpConfirmation({
+            to: user.email,
+            userName,
+            eventTitle: event.title,
+            eventDate: event.date ?? new Date().toISOString(),
+            eventLocation: event.location ?? '',
+            eventId: String(id),
+          });
+          // Notify event owner if different user
+          if (event.created_by && event.created_by !== user.id) {
+            const { data: ownerProfile } = await supabase
+              .from('profiles')
+              .select('email: id, name')
+              .eq('id', event.created_by)
+              .single();
+            const ownerEmail = (ownerProfile as any)?.email_address ?? null;
+            if (ownerEmail) {
+              sendNewRsvpNotification({
+                to: ownerEmail,
+                ownerName: (ownerProfile as any)?.name ?? 'Arrangør',
+                attendeeName: userName,
+                eventTitle: event.title,
+                eventId: String(id),
+                currentCount: attendees.length + 1,
+              });
+            }
+          }
+        }
       }
     } catch (e) {
       console.error(e);

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings, Calendar, BarChart3, Clock, StickyNote, MoreHorizontal, X, Search } from "lucide-react";
+import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings, Calendar, BarChart3, Clock, StickyNote, MoreHorizontal, X, Search, CalendarPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNotifications } from "@/context/NotificationContext";
@@ -307,6 +307,21 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
             </div>
           )}
 
+          {/* Opret Event CTA */}
+          {loggedIn && (
+            <Link
+              href="/opret-event"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all mb-2"
+              style={{
+                background: "linear-gradient(135deg, rgba(78,205,196,0.15), rgba(78,205,196,0.08))",
+                border: "1px solid rgba(78,205,196,0.25)",
+                color: "#4ecdc4",
+              }}
+            >
+              + Opret event
+            </Link>
+          )}
+
           {/* Language switcher */}
           <LanguageSwitcher variant="toggle" />
         </div>
@@ -395,6 +410,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
               {[
                 { href: "/soeg", icon: Search, label: "Søg" },
+                { href: "/opret-event", icon: CalendarPlus, label: "Opret event" },
                 { href: "/inviter", icon: UserPlus, label: "Invitér" },
                 { href: "/notifikationer", icon: Bell, label: "Notifikationer" },
                 { href: "/henvisning", icon: CircleDollarSign, label: "Henvisning" },
