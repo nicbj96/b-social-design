@@ -626,13 +626,20 @@ export default function FirmaFakturering() {
 
     const cId = companyId;
     if (cId) {
-      await supabase
-        .from("companies")
-        .update({ plan: newPlan })
-        .eq("id", cId);
+      try {
+        await supabase
+          .from("companies")
+          .update({ plan: newPlan })
+          .eq("id", cId);
+
+        setCurrentPlan(newPlan);
+        // TODO: Show success toast notification
+      } catch (error) {
+        console.error("Error changing plan:", error);
+        // TODO: Show error toast notification
+      }
     }
 
-    setCurrentPlan(newPlan);
     setChangingPlan(false);
   }
 
@@ -709,6 +716,17 @@ export default function FirmaFakturering() {
               <p className="ff-stat-card-label">{t('pricing.your_profit')}</p>
               <p className="ff-stat-card-value ff-stat-card-value-green">
                 {(monthlyRevenue - bsocialShare).toLocaleString("da-DK")} kr
+              </p>
+            </div>
+          </div>
+
+          {/* ── Invoice payment note ── */}
+          <div className="ff-callout ff-fade-up ff-d2">
+            <Info size={16} className="ff-callout-icon" />
+            <div>
+              <p className="ff-callout-title">Betaling via faktura</p>
+              <p className="ff-callout-desc">
+                Kontakt os for opsætning af fakturabetaling baseret på din valgte plan.
               </p>
             </div>
           </div>

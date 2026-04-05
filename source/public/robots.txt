@@ -1,7 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://b-social.net/sitemap.xml
+Sitemap: https://b-social.pages.dev/sitemap.xml
 
-# Block API and auth paths
-Disallow: /api/
-Disallow: /auth/
+User-agent: GPTBot
+Disallow: /

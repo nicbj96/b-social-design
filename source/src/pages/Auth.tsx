@@ -323,7 +323,7 @@ export default function Auth() {
 
         {/* ── LEFT PANEL (desktop) ── */}
         <div className="au-left">
-          <img src="/concert.jpg" alt="" aria-hidden="true" />
+          <img src="/concert.jpg" alt="" aria-hidden="true" loading="lazy" />
           <div className="au-left-overlay" aria-hidden="true" />
           <div className="au-left-teal" aria-hidden="true" />
 

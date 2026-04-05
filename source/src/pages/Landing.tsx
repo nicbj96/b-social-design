@@ -195,7 +195,7 @@ export default function Landing() {
           <div className="lp-events-row lp-fade-up lp-delay-4">
             {events.map((ev, i) => (
               <div key={i} className="lp-event-card" onClick={() => navigate("/feed")}>
-                <img className="lp-event-card-img" src={ev.img} alt={ev.name} />
+                <img className="lp-event-card-img" src={ev.img} alt={ev.name} loading="lazy" />
                 <div className="lp-event-card-overlay" />
                 <div className="lp-event-card-body">
                   <div className="lp-event-card-date">{ev.date}</div>

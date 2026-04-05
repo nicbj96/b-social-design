@@ -260,7 +260,7 @@ export default function TestMinSide() {
 
         {/* ── COVER HERO ── */}
         <div className="ms-cover" style={{ position: 'relative' }}>
-          <img src="/profile-hero.png" alt="" />
+          <img src="/profile-hero.png" alt="" loading="lazy" />
           <div className="ms-cover-overlay" />
           <Link href="/indstillinger" className="ms-settings-btn" aria-label="Settings">
             <Settings size={17} />
@@ -271,7 +271,7 @@ export default function TestMinSide() {
         <div className="ms-identity">
           <div className="ms-avatar">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt={displayName} />
+              <img src={profile.avatar_url} alt={displayName} loading="lazy" />
             ) : (
               displayInitial
             )}
@@ -321,7 +321,7 @@ export default function TestMinSide() {
                   <div key={a.id} className="ms-activity-item">
                     <div className="ms-activity-avatar">
                       {profile?.avatar_url ? (
-                        <img src={profile.avatar_url} alt="" />
+                        <img src={profile.avatar_url} alt="" loading="lazy" />
                       ) : (
                         displayInitial
                       )}

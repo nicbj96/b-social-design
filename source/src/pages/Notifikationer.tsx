@@ -422,7 +422,7 @@ export default function Notifikationer() {
 
       {/* Cover hero */}
       <div className="nt-cover">
-        <img src="/notifikationer-hero.png" alt="" />
+        <img src="/notifikationer-hero.png" alt="" loading="lazy" />
         <div className="nt-cover-overlay" />
       </div>
 

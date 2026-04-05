@@ -1,6 +1,5 @@
 // Live data layer — fetches from Supabase with static JSON fallback
 import { supabase } from "./supabase";
-import staticEvents from "@/data/events.json";
 import { logger } from "./logger";
 
 export type Event = {
@@ -29,6 +28,22 @@ export type Event = {
 };
 
 let _cachedEvents: Event[] | null = null;
+let _cachedStaticEvents: Event[] | null = null;
+
+/** Fetch static fallback events from public directory (lazy-loaded, not bundled) */
+async function getStaticEvents(): Promise<Event[]> {
+  if (_cachedStaticEvents) return _cachedStaticEvents;
+
+  try {
+    const response = await fetch("/events.json");
+    if (!response.ok) throw new Error(`Failed to fetch events.json: ${response.status}`);
+    _cachedStaticEvents = await response.json() as Event[];
+    return _cachedStaticEvents ?? [];
+  } catch (e) {
+    logger.warn("Failed to load static events fallback:", e);
+    return [];
+  }
+}
 
 /** Fetch all events — live from Supabase, fallback to static JSON */
 export async function getEvents(): Promise<Event[]> {
@@ -68,6 +83,7 @@ export async function getEvents(): Promise<Event[]> {
 
   // Fallback: static JSON sorted by date, filter out past events
   const now = new Date().toISOString().split("T")[0];
+  const staticEvents = await getStaticEvents();
   const fallback = (staticEvents as Event[])
     .filter((e) => e.date >= now)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

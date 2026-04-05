@@ -294,7 +294,7 @@ export default function Kalender() {
 
         {/* ── COVER HERO ── */}
         <div className="ka-cover">
-          <img src="/kalender-hero.png" alt="" />
+          <img src="/kalender-hero.png" alt="" loading="lazy" />
           <div className="ka-cover-overlay" />
         </div>
 

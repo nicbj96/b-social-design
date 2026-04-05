@@ -14,6 +14,7 @@ import { useFadeUp } from "@/lib/useFadeUp";
 import { pageBase } from "@/lib/pageCSSBase";
 import { gradients } from "@/lib/designTokens";
 import { useTagsForEvent } from "@/hooks/useTagData";
+import { useFavorites } from "@/hooks/useFavorites";
 import TagPill from "@/components/TagPill";
 
 /* ─────────────────────────────────────────────
@@ -325,7 +326,7 @@ export default function EventDetail() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [favorited, setFavorited] = useState(false);
+  const { toggle: toggleFavorite, isFavorite } = useFavorites();
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
   const [rsvpCount, setRsvpCount] = useState(0);
@@ -462,11 +463,11 @@ export default function EventDetail() {
               </button>
               <button
                 className="ed-icon-btn"
-                onClick={() => setFavorited(!favorited)}
+                onClick={() => id && toggleFavorite(id, "event")}
                 data-testid="button-favorite"
-                style={favorited ? { background: 'rgba(239,68,68,0.15)', borderColor: 'rgba(239,68,68,0.3)' } : undefined}
+                style={id && isFavorite(id) ? { background: 'rgba(239,68,68,0.15)', borderColor: 'rgba(239,68,68,0.3)' } : undefined}
               >
-                <Heart style={favorited ? { color: '#f87171', fill: '#f87171' } : undefined} />
+                <Heart style={id && isFavorite(id) ? { color: '#f87171', fill: '#f87171' } : undefined} />
               </button>
             </div>
           </div>

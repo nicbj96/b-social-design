@@ -300,7 +300,7 @@ export default function Overblik() {
       >
         {/* Cover */}
         <div className="ov-cover">
-          <img src="/dashboard-hero.png" alt="" />
+          <img src="/dashboard-hero.png" alt="" loading="lazy" />
           <div className="ov-cover-overlay" />
         </div>
 

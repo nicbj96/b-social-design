@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useFavorites } from "@/hooks/useFavorites";
 import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, MapPin, Star, Share2, Bookmark, ExternalLink, Navigation, Clock, Accessibility, Info, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -12,86 +13,86 @@ import TagPill from "@/components/TagPill";
 
 /* ── Category → hero image ── */
 const HERO_IMAGES: Record<string, string> = {
-  shelter:     "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop",
-  teltplads:   "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=800&auto=format&fit=crop",
-  bålhytte:    "https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=800&auto=format&fit=crop",
-  bålplads:    "https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=800&auto=format&fit=crop",
-  strand:      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop",
-  badning:     "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop",
-  hundeskov:   "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&auto=format&fit=crop",
-  hund:        "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&auto=format&fit=crop",
-  vandring:    "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&auto=format&fit=crop",
-  vandrerute:  "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&auto=format&fit=crop",
-  cykelrute:   "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=800&auto=format&fit=crop",
-  cykling:     "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=800&auto=format&fit=crop",
-  mtb:         "https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&auto=format&fit=crop",
-  mountainbike:"https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&auto=format&fit=crop",
-  fiskeri:     "https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=800&auto=format&fit=crop",
-  lystfiskeri: "https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=800&auto=format&fit=crop",
-  fiskesø:     "https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=800&auto=format&fit=crop",
-  fugletårn:   "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=800&auto=format&fit=crop",
-  fuglekiggeri:"https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=800&auto=format&fit=crop",
-  fitness:     "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop",
-  dykning:     "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop",
-  snorkel:     "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop",
-  kitesurf:    "https://images.unsplash.com/photo-1559288031-6ff34e1540ff?w=800&auto=format&fit=crop",
-  windsurf:    "https://images.unsplash.com/photo-1559288031-6ff34e1540ff?w=800&auto=format&fit=crop",
-  kælkebakke:  "https://images.unsplash.com/photo-1516820612845-a13894592046?w=800&auto=format&fit=crop",
-  vinterbadning:"https://images.unsplash.com/photo-1551524559-8af4e6624178?w=800&auto=format&fit=crop",
-  discgolf:    "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop",
-  kajak:       "https://images.unsplash.com/photo-1472745942893-4b9f730c7668?w=800&auto=format&fit=crop",
-  kano:        "https://images.unsplash.com/photo-1472745942893-4b9f730c7668?w=800&auto=format&fit=crop",
-  løb:         "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&auto=format&fit=crop",
-  ridning:     "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&auto=format&fit=crop",
-  camping:     "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop",
-  kultur:      "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&auto=format&fit=crop",
-  natur:       "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop",
-  logi:        "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop",
-  aktiv:       "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&auto=format&fit=crop",
-  wellness:    "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&auto=format&fit=crop",
-  yoga:        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop",
-  museum:      "https://images.unsplash.com/photo-1578321271385-cd66d387b246?w=800&auto=format&fit=crop",
-  teater:      "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?w=800&auto=format&fit=crop",
-  restaurant:  "https://images.unsplash.com/photo-1514432324607-2e467f4af445?w=800&auto=format&fit=crop",
-  café:        "https://images.unsplash.com/photo-1502661402884-bee194c3ebda?w=800&auto=format&fit=crop",
-  bar:         "https://images.unsplash.com/photo-1514432324607-2e467f4af445?w=800&auto=format&fit=crop",
-  hotel:       "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&auto=format&fit=crop",
-  havn:        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop",
-  bro:         "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop",
-  slot:        "https://images.unsplash.com/photo-1570129477492-45a003537e1f?w=800&auto=format&fit=crop",
-  kirke:       "https://images.unsplash.com/photo-1548013147-72caa4e41edd?w=800&auto=format&fit=crop",
-  zoo:         "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&auto=format&fit=crop",
-  akvarium:    "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&auto=format&fit=crop",
-  legeplads:   "https://images.unsplash.com/photo-1576169645919-51582a1b25c0?w=800&auto=format&fit=crop",
-  picnic:      "https://images.unsplash.com/photo-1414235077418-3a91e9be593f?w=800&auto=format&fit=crop",
-  grill:       "https://images.unsplash.com/photo-1555939594-58d7cb561404?w=800&auto=format&fit=crop",
-  skateboard:  "https://images.unsplash.com/photo-1488348695476-3596ee1aa0d5?w=800&auto=format&fit=crop",
-  golf:        "https://images.unsplash.com/photo-1459925456917-14bec96c68c6?w=800&auto=format&fit=crop",
-  vandglid:    "https://images.unsplash.com/photo-1553090254-d3a9b3a29bed?w=800&auto=format&fit=crop",
-  svømning:    "https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?w=800&auto=format&fit=crop",
-  surfer:      "https://images.unsplash.com/photo-1539874754509-aeb1d247e90f?w=800&auto=format&fit=crop",
-  ski:         "https://images.unsplash.com/photo-1551632440-ff5385277ffe?w=800&auto=format&fit=crop",
-  vandtur:     "https://images.unsplash.com/photo-1470252649378-9c29740ff023?w=800&auto=format&fit=crop",
-  båd:         "https://images.unsplash.com/photo-1552466835-d9404e9fb0e1?w=800&auto=format&fit=crop",
+  shelter:     "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop&fm=webp",
+  teltplads:   "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=800&auto=format&fit=crop&fm=webp",
+  bålhytte:    "https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=800&auto=format&fit=crop&fm=webp",
+  bålplads:    "https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=800&auto=format&fit=crop&fm=webp",
+  strand:      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&fm=webp",
+  badning:     "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&fm=webp",
+  hundeskov:   "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&auto=format&fit=crop&fm=webp",
+  hund:        "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&auto=format&fit=crop&fm=webp",
+  vandring:    "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&auto=format&fit=crop&fm=webp",
+  vandrerute:  "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&auto=format&fit=crop&fm=webp",
+  cykelrute:   "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=800&auto=format&fit=crop&fm=webp",
+  cykling:     "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=800&auto=format&fit=crop&fm=webp",
+  mtb:         "https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&auto=format&fit=crop&fm=webp",
+  mountainbike:"https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&auto=format&fit=crop&fm=webp",
+  fiskeri:     "https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=800&auto=format&fit=crop&fm=webp",
+  lystfiskeri: "https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=800&auto=format&fit=crop&fm=webp",
+  fiskesø:     "https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=800&auto=format&fit=crop&fm=webp",
+  fugletårn:   "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=800&auto=format&fit=crop&fm=webp",
+  fuglekiggeri:"https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=800&auto=format&fit=crop&fm=webp",
+  fitness:     "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&fm=webp",
+  dykning:     "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop&fm=webp",
+  snorkel:     "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop&fm=webp",
+  kitesurf:    "https://images.unsplash.com/photo-1559288031-6ff34e1540ff?w=800&auto=format&fit=crop&fm=webp",
+  windsurf:    "https://images.unsplash.com/photo-1559288031-6ff34e1540ff?w=800&auto=format&fit=crop&fm=webp",
+  kælkebakke:  "https://images.unsplash.com/photo-1516820612845-a13894592046?w=800&auto=format&fit=crop&fm=webp",
+  vinterbadning:"https://images.unsplash.com/photo-1551524559-8af4e6624178?w=800&auto=format&fit=crop&fm=webp",
+  discgolf:    "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop&fm=webp",
+  kajak:       "https://images.unsplash.com/photo-1472745942893-4b9f730c7668?w=800&auto=format&fit=crop&fm=webp",
+  kano:        "https://images.unsplash.com/photo-1472745942893-4b9f730c7668?w=800&auto=format&fit=crop&fm=webp",
+  løb:         "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&auto=format&fit=crop&fm=webp",
+  ridning:     "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&auto=format&fit=crop&fm=webp",
+  camping:     "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop&fm=webp",
+  kultur:      "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&auto=format&fit=crop&fm=webp",
+  natur:       "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop&fm=webp",
+  logi:        "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format&fit=crop&fm=webp",
+  aktiv:       "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&auto=format&fit=crop&fm=webp",
+  wellness:    "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&auto=format&fit=crop&fm=webp",
+  yoga:        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&fm=webp",
+  museum:      "https://images.unsplash.com/photo-1578321271385-cd66d387b246?w=800&auto=format&fit=crop&fm=webp",
+  teater:      "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?w=800&auto=format&fit=crop&fm=webp",
+  restaurant:  "https://images.unsplash.com/photo-1514432324607-2e467f4af445?w=800&auto=format&fit=crop&fm=webp",
+  café:        "https://images.unsplash.com/photo-1502661402884-bee194c3ebda?w=800&auto=format&fit=crop&fm=webp",
+  bar:         "https://images.unsplash.com/photo-1514432324607-2e467f4af445?w=800&auto=format&fit=crop&fm=webp",
+  hotel:       "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&auto=format&fit=crop&fm=webp",
+  havn:        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&fm=webp",
+  bro:         "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop&fm=webp",
+  slot:        "https://images.unsplash.com/photo-1570129477492-45a003537e1f?w=800&auto=format&fit=crop&fm=webp",
+  kirke:       "https://images.unsplash.com/photo-1548013147-72caa4e41edd?w=800&auto=format&fit=crop&fm=webp",
+  zoo:         "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&auto=format&fit=crop&fm=webp",
+  akvarium:    "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&auto=format&fit=crop&fm=webp",
+  legeplads:   "https://images.unsplash.com/photo-1576169645919-51582a1b25c0?w=800&auto=format&fit=crop&fm=webp",
+  picnic:      "https://images.unsplash.com/photo-1414235077418-3a91e9be593f?w=800&auto=format&fit=crop&fm=webp",
+  grill:       "https://images.unsplash.com/photo-1555939594-58d7cb561404?w=800&auto=format&fit=crop&fm=webp",
+  skateboard:  "https://images.unsplash.com/photo-1488348695476-3596ee1aa0d5?w=800&auto=format&fit=crop&fm=webp",
+  golf:        "https://images.unsplash.com/photo-1459925456917-14bec96c68c6?w=800&auto=format&fit=crop&fm=webp",
+  vandglid:    "https://images.unsplash.com/photo-1553090254-d3a9b3a29bed?w=800&auto=format&fit=crop&fm=webp",
+  svømning:    "https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?w=800&auto=format&fit=crop&fm=webp",
+  surfer:      "https://images.unsplash.com/photo-1539874754509-aeb1d247e90f?w=800&auto=format&fit=crop&fm=webp",
+  ski:         "https://images.unsplash.com/photo-1551632440-ff5385277ffe?w=800&auto=format&fit=crop&fm=webp",
+  vandtur:     "https://images.unsplash.com/photo-1470252649378-9c29740ff023?w=800&auto=format&fit=crop&fm=webp",
+  båd:         "https://images.unsplash.com/photo-1552466835-d9404e9fb0e1?w=800&auto=format&fit=crop&fm=webp",
 };
 
 /* ── City → hero image (secondary fallback) ── */
 const CITY_IMAGES: Record<string, string> = {
-  København:   "https://images.unsplash.com/photo-1512453681174-efc80e5dc0ae?w=800&auto=format&fit=crop",
-  Aarhus:      "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&auto=format&fit=crop",
-  Odense:      "https://images.unsplash.com/photo-1488747807830-63789f68bb65?w=800&auto=format&fit=crop",
-  Aalborg:     "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop",
-  Randers:     "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop",
+  København:   "https://images.unsplash.com/photo-1512453681174-efc80e5dc0ae?w=800&auto=format&fit=crop&fm=webp",
+  Aarhus:      "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&auto=format&fit=crop&fm=webp",
+  Odense:      "https://images.unsplash.com/photo-1488747807830-63789f68bb65?w=800&auto=format&fit=crop&fm=webp",
+  Aalborg:     "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop&fm=webp",
+  Randers:     "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop&fm=webp",
 };
 
 /* ── Fallback rotation images (Danish landscapes) ── */
 const FALLBACK_HEROES = [
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1434725039152-f716dbb29458?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop&fm=webp",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop&fm=webp",
+  "https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?w=800&auto=format&fit=crop&fm=webp",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop&fm=webp",
+  "https://images.unsplash.com/photo-1434725039152-f716dbb29458?w=800&auto=format&fit=crop&fm=webp",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&auto=format&fit=crop&fm=webp",
 ];
 
 const DEFAULT_HERO = FALLBACK_HEROES[0];
@@ -349,6 +350,7 @@ export default function StedDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const { toggle: toggleFavorite, isFavorite } = useFavorites();
   const { data: placeTags } = useTagsForPlace(place?.id ?? "");
   // Set dynamic page meta tags
   usePageMeta({
@@ -483,8 +485,12 @@ export default function StedDetail() {
             >
               <MapPin />
             </button>
-            <button className="sd-action-secondary">
-              <Bookmark />
+            <button
+              className="sd-action-secondary"
+              onClick={() => toggleFavorite(place.id, "place")}
+              title={isFavorite(place.id) ? "Fjern fra favoritter" : "Tilføj til favoritter"}
+            >
+              <Bookmark fill={isFavorite(place.id) ? "currentColor" : "none"} />
             </button>
           </div>
 

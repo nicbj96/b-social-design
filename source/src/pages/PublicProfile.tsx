@@ -299,6 +299,12 @@ interface FriendRequest {
   created_at: string;
 }
 
+interface UserFollows {
+  follower_id: string;
+  following_id: string;
+  created_at: string;
+}
+
 export default function PublicProfile() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
@@ -308,6 +314,8 @@ export default function PublicProfile() {
   const [friendCount, setFriendCount] = useState<number>(0);
   const [friendStatus, setFriendStatus] = useState<"not_friends" | "friends" | "pending_sent" | "pending_received">("not_friends");
   const [actionLoading, setActionLoading] = useState(false);
+  const [followerCount, setFollowerCount] = useState<number>(0);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // Extract profile ID from URL path (/profil/UUID)
   const pathParts = typeof window !== "undefined" ? window.location.pathname.split("/") : [];
@@ -344,6 +352,20 @@ export default function PublicProfile() {
         // Check friendship status
         if (user?.id) {
           await checkFriendStatus(user.id, profileId);
+          await checkFollowStatus(user.id, profileId);
+        }
+
+        // Fetch follower count
+        try {
+          const { count } = await supabase
+            .from("user_follows")
+            .select("follower_id", { count: "exact", head: true })
+            .eq("following_id", profileId);
+          if (count !== null) {
+            setFollowerCount(count);
+          }
+        } catch {
+          // Table may not exist yet
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -405,6 +427,22 @@ export default function PublicProfile() {
     }
   };
 
+  const checkFollowStatus = async (currentUserId: string, targetUserId: string) => {
+    try {
+      const { data } = await supabase
+        .from("user_follows")
+        .select("following_id")
+        .eq("follower_id", currentUserId)
+        .eq("following_id", targetUserId)
+        .single();
+
+      setIsFollowing(!!data);
+    } catch (err) {
+      console.error("Error checking follow status:", err);
+      setIsFollowing(false);
+    }
+  };
+
   const handleAddFriend = async () => {
     if (!user?.id || !profileId) return;
     setActionLoading(true);
@@ -460,6 +498,39 @@ export default function PublicProfile() {
       setFriendStatus("not_friends");
     } catch (err) {
       console.error("Error rejecting request:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleFollow = async () => {
+    if (!user?.id || !profileId) return;
+    setActionLoading(true);
+    try {
+      if (isFollowing) {
+        // Unfollow
+        const { error } = await supabase
+          .from("user_follows")
+          .delete()
+          .eq("follower_id", user.id)
+          .eq("following_id", profileId);
+        if (error) throw error;
+        setIsFollowing(false);
+        setFollowerCount(Math.max(0, followerCount - 1));
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from("user_follows")
+          .insert({
+            follower_id: user.id,
+            following_id: profileId,
+          });
+        if (error) throw error;
+        setIsFollowing(true);
+        setFollowerCount(followerCount + 1);
+      }
+    } catch (err) {
+      console.error("Error toggling follow:", err);
     } finally {
       setActionLoading(false);
     }
@@ -573,8 +644,8 @@ export default function PublicProfile() {
           </div>
           <div className="pp-stat-card">
             <Heart size={20} className="pp-stat-icon" />
-            <p className="pp-stat-value">{profile.interests?.length || 0}</p>
-            <p className="pp-stat-label">Interesser</p>
+            <p className="pp-stat-value">{followerCount}</p>
+            <p className="pp-stat-label">Følgere</p>
           </div>
         </div>
 
@@ -649,6 +720,15 @@ export default function PublicProfile() {
               </button>
             </>
           )}
+
+          <button
+            onClick={handleToggleFollow}
+            disabled={actionLoading}
+            className={`pp-action-btn ${isFollowing ? 'pp-action-ghost' : 'pp-action-primary'}`}
+          >
+            <Heart fill={isFollowing ? 'currentColor' : 'none'} size={18} />
+            {isFollowing ? "Følger" : "Følg"}
+          </button>
 
           <button
             onClick={handleSendMessage}

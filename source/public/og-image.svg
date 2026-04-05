@@ -1,0 +1,51 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
+  <rect width="1200" height="630" fill="#0D1117"/>
+
+  <!-- Decorative gradient circles -->
+  <defs>
+    <linearGradient id="tealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:0.1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Large accent circles (top right) -->
+  <circle cx="1050" cy="80" r="120" fill="url(#tealGradient)" filter="url(#glow)"/>
+  <circle cx="950" cy="120" r="80" fill="url(#tealGradient)" opacity="0.5" filter="url(#glow)"/>
+
+  <!-- Small accent circles (bottom left) -->
+  <circle cx="100" cy="520" r="90" fill="url(#tealGradient)" opacity="0.4" filter="url(#glow)"/>
+  <circle cx="180" cy="580" r="50" fill="url(#tealGradient)" opacity="0.6" filter="url(#glow)"/>
+
+  <!-- Teal accent line -->
+  <line x1="0" y1="180" x2="300" y2="180" stroke="#10B981" stroke-width="3" opacity="0.8"/>
+
+  <!-- Main content -->
+  <g>
+    <!-- B-Social logo/text -->
+    <text x="600" y="220" font-family="'Instrument Serif', serif" font-size="96" font-weight="400" fill="#FFFFFF" text-anchor="middle" letter-spacing="-2">
+      B-Social
+    </text>
+
+    <!-- Tagline -->
+    <text x="600" y="340" font-family="'DM Sans', sans-serif" font-size="52" font-weight="500" fill="#E5E7EB" text-anchor="middle" letter-spacing="0.5">
+      Oplev verden sammen
+    </text>
+
+    <!-- Subtitle -->
+    <text x="600" y="420" font-family="'Inter', sans-serif" font-size="24" font-weight="400" fill="#9CA3AF" text-anchor="middle">
+      Find events, steder og oplevelser der betyder noget
+    </text>
+  </g>
+
+  <!-- Bottom accent line -->
+  <line x1="900" y1="480" x2="1200" y2="480" stroke="#10B981" stroke-width="3" opacity="0.6"/>
+</svg>

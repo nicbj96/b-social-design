@@ -114,6 +114,7 @@ ${pageBase("fe")}
 }
 .fe-form-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  align-items: start;
 }
 .fe-form-full { grid-column: 1 / -1; }
 .fe-form-label {
@@ -384,6 +385,84 @@ ${pageBase("fe")}
 }
 .fe-dur-btn:hover:not(.active) { border-color: rgba(255,255,255,0.15); color: var(--pg-white-dim); }
 
+/* ── Form inputs ── */
+.fe-input {
+  width: 100%; padding: 12px 14px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; color: var(--pg-white); font-size: 14px;
+  font-family: var(--sans); outline: none; transition: all 0.25s;
+}
+.fe-input:focus {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(78,205,196,0.4);
+  box-shadow: 0 0 0 3px rgba(78,205,196,0.1);
+}
+.fe-input.error {
+  border-color: rgba(239,68,68,0.5);
+  background: rgba(239,68,68,0.08);
+}
+.fe-input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+.fe-input::placeholder { color: rgba(255,255,255,0.3); }
+
+/* ── Select dropdown ── */
+.fe-select {
+  width: 100%; padding: 12px 14px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; color: var(--pg-white); font-size: 14px;
+  font-family: var(--sans); outline: none; transition: all 0.25s;
+  appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat; background-position: right 12px center;
+  background-size: 16px; padding-right: 40px;
+}
+.fe-select:focus {
+  background-color: rgba(255,255,255,0.08);
+  border-color: rgba(78,205,196,0.4);
+  box-shadow: 0 0 0 3px rgba(78,205,196,0.1);
+}
+.fe-select.error {
+  border-color: rgba(239,68,68,0.5);
+  background-color: rgba(239,68,68,0.08);
+}
+.fe-select option {
+  background: #1a1f2e; color: #fff;
+}
+
+/* ── Checkbox ── */
+.fe-checkbox-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px; border-radius: 12px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer; transition: all 0.25s;
+}
+.fe-checkbox-wrap:hover {
+  background: rgba(255,255,255,0.06);
+}
+.fe-checkbox {
+  width: 18px; height: 18px; cursor: pointer;
+  accent-color: var(--teal);
+}
+.fe-checkbox-label {
+  flex: 1; color: var(--pg-white); font-size: 14px;
+  cursor: pointer; user-select: none;
+}
+
+/* ── Error message ── */
+.fe-error-text {
+  font-size: 12px; color: #f87171; margin-top: 4px;
+  display: none;
+}
+.fe-input.error ~ .fe-error-text,
+.fe-select.error ~ .fe-error-text {
+  display: block;
+}
+
+/* ── Form field wrapper ── */
+.fe-form-field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .fe-header { flex-direction: column; align-items: flex-start; }
@@ -391,6 +470,7 @@ ${pageBase("fe")}
   .fe-event-date { display: none; }
   .fe-filters { flex-direction: column; }
   .fe-search-wrap { min-width: 100%; }
+  .fe-select { background-size: 14px; padding-right: 36px; }
 }
 `;
 
@@ -481,7 +561,9 @@ export default function FirmaEvents() {
     category: "",
     price: "",
     maxSignups: "",
+    isFree: false,
   });
+  const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
 
   // Fetch user's events from Supabase
   const { data: events = [], refetch: refetchEvents, isLoading } = useQuery({
@@ -529,8 +611,17 @@ export default function FirmaEvents() {
       alert("Du skal være logget ind for at oprette events");
       return;
     }
-    if (!formData.title || !formData.date || !formData.location) {
-      alert("Udfyld titel, dato og location");
+
+    // Validation
+    const errors: Record<string, boolean> = {};
+    if (!formData.title?.trim()) errors.title = true;
+    if (!formData.date) errors.date = true;
+    if (!formData.location?.trim()) errors.location = true;
+    if (!formData.category) errors.category = true;
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      alert("Udfyld alle obligatoriske felter");
       return;
     }
 
@@ -540,8 +631,8 @@ export default function FirmaEvents() {
         description: formData.description,
         date: formData.date,
         location: formData.location,
-        category: formData.category || "Diverse",
-        price: formData.price ? parseFloat(formData.price) : null,
+        category: formData.category,
+        price: formData.isFree ? 0 : (formData.price ? parseFloat(formData.price) : null),
         max_participants: formData.maxSignups ? parseInt(formData.maxSignups) : null,
         created_by: user.id,
         interest_tags: formData.tags ? formData.tags.split(",").map(t => t.trim()) : [],
@@ -559,7 +650,9 @@ export default function FirmaEvents() {
           category: "",
           price: "",
           maxSignups: "",
+          isFree: false,
         });
+        setFormErrors({});
         setShowCreate(false);
         refetchEvents();
         alert("Event oprettet!");
@@ -636,76 +729,24 @@ export default function FirmaEvents() {
             <div className="fe-form fe-fade-up fe-d1">
               <h2 className="fe-form-title">{t('firma.events_new')}</h2>
               <div className="fe-form-grid">
-                <div>
-                  <label className="fe-form-label">{t('firma.events_label_title')}</label>
+                {/* Title - Required, Full width */}
+                <div className="fe-form-full fe-form-field">
+                  <label className="fe-form-label">{t('firma.events_label_title')} *</label>
                   <input
                     type="text"
                     placeholder={t('firma.events_placeholder_title')}
-                    className="fe-input"
+                    className={`fe-input${formErrors.title ? " error" : ""}`}
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, title: e.target.value });
+                      if (formErrors.title && e.target.value.trim()) setFormErrors({ ...formErrors, title: false });
+                    }}
                   />
+                  {formErrors.title && <span className="fe-error-text">Titlen er påkrævet</span>}
                 </div>
-                <div>
-                  <label className="fe-form-label">{t('firma.events_label_date')}</label>
-                  <input
-                    type="date"
-                    className="fe-input"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="fe-form-label">{t('firma.events_label_location')}</label>
-                  <input
-                    type="text"
-                    placeholder={t('firma.events_placeholder_address')}
-                    className="fe-input"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="fe-form-label">{t('firma.events_label_tags')}</label>
-                  <input
-                    type="text"
-                    placeholder={t('firma.events_placeholder_tags')}
-                    className="fe-input"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="fe-form-label">Kategori</label>
-                  <input
-                    type="text"
-                    placeholder="f.eks. Fitness, Musik, Sport"
-                    className="fe-input"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="fe-form-label">Pris (kr)</label>
-                  <input
-                    type="number"
-                    placeholder="0 for gratis"
-                    className="fe-input"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="fe-form-label">Max deltagere</label>
-                  <input
-                    type="number"
-                    placeholder="f.eks. 50"
-                    className="fe-input"
-                    value={formData.maxSignups}
-                    onChange={(e) => setFormData({ ...formData, maxSignups: e.target.value })}
-                  />
-                </div>
-                <div className="fe-form-full">
+
+                {/* Description - Optional, Full width */}
+                <div className="fe-form-full fe-form-field">
                   <label className="fe-form-label">{t('firma.events_label_description')}</label>
                   <textarea
                     rows={3}
@@ -716,11 +757,123 @@ export default function FirmaEvents() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
+
+                {/* Date & Time - Required */}
+                <div className="fe-form-field">
+                  <label className="fe-form-label">{t('firma.events_label_date')} *</label>
+                  <input
+                    type="datetime-local"
+                    className={`fe-input${formErrors.date ? " error" : ""}`}
+                    value={formData.date}
+                    onChange={(e) => {
+                      setFormData({ ...formData, date: e.target.value });
+                      if (formErrors.date && e.target.value) setFormErrors({ ...formErrors, date: false });
+                    }}
+                  />
+                  {formErrors.date && <span className="fe-error-text">Dato og tid er påkrævet</span>}
+                </div>
+
+                {/* Location - Required */}
+                <div className="fe-form-field">
+                  <label className="fe-form-label">{t('firma.events_label_location')} *</label>
+                  <input
+                    type="text"
+                    placeholder={t('firma.events_placeholder_address')}
+                    className={`fe-input${formErrors.location ? " error" : ""}`}
+                    value={formData.location}
+                    onChange={(e) => {
+                      setFormData({ ...formData, location: e.target.value });
+                      if (formErrors.location && e.target.value.trim()) setFormErrors({ ...formErrors, location: false });
+                    }}
+                  />
+                  {formErrors.location && <span className="fe-error-text">Lokation er påkrævet</span>}
+                </div>
+
+                {/* Category - Required */}
+                <div className="fe-form-field">
+                  <label className="fe-form-label">Kategori *</label>
+                  <select
+                    className={`fe-select${formErrors.category ? " error" : ""}`}
+                    value={formData.category}
+                    onChange={(e) => {
+                      setFormData({ ...formData, category: e.target.value });
+                      if (formErrors.category && e.target.value) setFormErrors({ ...formErrors, category: false });
+                    }}
+                  >
+                    <option value="">Vælg kategori...</option>
+                    <option value="events">📅 Events</option>
+                    <option value="logi">🏨 Overnatning</option>
+                    <option value="ture">🥾 Ture</option>
+                    <option value="natur">🌿 Natur</option>
+                    <option value="aktiv">⚽ Aktiv</option>
+                    <option value="mad">🍽️ Mad</option>
+                    <option value="kultur">🎭 Kultur</option>
+                    <option value="rejser">✈️ Rejser</option>
+                    <option value="communities">👥 Communities</option>
+                    <option value="wellness">🧘 Wellness</option>
+                  </select>
+                  {formErrors.category && <span className="fe-error-text">Kategori er påkrævet</span>}
+                </div>
+
+                {/* Free Event Toggle */}
+                <div className="fe-form-full">
+                  <label className="fe-checkbox-wrap">
+                    <input
+                      type="checkbox"
+                      className="fe-checkbox"
+                      checked={formData.isFree}
+                      onChange={(e) => {
+                        setFormData({ ...formData, isFree: e.target.checked, price: e.target.checked ? "" : formData.price });
+                      }}
+                    />
+                    <span className="fe-checkbox-label">Gratis event</span>
+                  </label>
+                </div>
+
+                {/* Price - Only shown if not free */}
+                {!formData.isFree && (
+                  <div className="fe-form-field">
+                    <label className="fe-form-label">Pris (DKK)</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      className="fe-input"
+                      min="0"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                {/* Max Participants - Optional */}
+                <div className="fe-form-field">
+                  <label className="fe-form-label">Max deltagere</label>
+                  <input
+                    type="number"
+                    placeholder="Lad være tom for ubegrænset"
+                    className="fe-input"
+                    min="1"
+                    value={formData.maxSignups}
+                    onChange={(e) => setFormData({ ...formData, maxSignups: e.target.value })}
+                  />
+                </div>
+
+                {/* Tags - Optional */}
+                <div className="fe-form-full fe-form-field">
+                  <label className="fe-form-label">{t('firma.events_label_tags')}</label>
+                  <input
+                    type="text"
+                    placeholder="Adskil med kommaer, f.eks. yoga, udendørs, anfængere"
+                    className="fe-input"
+                    value={formData.tags}
+                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  />
+                </div>
               </div>
               <div className="fe-form-actions">
-                <button className="fe-btn-sm" onClick={handleCreateEvent}>{t('firma.events_save_draft')}</button>
                 <button className="fe-btn-publish" onClick={handleCreateEvent}>{t('firma.events_publish')}</button>
-                <button onClick={() => setShowCreate(false)} className="fe-btn-cancel">{t('firma.events_cancel')}</button>
+                <button onClick={() => { setShowCreate(false); setFormErrors({}); }} className="fe-btn-cancel">{t('firma.events_cancel')}</button>
               </div>
             </div>
           )}
