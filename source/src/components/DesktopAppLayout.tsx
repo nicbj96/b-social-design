@@ -1,12 +1,13 @@
 import { Link } from "wouter";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings, Calendar, BarChart3, Clock, StickyNote, MoreHorizontal, X } from "lucide-react";
+import { Home, Compass, MapPin, MessageCircle, User, Bell, Building2, UserPlus, CircleDollarSign, LogIn, LogOut, Settings, Calendar, BarChart3, Clock, StickyNote, MoreHorizontal, X, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNotifications } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import NotificationBell from "@/components/NotificationBell";
 
 const NAV_MAIN = [
   { key: "nav.feed", icon: Home, href: "/feed" },
@@ -113,10 +114,11 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
         />
 
         {/* Logo area — premium version */}
+        <div className="flex items-center border-b border-white/[0.06]" style={{ position: "relative", zIndex: 1 }}>
         <Link
           href="/feed"
-          className="block px-5 py-6 mb-1 cursor-pointer border-b border-white/[0.06]"
-          style={{ position: "relative", zIndex: 1 }}
+          className="block px-5 py-6 mb-1 cursor-pointer flex-1"
+          style={{ position: "relative" }}
         >
           {/* Subtle radial glow behind logo */}
           <div
@@ -201,10 +203,19 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
             </div>
           </div>
         </Link>
+        {/* Notification bell — right of logo */}
+        {loggedIn && (
+          <div style={{ paddingRight: 12, paddingBottom: 4 }}>
+            <NotificationBell size={18} />
+          </div>
+        )}
+        </div>
 
         {/* Main navigation */}
         <nav className="flex-1 px-3 overflow-y-auto" style={{ position: "relative", zIndex: 1, scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
           {NAV_MAIN.map((item) => navLink(item.href, item.icon, t(item.key), item.key === "nav.beskeder" ? { badge: unreadMessages } : undefined))}
+          {/* Søg */}
+          {navLink("/soeg", Search, "Søg")}
           {/* Invitér — right under Beskeder/Min Side */}
           {navLink("/inviter", UserPlus, "Invitér")}
 
@@ -383,6 +394,7 @@ export default function DesktopAppLayout({ children }: { children: React.ReactNo
             {/* Grid of nav items */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
               {[
+                { href: "/soeg", icon: Search, label: "Søg" },
                 { href: "/inviter", icon: UserPlus, label: "Invitér" },
                 { href: "/notifikationer", icon: Bell, label: "Notifikationer" },
                 { href: "/henvisning", icon: CircleDollarSign, label: "Henvisning" },

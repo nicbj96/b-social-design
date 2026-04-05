@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Settings, Bell, Shield, Globe, Moon, ChevronRight,
   User, Mail, Trash2, Pencil, LogOut, MapPin, Smartphone, MessageSquare,
+  Camera, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -78,6 +79,41 @@ const indstillingerCSS = `${pageBase("is")}
   display: flex; align-items: center; gap: 4px;
 }
 .is-profile-chevron { color: rgba(255,255,255,0.25); flex-shrink: 0; }
+.is-profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+/* ── Avatar upload ── */
+.is-avatar-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 16px 16px 0;
+}
+.is-avatar-btn {
+  position: relative; cursor: pointer; border-radius: 50%;
+  display: inline-block;
+}
+.is-avatar-big {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(78,205,196,0.2), rgba(147,197,253,0.15));
+  border: 2px solid rgba(78,205,196,0.35);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 26px; color: var(--teal);
+  overflow: hidden; transition: opacity 0.2s;
+}
+.is-avatar-big img { width: 100%; height: 100%; object-fit: cover; }
+.is-avatar-big:hover { opacity: 0.8; }
+.is-avatar-overlay {
+  position: absolute; bottom: 0; right: 0;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #4ecdc4; border: 2px solid var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  color: #0d1117;
+}
+.is-avatar-overlay svg { width: 11px; height: 11px; }
+.is-avatar-uploading {
+  font-size: 12px; color: rgba(255,255,255,0.4);
+  display: flex; align-items: center; gap: 5px;
+}
+.is-avatar-uploading svg { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Section card ── */
 .is-card {
@@ -274,6 +310,56 @@ function EditProfileSection({ onClose }: { onClose: () => void }) {
   const [city, setCity] = useState(profile?.city || "");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage("Foto er for stort (maks 5 MB)");
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      setMessage("Kun JPEG, PNG, WEBP og GIF er tilladt");
+      return;
+    }
+
+    setAvatarUploading(true);
+    setMessage("");
+
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${user.id}/${Date.now()}.${ext}`;
+
+    const { error: upErr } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (upErr) {
+      setMessage("Upload fejlede: " + upErr.message);
+      setAvatarUploading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(path);
+
+    const { error: dbErr } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', user.id);
+
+    if (dbErr) {
+      setMessage("Kunne ikke gemme foto: " + dbErr.message);
+    } else {
+      setAvatarUrl(publicUrl);
+      await refreshProfile();
+    }
+    setAvatarUploading(false);
+  };
 
   const handleSave = async () => {
     if (!user?.id) return;
@@ -295,8 +381,42 @@ function EditProfileSection({ onClose }: { onClose: () => void }) {
     setSaving(false);
   };
 
+  const initials = (profile?.display_name || profile?.name || "?")[0]?.toUpperCase();
+
   return (
     <div className="is-edit-panel">
+      {/* ── Avatar upload ── */}
+      <div className="is-avatar-wrap">
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          style={{ display: 'none' }}
+          onChange={handleAvatarChange}
+        />
+        <button
+          className="is-avatar-btn"
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          disabled={avatarUploading}
+          aria-label="Skift profilfoto"
+        >
+          <div className="is-avatar-big">
+            {avatarUrl
+              ? <img src={avatarUrl} alt="Avatar" />
+              : initials}
+          </div>
+          <span className="is-avatar-overlay">
+            {avatarUploading ? <Loader2 /> : <Camera />}
+          </span>
+        </button>
+        {avatarUploading && (
+          <span className="is-avatar-uploading">
+            <Loader2 size={12} /> Uploader foto…
+          </span>
+        )}
+      </div>
+
       <div>
         <label className="is-edit-label">{t("settings.name_label")}</label>
         <input
@@ -312,7 +432,7 @@ function EditProfileSection({ onClose }: { onClose: () => void }) {
         />
       </div>
       {message && (
-        <p className={`is-msg ${message.startsWith("Fejl") ? "is-msg--err" : "is-msg--ok"}`}>{message}</p>
+        <p className={`is-msg ${message.startsWith("Fejl") || message.startsWith("Upload") || message.startsWith("Foto") || message.startsWith("Kun") || message.startsWith("Kunne") ? "is-msg--err" : "is-msg--ok"}`}>{message}</p>
       )}
       <div className="is-btn-row">
         <button onClick={onClose} className="is-btn-cancel">{t("settings.cancel")}</button>
@@ -479,7 +599,9 @@ export default function Indstillinger() {
             ) : (
               <div className="is-profile-card" onClick={() => setEditingProfile(true)}>
                 <div className="is-profile-avatar">
-                  {displayName[0]?.toUpperCase() || <User size={22} />}
+                  {profile?.avatar_url
+                    ? <img src={profile.avatar_url} alt={displayName} />
+                    : (displayName[0]?.toUpperCase() || <User size={22} />)}
                 </div>
                 <div className="is-profile-info">
                   <p className="is-profile-name">{displayName}</p>

@@ -128,6 +128,21 @@ const css = `
 }
 .cs-loading svg { animation: spin 1s linear infinite; width: 14px; height: 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Live indicator ── */
+.cs-live {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: rgba(78,205,196,0.7);
+  margin-left: auto;
+}
+.cs-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #4ecdc4; animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
 `;
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
@@ -154,6 +169,7 @@ export default function CommentsSection({ entityType, entityId }: Props) {
   const [loading, setLoading]     = useState(true);
   const [text, setText]           = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [liveConnected, setLiveConnected] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // ── Load comments ──────────────────────────────────────────────────────
@@ -175,8 +191,56 @@ export default function CommentsSection({ entityType, entityId }: Props) {
     setLoading(false);
   };
 
+  // ── Supabase Realtime subscription ────────────────────────────────────
   useEffect(() => {
-    if (entityId) loadComments();
+    if (!entityId) return;
+    loadComments();
+
+    const channel = supabase
+      .channel(`comments-${entityType}-${entityId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'comments',
+          filter: `${col}=eq.${entityId}`,
+        },
+        async (payload) => {
+          // Fetch full comment with profile join
+          const { data } = await supabase
+            .from('comments')
+            .select('id, content, user_id, created_at, profiles(name, full_name, avatar_url)')
+            .eq('id', payload.new.id)
+            .single();
+          if (data) {
+            setComments((prev) => {
+              // Deduplicate in case optimistic update already added it
+              if (prev.some((c) => c.id === data.id)) return prev;
+              return [...prev, data as unknown as CommentRow];
+            });
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'comments',
+          filter: `${col}=eq.${entityId}`,
+        },
+        (payload) => {
+          setComments((prev) => prev.filter((c) => c.id !== payload.old.id));
+        },
+      )
+      .subscribe((status) => {
+        setLiveConnected(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [entityId, entityType]);
 
   // ── Auto-grow textarea ─────────────────────────────────────────────────
@@ -232,6 +296,12 @@ export default function CommentsSection({ entityType, entityId }: Props) {
           <span className="cs-title">
             Kommentarer {comments.length > 0 && `(${comments.length})`}
           </span>
+          {liveConnected && (
+            <span className="cs-live">
+              <span className="cs-live-dot" />
+              Live
+            </span>
+          )}
         </div>
 
         {/* Input or login prompt */}
