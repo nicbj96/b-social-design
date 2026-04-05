@@ -997,6 +997,51 @@ const kortCSS = `${pageBase("kt")}
   font-family: var(--sans);
 }
 
+/* ══════════ MAP STATS COUNTER ══════════ */
+.kt-stats {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+}
+.kt-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  background: rgba(6,10,15,0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.kt-stat-pill .kt-stat-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+.kt-stat-pill .kt-stat-selected {
+  color: var(--teal);
+  font-variant-numeric: tabular-nums;
+}
+.kt-stat-pill .kt-stat-sep {
+  color: rgba(255,255,255,0.25);
+  font-weight: 400;
+}
+.kt-stat-pill .kt-stat-total {
+  color: rgba(255,255,255,0.4);
+  font-variant-numeric: tabular-nums;
+}
+
 @keyframes kt-pulse {
   0%, 100% { opacity: 0.4; transform: scale(0.85); }
   50% { opacity: 1; transform: scale(1.1); }
@@ -1417,6 +1462,8 @@ const kortCSS = `${pageBase("kt")}
   .kt-carousel-thumb { width: 110px; height: 68px; }
   .kt-zoom-group { bottom: 160px; right: 10px; }
   .kt-recenter-btn { bottom: 160px; left: 10px; }
+  .kt-stats { bottom: 78px; left: 10px; gap: 6px; }
+  .kt-stat-pill { padding: 5px 10px; font-size: 10px; }
   .kt-detail { bottom: 72px; }
 }
 `;
@@ -1503,6 +1550,19 @@ export default function Kort() {
     return () => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); };
   }, []);
 
+  // Total DB counts for stats counter
+  const { data: totalCounts } = useQuery({
+    queryKey: ["map-total-counts"],
+    queryFn: async () => {
+      const [pRes, eRes] = await Promise.all([
+        supabase.from("places").select("id", { count: "exact", head: true }),
+        supabase.from("events").select("id", { count: "exact", head: true }),
+      ]);
+      return { places: pRes.count || 0, events: eRes.count || 0 };
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   // Fetch Supabase events
   const { data: supabaseEvents } = useQuery<SupabaseEvent[]>({
     queryKey: ["supabase-events-map"],
@@ -1559,6 +1619,12 @@ export default function Kort() {
       );
     });
   }, [search, allPins, mapFilterSlugs, t, tagSearchCache]);
+
+  // Stats: count places vs events in the filtered set
+  const selectedPlaceCount = useMemo(() => filteredPins.filter(p => !p.isSupabaseEvent).length, [filteredPins]);
+  const selectedEventCount = useMemo(() => filteredPins.filter(p => p.isSupabaseEvent).length, [filteredPins]);
+  const isFiltered = !!(search || (mapFilterSlugs && mapFilterSlugs.length > 0));
+  const fmtK = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1).replace(".", ",")}K` : n.toLocaleString("da-DK");
 
   // Carousel: nearest pins sorted by distance
   const carouselPins = useMemo(() => {
@@ -1690,6 +1756,36 @@ export default function Kort() {
         <button onClick={handleRecenter} className="kt-recenter-btn" data-testid="button-near-me">
           <Navigation size={18} />
         </button>
+
+        {/* ── Stats counter ── */}
+        <div className="kt-stats">
+          <div className="kt-stat-pill">
+            <span className="kt-stat-icon">📍</span>
+            {isFiltered ? (
+              <>
+                <span className="kt-stat-selected">{fmtK(selectedPlaceCount)}</span>
+                <span className="kt-stat-sep">/</span>
+                <span className="kt-stat-total">{fmtK(totalCounts?.places || 0)}</span>
+              </>
+            ) : (
+              <span className="kt-stat-selected">{fmtK(totalCounts?.places || supabasePlaces.length)}</span>
+            )}
+            <span>steder</span>
+          </div>
+          <div className="kt-stat-pill">
+            <span className="kt-stat-icon">🎉</span>
+            {isFiltered ? (
+              <>
+                <span className="kt-stat-selected">{fmtK(selectedEventCount)}</span>
+                <span className="kt-stat-sep">/</span>
+                <span className="kt-stat-total">{fmtK(totalCounts?.events || 0)}</span>
+              </>
+            ) : (
+              <span className="kt-stat-selected">{fmtK(totalCounts?.events || eventPins.length)}</span>
+            )}
+            <span>events</span>
+          </div>
+        </div>
 
         {/* ── Loading indicator ── */}
         {isLoadingViewport && (
