@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Pages + Supabase Functions
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'source/**'
+      - 'supabase/functions/**'
       - '.github/workflows/deploy.yml'
 
   workflow_dispatch:
@@ -45,3 +46,17 @@ jobs:
           projectName: b-social
           directory: source/dist/public
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Supabase Edge Functions
+        if: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
+        run: |
+          supabase functions deploy send-push-notifications \
+            --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} \
+            --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
