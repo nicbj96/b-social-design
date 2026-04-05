@@ -6,8 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTags } from "@/context/TagContext";
 import { useEventsByTag, usePopularTags, usePlacesByTag } from "@/hooks/useTagData";
 import { FeedTagEditor } from "@/components/FeedTagEditor";
-import TagPill from "@/components/TagPill";
-import TagRow from "@/components/TagRow";
+// TagPill and TagRow intentionally removed — tags are background logic, not foreground UI
 import { getEventImage, formatDanishDate } from "@/lib/eventHelpers";
 import { getTagNode, getOverkategoriForTag } from "@/lib/tagEngine";
 
@@ -54,47 +53,46 @@ export default function Feed() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-12">
-        {/* Selected Tags Bar */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider">
-            Dine Interesser
-          </h2>
-          {selectedTags.length === 0 ? (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-              <p className="text-white/60 mb-3">Vælg dine interesser for at se personaliserede events</p>
-              <button
-                onClick={() => setTagEditorOpen(true)}
-                className="inline-block px-4 py-2 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 rounded-lg text-teal-400 font-medium transition-all"
-              >
-                Vælg Interesser
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {selectedTags.map((slug) => {
-                const node = getTagNode(slug);
-                return (
-                  <TagPill
-                    key={slug}
-                    slug={slug}
-                    name={node?.label || slug}
-                    emoji={node?.emoji}
-                    level={1}
-                    size="md"
-                    selected={true}
-                    onRemove={() => {
-                      setSelectedTags(selectedTags.filter((t) => t !== slug));
-                    }}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
 
-        {/* Tag Sections */}
+        {/* Subtle interests bar — just one line, no pill wall */}
+        {selectedTags.length === 0 ? (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(78,205,196,0.08), rgba(78,205,196,0.04))",
+            border: "1px solid rgba(78,205,196,0.2)",
+            borderRadius: "16px", padding: "24px", textAlign: "center",
+          }}>
+            <p style={{ color: "rgba(255,255,255,0.55)", marginBottom: "14px", fontSize: "15px" }}>
+              Tilpas dit feed med dine interesser
+            </p>
+            <button
+              onClick={() => setTagEditorOpen(true)}
+              style={{
+                padding: "10px 24px", background: "rgba(78,205,196,0.15)",
+                border: "1px solid rgba(78,205,196,0.35)", borderRadius: "10px",
+                color: "#4ECDC4", fontWeight: 600, fontSize: "14px", cursor: "pointer",
+              }}
+            >
+              Vælg interesser →
+            </button>
+          </div>
+        ) : (
+          /* Single subtle line — no pill wall */
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.3)" }}>
+              {overkategorierInfo.map(c => c.emoji + " " + c.name).join("  ·  ")}
+            </p>
+            <button
+              onClick={() => setTagEditorOpen(true)}
+              style={{ fontSize: "12px", color: "rgba(78,205,196,0.7)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              Rediger →
+            </button>
+          </div>
+        )}
+
+        {/* Event sections — the actual content */}
         {selectedTags.length > 0 && (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {overkategorierInfo.map((category) => (
               <FeedSection
                 key={category.slug}
@@ -106,10 +104,10 @@ export default function Feed() {
           </div>
         )}
 
-        {/* Trending Tags Section */}
+        {/* Trending */}
         <TrendingTagsSection />
 
-        {/* Places Section */}
+        {/* Places */}
         {selectedTags.length > 0 && <PlacesSection firstTag={selectedTags[0]} />}
       </div>
 
@@ -271,23 +269,30 @@ function TrendingTagsSection() {
   }
 
   return (
-    <section className="space-y-4">
-      <h2 className="text-lg font-semibold flex items-center gap-2">
-        <span className="text-xl">🔥</span>
-        Trending
+    <section>
+      <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#f0fffe", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+        🔥 Populære kategorier
       </h2>
-
-      <div className="flex flex-wrap gap-2">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
         {trendingTags.map((t) => (
-          <TagPill
-            key={t.slug}
-            slug={t.slug}
-            name={`${t.name} (${(t.total_count || 0).toLocaleString("da-DK")})`}
-            emoji={t.emoji}
-            level={1}
-            size="sm"
-            clickable={true}
-          />
+          <Link key={t.slug} to={`/kategori/${t.slug}`}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: "5px",
+              padding: "6px 12px", borderRadius: "8px",
+              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+              fontSize: "13px", color: "rgba(255,255,255,0.6)", cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(78,205,196,0.3)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; }}
+            >
+              {t.emoji && <span>{t.emoji}</span>}
+              <span>{t.name}</span>
+              <span style={{ color: "rgba(78,205,196,0.6)", fontSize: "11px" }}>
+                {(t.total_count || 0).toLocaleString("da-DK")}
+              </span>
+            </span>
+          </Link>
         ))}
       </div>
     </section>
@@ -314,39 +319,27 @@ function PlacesSection({ firstTag }: { firstTag: string }) {
         Steder nær dig
       </h2>
 
-      <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+      <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "8px" }}>
         {places.map((place) => (
-          <Link key={place.id} to={`/sted/${place.id}`}>
-            <div className="flex-shrink-0 w-56 rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-pointer group snap-start p-4 h-fit">
-              {/* Name */}
-              <h3 className="font-medium text-sm text-white line-clamp-2 mb-2">
+          <Link key={place.id} to={`/sted/${place.id}`} style={{ flexShrink: 0 }}>
+            <div style={{
+              width: "180px", borderRadius: "16px", padding: "16px",
+              background: "linear-gradient(135deg, rgba(78,205,196,0.08), rgba(6,10,15,0.9))",
+              border: "1px solid rgba(78,205,196,0.18)",
+              cursor: "pointer", transition: "transform 0.18s",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.03)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: "9px", background: "rgba(78,205,196,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
+                <MapPin size={16} color="#4ECDC4" />
+              </div>
+              <h3 style={{ fontWeight: 600, fontSize: "13px", color: "#f0fffe", lineHeight: 1.3, marginBottom: "5px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                 {place.name}
               </h3>
-
-              {/* City */}
               {place.city && (
-                <p className="text-xs text-white/50 mb-3">
-                  {place.city}
-                </p>
-              )}
-
-              {/* Tags */}
-              {place.tags && place.tags.length > 0 && (
-                <TagRow
-                  tags={place.tags
-                    .slice(0, 2)
-                    .map((slug: string) => {
-                      const node = getTagNode(slug);
-                      return {
-                        slug,
-                        name: node?.label || slug,
-                        emoji: node?.emoji,
-                        level: node ? 2 : 3,
-                      };
-                    })}
-                  maxVisible={2}
-                  size="sm"
-                />
+                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{place.city}</p>
               )}
             </div>
           </Link>

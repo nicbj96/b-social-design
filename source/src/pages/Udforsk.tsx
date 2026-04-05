@@ -9,8 +9,7 @@ import {
   usePopularTags,
   useChildTags,
 } from "@/hooks/useTagData";
-import TagPill from "@/components/TagPill";
-import TagRow from "@/components/TagRow";
+// TagPill + TagRow removed — tags are subtle background logic, not foreground UI
 import TagBreadcrumb from "@/components/TagBreadcrumb";
 import { getEventImage, formatDanishDate } from "@/lib/eventHelpers";
 import { Search, MapPin, ChevronRight, ArrowLeft } from "lucide-react";
@@ -340,32 +339,29 @@ function Level1View({
         <h1 className="text-3xl font-bold">{activeL1.name}</h1>
       </div>
 
-      {/* L2 Subcategory Chips */}
+      {/* L2 Subcategory — subtle text links, not pill wall */}
       {l2Children.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+        <div>
+          <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: "10px" }}>
             Underkategorier
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {l2Children.map((child) => (
               <button
                 key={child.slug}
-                onClick={() =>
-                  onSelectL2({
-                    slug: child.slug,
-                    name: child.name,
-                    emoji: child.emoji || "🏷️",
-                  })
-                }
-                className="cursor-pointer"
+                onClick={() => onSelectL2({ slug: child.slug, name: child.name, emoji: child.emoji || "🏷️" })}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "5px",
+                  padding: "5px 11px", borderRadius: "8px",
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                  fontSize: "13px", color: "rgba(255,255,255,0.55)", cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(78,205,196,0.3)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; }}
               >
-                <TagPill
-                  slug={child.slug}
-                  name={child.name}
-                  emoji={child.emoji}
-                  level={2}
-                  size="md"
-                />
+                {child.emoji && <span style={{ fontSize: "14px" }}>{child.emoji}</span>}
+                {child.name}
               </button>
             ))}
           </div>
@@ -490,22 +486,23 @@ function Level2View({
         <h1 className="text-3xl font-bold">{activeL2.name}</h1>
       </div>
 
-      {/* L3 Subcategory Chips (if any) */}
+      {/* L3 Subcategory — subtle text only */}
       {l3Children.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+        <div>
+          <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: "10px" }}>
             Underkategorier
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {l3Children.map((child) => (
-              <TagPill
-                key={child.slug}
-                slug={child.slug}
-                name={child.name}
-                emoji={child.emoji}
-                level={3}
-                size="md"
-              />
+              <span key={child.slug} style={{
+                display: "inline-flex", alignItems: "center", gap: "4px",
+                padding: "4px 10px", borderRadius: "7px",
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+                fontSize: "12px", color: "rgba(255,255,255,0.45)",
+              }}>
+                {child.emoji && <span>{child.emoji}</span>}
+                {child.name}
+              </span>
             ))}
           </div>
         </div>
