@@ -14,5 +14,11 @@ dist/
 .env
 .env.local
 
+# Credentials — NEVER commit these
+CREDENTIALS.md
+*.credentials.md
+*.secrets.md
+secrets/
+
 # Logs
 *.log
