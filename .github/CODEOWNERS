@@ -1,0 +1,7 @@
+# Niclas ejer alt — ingen kan merge uden hans godkendelse
+* @nicbj96
+
+# Designeren må kun lave PR på disse stier
+src/pages/ @nicbj96
+src/components/ @nicbj96
+src/index.css @nicbj96
