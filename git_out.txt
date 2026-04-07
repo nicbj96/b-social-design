@@ -1,0 +1,13 @@
+warning: in the working copy of 'source/public/robots.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'source/public/sitemap.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'source/src/lib/email.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'source/src/pages/OpretEvent.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/functions/send-email/index.ts', LF will be replaced by CRLF the next time Git touches it
+[main ad6d73b] feat: user event creation, email notifications, SEO improvements
+ 8 files changed, 941 insertions(+), 9 deletions(-)
+ create mode 100644 source/src/lib/email.ts
+ create mode 100644 source/src/pages/OpretEvent.tsx
+ create mode 100644 supabase/functions/send-email/index.ts
+To https://github.com/nicbj96/b-social-pages.git
+   2fef3fd..ad6d73b  main -> main
+DONE
