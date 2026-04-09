@@ -1,58 +1,42 @@
-name: Deploy to Cloudflare Pages + Supabase Functions
+name: Deploy Supabase Edge Functions
+
+# ──────────────────────────────────────────────────────────────
+# DESIGN WORKSPACE — nicbj96/b-social-design
+#
+# Dette repo deployer KUN til b-social-design.pages.dev (preview).
+# Cloudflare's native git integration håndterer preview-deployet
+# automatisk — ingen GitHub Actions nødvendig for frontend.
+#
+# Production (b-social.net) styres UDELUKKENDE af:
+#   bbssocialnico-bit/b-social-pages → Cloudflare Worker b-social-pages
+#
+# Denne workflow deployer KUN Supabase Edge Functions.
+# ──────────────────────────────────────────────────────────────
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'source/**'
       - 'supabase/functions/**'
       - '.github/workflows/deploy.yml'
 
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy-edge-functions:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-    name: Build and Deploy
+    name: Deploy Supabase Edge Functions
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        working-directory: ./source
-        run: npm install --legacy-peer-deps
-
-      - name: Build
-        working-directory: ./source
-        run: npx vite build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-
-      - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: b-social
-          directory: source/dist/public
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: latest
 
-      - name: Deploy Supabase Edge Functions
+      - name: Deploy send-push-notifications
         if: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
         run: |
           supabase functions deploy send-push-notifications \
