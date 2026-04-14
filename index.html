@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B-Social | Brutalist</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F0E8;--black:#0A0A0A;--white:#FAFAFA;
+  --red:#E63312;--yellow:#FFE000;
+  --muted:#6B6560;--border:#0A0A0A;
+  --nav-h:64px;
+  --font-d:'Bebas Neue',sans-serif;
+  --font-m:'IBM Plex Mono',monospace;
+  --font-b:'IBM Plex Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);font-family:var(--font-b);color:var(--black);overflow:hidden;}
+.app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:#E0DBD3;}
+  .app{height:90vh;max-height:932px;border:2px solid var(--black);box-shadow:6px 6px 0 var(--black);}
+}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;background:var(--bg);}
+.view.active{display:flex;}
+.view-enter{animation:brutIn 200ms steps(4) forwards;}
+@keyframes brutIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+16px);}
+.scroll-area::-webkit-scrollbar{display:none;} .scroll-area{-ms-overflow-style:none;scrollbar-width:none;}
+
+/* STATUS BAR */
+.status-bar{
+  height:40px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 16px;font-family:var(--font-m);font-size:11px;color:var(--muted);
+  border-bottom:1px solid var(--black);position:relative;z-index:20;background:var(--white);
+}
+
+/* LANDING */
+.land-grid{flex:1;display:grid;grid-template-rows:auto 1fr auto;border-bottom:2px solid var(--black);}
+.land-top{
+  padding:20px 20px 0;border-bottom:2px solid var(--black);
+  background:var(--black);color:var(--white);
+}
+.land-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:12px;}
+.land-title{font-family:var(--font-d);font-size:clamp(5rem,18vw,8rem);line-height:0.88;letter-spacing:-1px;}
+.land-title .inv{-webkit-text-stroke:2px var(--white);color:transparent;}
+.land-mid{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--yellow);border-bottom:2px solid var(--black);
+  position:relative;overflow:hidden;
+}
+.land-mid-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:contrast(1.3);opacity:0.6;}
+.land-mid-text{
+  position:relative;z-index:1;text-align:center;
+  font-family:var(--font-d);font-size:clamp(1.5rem,6vw,2.5rem);
+  line-height:1.1;padding:20px;
+}
+.land-bot{padding:20px;display:flex;gap:12px;background:var(--bg);}
+.btn-brut{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--black);color:var(--white);
+  font-family:var(--font-m);font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  padding:16px;border:2px solid var(--black);cursor:pointer;
+  box-shadow:3px 3px 0 var(--red);transition:all 0.1s;
+}
+.btn-brut:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--red);}
+.btn-brut.outline{background:transparent;color:var(--black);box-shadow:3px 3px 0 var(--black);}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;width:100%;height:var(--nav-h);
+  background:var(--white);border-top:2px solid var(--black);
+  display:flex;justify-content:space-around;align-items:center;
+  padding:0;z-index:200;
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;height:100%;
+  justify-content:center;color:var(--muted);background:none;border:none;border-right:1px solid var(--black);
+  font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.15s;
+}
+.nav-item:last-child{border-right:none;}
+.nav-item.active{background:var(--black);color:var(--white);}
+.nav-icon{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;}
+
+/* FEED */
+.feed-header{border-bottom:2px solid var(--black);background:var(--white);}
+.feed-title-wrap{padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-end;}
+.feed-title{font-family:var(--font-d);font-size:60px;line-height:0.88;letter-spacing:-1px;}
+.feed-tag{font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.time-row{
+  display:flex;border-top:1px solid var(--black);overflow-x:auto;
+}
+.time-row::-webkit-scrollbar{display:none;}
+.titem{
+  font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  padding:10px 14px;white-space:nowrap;cursor:pointer;border-right:1px solid var(--black);
+  background:var(--white);color:var(--muted);transition:all 0.15s;
+}
+.titem.act{background:var(--black);color:var(--white);}
+
+/* BRUT CARD */
+.brut-card{
+  border-bottom:2px solid var(--black);display:flex;position:relative;cursor:pointer;
+  transition:all 0.15s;overflow:hidden;
+}
+.brut-card.hero{height:260px;flex-direction:column;}
+.brut-card.row{height:120px;flex-direction:row;}
+.brut-card:hover{background:rgba(0,0,0,0.03);}
+.brut-card.live-card{background:var(--yellow);}
+.brut-img{object-fit:cover;filter:grayscale(20%) contrast(1.1);}
+.brut-card.hero .brut-img{position:absolute;inset:0;width:100%;height:100%;filter:grayscale(100%) contrast(1.2);opacity:0.15;}
+.brut-card.row .brut-img{width:100px;height:100%;flex-shrink:0;border-right:2px solid var(--black);}
+.brut-body{padding:16px;flex:1;display:flex;flex-direction:column;justify-content:flex-end;position:relative;z-index:1;}
+.brut-num{font-family:var(--font-m);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;}
+.brut-title{font-family:var(--font-d);font-size:32px;line-height:0.9;margin-bottom:6px;letter-spacing:0px;}
+.brut-card.row .brut-title{font-size:22px;}
+.brut-meta{font-family:var(--font-m);font-size:10px;color:var(--muted);letter-spacing:1px;}
+.badge-live-b{
+  position:absolute;top:12px;right:12px;z-index:3;
+  background:var(--red);color:var(--white);
+  font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  padding:4px 10px;
+}
+.badge-live-b::before{content:'◉ ';}
+.sec-brut{
+  background:var(--black);color:var(--white);
+  padding:6px 16px;font-family:var(--font-m);font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.sec-brut.live-s{background:var(--red);}
+
+/* OB */
+.ob-brut{flex:1;display:flex;flex-direction:column;}
+.ob-header{background:var(--black);color:var(--white);padding:24px 20px;flex:1;display:flex;flex-direction:column;justify-content:flex-end;}
+.ob-title{font-family:var(--font-d);font-size:64px;line-height:0.88;letter-spacing:-1px;margin-bottom:8px;}
+.ob-sub{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);}
+.ob-opts-wrap{padding:16px;}
+.ob-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 16px;border:2px solid var(--black);margin-bottom:8px;cursor:pointer;transition:all 0.15s;
+  box-shadow:3px 3px 0 var(--black);
+}
+.ob-row:active{transform:translate(3px,3px);box-shadow:0 0 0;}
+.ob-row.act{background:var(--black);color:var(--white);box-shadow:3px 3px 0 var(--red);}
+.ob-row-l{font-family:var(--font-d);font-size:28px;letter-spacing:0px;}
+.ob-row-r{font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.ob-row.act .ob-row-r{color:rgba(255,255,255,0.5);}
+
+/* EXPLORE */
+.expl-brut{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--black);}
+.expl-tile{position:relative;height:180px;overflow:hidden;cursor:pointer;border-right:2px solid var(--black);border-bottom:2px solid var(--black);}
+.expl-tile:nth-child(even){border-right:none;}
+.expl-tile img{width:100%;height:100%;object-fit:cover;filter:grayscale(80%) contrast(1.2);transition:filter 0.3s;}
+.expl-tile:hover img{filter:grayscale(0%) contrast(1.1);}
+.expl-tile-label{
+  position:absolute;bottom:0;left:0;right:0;
+  background:var(--black);color:var(--white);
+  font-family:var(--font-d);font-size:22px;padding:6px 12px;letter-spacing:0px;
+}
+.expl-num{position:absolute;top:8px;left:8px;font-family:var(--font-m);font-size:9px;letter-spacing:2px;background:var(--white);padding:2px 6px;border:1px solid var(--black);}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- LANDING -->
+  <div id="v-landing" class="view active">
+    <div class="status-bar"><span>B—SOC_9:41</span><span>★★★ LIVE</span></div>
+    <div class="land-grid">
+      <div class="land-top">
+        <div class="land-eyebrow">Dansk social platform · 2025</div>
+        <div class="land-title">TID<br><span class="inv">FLY</span>DER</div>
+      </div>
+      <div class="land-mid">
+        <img class="land-mid-img" src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600&q=90&fit=crop" alt="">
+        <div class="land-mid-text">
+          FREMTID ER OPSTRØMS<br>NUTID ER HER<br>FORTID FLYDER FORBI
+        </div>
+      </div>
+      <div class="land-bot">
+        <button class="btn-brut" onclick="go('v-ob')">→ TRÆD IND</button>
+        <button class="btn-brut outline" onclick="go('v-feed')">UDFORSK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="v-ob" class="view">
+    <div class="status-bar"><span>B—SOC_9:41</span><span>KALIBRERING</span></div>
+    <div class="ob-brut">
+      <div class="ob-header">
+        <div class="ob-title">VÆL<br>G TID</div>
+        <div class="ob-sub">// Dit sted i strømmen</div>
+      </div>
+      <div class="ob-opts-wrap">
+        <div class="ob-row" onclick="selOb(this)">
+          <div class="ob-row-l">Fremtid</div>
+          <div class="ob-row-r">+30 DAGE →</div>
+        </div>
+        <div class="ob-row" onclick="selOb(this)">
+          <div class="ob-row-l">Snart</div>
+          <div class="ob-row-r">+7 DAGE →</div>
+        </div>
+        <div class="ob-row act" onclick="selOb(this)">
+          <div class="ob-row-l">Nu</div>
+          <div class="ob-row-r">T+0 ◉</div>
+        </div>
+        <button class="btn-brut" style="margin-top:16px;width:100%;" onclick="go('v-feed')">→ SE FLODEN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="v-feed" class="view">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>B—SOC_9:41</span><span>◉ LIVE</span></div>
+    <div class="scroll-area">
+      <div class="feed-header">
+        <div class="feed-title-wrap">
+          <div class="feed-title">FLOV<br>DEN</div>
+          <div class="feed-tag">B-SOC<br>STRØM<br>2025</div>
+        </div>
+        <div class="time-row">
+          <div class="titem">AUG</div>
+          <div class="titem">JUL</div>
+          <div class="titem">UGE</div>
+          <div class="titem act">NU</div>
+          <div class="titem">GÅR</div>
+        </div>
+      </div>
+
+      <div class="sec-brut"><span>FREMTID</span><span>01/03</span></div>
+      <div class="brut-card row">
+        <img class="brut-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=300&q=90&fit=crop" alt="">
+        <div class="brut-body">
+          <div class="brut-num">01 · FEST</div>
+          <div class="brut-title">Sommer-<br>galla</div>
+          <div class="brut-meta">14. AUG · FREDERIKSBERG</div>
+        </div>
+      </div>
+
+      <div class="sec-brut live-s"><span>◉ LIVE NU</span><span>02/03</span></div>
+      <div class="brut-card hero live-card">
+        <img class="brut-img" src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=90&fit=crop" alt="">
+        <div class="badge-live-b">Live</div>
+        <div class="brut-body">
+          <div class="brut-num">02 · MUSIK</div>
+          <div class="brut-title">Jazz på<br>Havnen</div>
+          <div class="brut-meta">I GANG · SLUTTER 22:00 · NYHAVN</div>
+        </div>
+      </div>
+      <div class="brut-card row">
+        <img class="brut-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&q=90&fit=crop" alt="">
+        <div class="brut-body">
+          <div class="brut-num">03 · MAD</div>
+          <div class="brut-title">Pop-up Food</div>
+          <div class="brut-meta">18:00 · VESTERBRO</div>
+        </div>
+      </div>
+
+      <div class="sec-brut" style="opacity:0.4;"><span>FORTID</span><span>—/—</span></div>
+      <div class="brut-card row" style="opacity:0.3;filter:grayscale(100%);">
+        <img class="brut-img" src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=300&q=90&fit=crop" alt="">
+        <div class="brut-body">
+          <div class="brut-num">XX · AFSLUTTET</div>
+          <div class="brut-title">Byvan-<br>dring</div>
+          <div class="brut-meta">I GÅR</div>
+        </div>
+      </div>
+      <div style="height:32px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>FLOD</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SCAN</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ICH</button>
+    </nav>
+  </div>
+
+  <!-- EXPLORE -->
+  <div id="v-explore" class="view">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>B—SOC_9:41</span><span>KATEGORIER</span></div>
+    <div class="scroll-area">
+      <div class="feed-header" style="padding:12px 16px;border-bottom:2px solid var(--black);"><div class="feed-title">UDFORSK</div></div>
+      <div class="expl-brut">
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=85&fit=crop" alt=""><div class="expl-num">01</div><div class="expl-tile-label">MUSIK</div></div>
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&q=85&fit=crop" alt=""><div class="expl-num">02</div><div class="expl-tile-label">AKTIV</div></div>
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=85&fit=crop" alt=""><div class="expl-num">03</div><div class="expl-tile-label">MAD</div></div>
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=85&fit=crop" alt=""><div class="expl-num">04</div><div class="expl-tile-label">WELLNESS</div></div>
+      </div>
+      <div class="sec-brut live-s"><span>◉ TRENDING</span></div>
+      <div class="brut-card hero live-card" style="border-bottom:none;">
+        <img class="brut-img" src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=90&fit=crop" alt="">
+        <div class="badge-live-b">Trending</div>
+        <div class="brut-body">
+          <div class="brut-num">HOT · KULTUR</div>
+          <div class="brut-title">Fjord-<br>havnen</div>
+          <div class="brut-meta">LIVE · NORDHAVN</div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>FLOD</button>
+      <button class="nav-item active" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SCAN</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ICH</button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="v-profile" class="view">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>B—SOC_9:41</span><span>PROFIL</span></div>
+    <div class="scroll-area">
+      <div style="border-bottom:2px solid var(--black);">
+        <div style="background:var(--black);padding:20px 16px;display:flex;align-items:center;gap:16px;">
+          <div style="width:64px;height:64px;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:32px;color:var(--black);">SK</div>
+          <div><div style="font-family:var(--font-d);font-size:32px;color:var(--white);letter-spacing:0;">SARA K.</div><div style="font-family:var(--font-m);font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);">@SARA.STRØM</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;">
+          <div style="padding:16px;text-align:center;border-right:1px solid var(--black);">
+            <div style="font-family:var(--font-d);font-size:40px;color:var(--red);">47</div>
+            <div style="font-family:var(--font-m);font-size:9px;letter-spacing:2px;">EVENTS</div>
+          </div>
+          <div style="padding:16px;text-align:center;border-right:1px solid var(--black);">
+            <div style="font-family:var(--font-d);font-size:40px;color:var(--red);">312</div>
+            <div style="font-family:var(--font-m);font-size:9px;letter-spacing:2px;">FØLGERE</div>
+          </div>
+          <div style="padding:16px;text-align:center;">
+            <div style="font-family:var(--font-d);font-size:40px;color:var(--red);">89</div>
+            <div style="font-family:var(--font-m);font-size:9px;letter-spacing:2px;">FØLGER</div>
+          </div>
+        </div>
+      </div>
+      <div class="sec-brut"><span>GEMTE EVENTS</span></div>
+      <div class="brut-card row">
+        <img class="brut-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=300&q=90&fit=crop" alt="">
+        <div class="brut-body">
+          <div class="brut-num">01 · FEST</div>
+          <div class="brut-title">Sommer-<br>galla</div>
+          <div class="brut-meta">14. AUGUST</div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>FLOD</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SCAN</button>
+      <button class="nav-item active" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ICH</button>
+    </nav>
+  </div>
+</div>
+<script>
+let cur='v-landing';
+function go(id){const p=document.getElementById(cur),n=document.getElementById(id);n.classList.add('active','view-enter');setTimeout(()=>{p.classList.remove('active');n.classList.remove('view-enter');},200);cur=id;}
+function navTo(id,btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');go(id);}
+function selOb(el){document.querySelectorAll('.ob-row').forEach(o=>o.classList.remove('act'));el.classList.add('act');}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
