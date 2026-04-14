@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>B·SOCIAL — God Aften · Aalborg</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0E0C08; --bg-2:#14110B; --bg-3:#1B1710;
+    --line:rgba(214,177,116,0.09); --line-2:rgba(214,177,116,0.22);
+    --text:#F3ECDD; --text-2:#B5AB95; --text-3:#6B644F;
+    --amber:#D6B174; --amber-2:#8A6E3D;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+    --sans:"Inter",-apple-system,sans-serif;
+    --serif:"Fraunces","Instrument Serif",Georgia,serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{background:#050403;font-family:var(--sans);color:var(--text);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .phone{width:390px;height:min(844px,calc(100vh - 40px));
+    border-radius:44px;background:var(--bg);overflow:hidden;
+    position:relative;display:flex;flex-direction:column;
+    box-shadow:0 60px 140px rgba(0,0,0,0.6),0 0 0 1px rgba(214,177,116,0.06);}
+  .phone::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:999;
+    opacity:0.3;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.84, 0 0 0 0 0.70, 0 0 0 0 0.46, 0 0 0 0.025 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+  .stat{position:absolute;top:0;left:0;right:0;height:40px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px 0;font:500 11px/1 var(--mono);
+    color:var(--text-3);letter-spacing:0.08em;z-index:20;}
+  .screen{flex:1;position:relative;overflow-y:auto;padding:52px 24px 90px;display:none;}
+  .screen.active{display:block;}
+  .screen::-webkit-scrollbar{display:none;}
+  .screen{scrollbar-width:none;}
+  .eyebrow{font:500 10px/1 var(--sans);letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--amber);}
+  .eyebrow.dim{color:var(--text-3);}
+  .hairline{height:1px;background:var(--line);margin:20px 0;}
+  .hairline.amber{background:var(--line-2);}
+  h1,h2,h3{font-weight:inherit;}
+  .greet{font:400 italic 56px/1 var(--serif);letter-spacing:-0.03em;color:var(--text);margin:16px 0 4px;}
+  .greet .you{color:var(--amber);}
+  .date{font:500 11px/1 var(--sans);letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--text-2);margin-bottom:24px;}
+  .search{display:flex;align-items:center;gap:12px;padding:14px 18px;
+    background:var(--bg-2);border:1px solid var(--line);border-radius:14px;margin-bottom:28px;}
+  .search svg{flex:0 0 16px;color:var(--text-3);}
+  .search input{flex:1;background:transparent;border:0;outline:0;
+    font:400 14px/1 var(--sans);color:var(--text);}
+  .search input::placeholder{color:var(--text-3);}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:20px;margin:-4px 0 8px;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{flex:0 0 auto;padding:8px 14px;border:1px solid var(--line-2);
+    border-radius:999px;font:500 11px/1 var(--sans);letter-spacing:0.1em;
+    text-transform:uppercase;color:var(--text-2);background:transparent;cursor:pointer;}
+  .chip.on{background:var(--amber);color:#1B1710;border-color:var(--amber);}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 14px;}
+  .section-head .more{font:500 10px/1 var(--sans);letter-spacing:0.2em;
+    text-transform:uppercase;color:var(--amber);cursor:pointer;}
+  /* Event cards */
+  .event{display:block;padding:16px 0;border-bottom:1px solid var(--line);
+    text-decoration:none;color:inherit;}
+  .event-head{display:flex;gap:16px;align-items:stretch;}
+  .event-date{flex:0 0 64px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;padding-top:4px;}
+  .event-date .d{font:400 italic 36px/0.9 var(--serif);color:var(--amber);font-variant-numeric:tabular-nums;}
+  .event-date .m{font:500 10px/1 var(--sans);letter-spacing:0.2em;
+    text-transform:uppercase;color:var(--text-2);margin-top:4px;}
+  .event-body{flex:1;display:flex;flex-direction:column;gap:4px;}
+  .event-title{font:600 17px/1.25 var(--serif);letter-spacing:-0.01em;color:var(--text);}
+  .event-meta{font:400 12px/1.4 var(--sans);color:var(--text-2);letter-spacing:0.01em;}
+  .event-footer{display:flex;gap:10px;margin-top:10px;align-items:center;}
+  .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;
+    font:500 10px/1 var(--mono);letter-spacing:0.1em;text-transform:uppercase;}
+  .badge.price{color:var(--amber);border:1px solid var(--line-2);}
+  .badge.free{color:var(--amber);background:rgba(214,177,116,0.12);border:1px solid transparent;}
+  .badge.near{color:var(--text-2);border:1px solid var(--line);}
+  /* Featured big card */
+  .feature{position:relative;overflow:hidden;border-radius:22px;margin-bottom:28px;
+    background:var(--bg-2);border:1px solid var(--line);aspect-ratio:7/8;}
+  .feature img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    filter:grayscale(25%) sepia(0.2) contrast(1.05) brightness(0.72);}
+  .feature::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(14,12,8,0) 0%,rgba(14,12,8,0.15) 40%,rgba(14,12,8,0.88) 100%);}
+  .feature-body{position:absolute;left:20px;right:20px;bottom:20px;z-index:2;}
+  .feature-eyebrow{font:500 10px/1 var(--sans);letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--amber);margin-bottom:8px;}
+  .feature-title{font:400 italic 32px/1.05 var(--serif);color:var(--text);
+    letter-spacing:-0.02em;margin-bottom:8px;}
+  .feature-meta{font:500 11px/1 var(--mono);letter-spacing:0.06em;color:var(--text-2);}
+  /* Map */
+  .map-bg{position:relative;height:280px;border-radius:20px;overflow:hidden;
+    background:
+      radial-gradient(60% 40% at 30% 30%,rgba(214,177,116,0.06),transparent 60%),
+      radial-gradient(40% 60% at 70% 70%,rgba(214,177,116,0.04),transparent 60%),
+      var(--bg-2);
+    border:1px solid var(--line);margin:20px 0;}
+  .map-pin{position:absolute;width:10px;height:10px;border-radius:50%;
+    background:var(--amber);box-shadow:0 0 0 4px rgba(214,177,116,0.2);transform:translate(-50%,-50%);}
+  .map-label{position:absolute;transform:translate(-50%,calc(-100% - 10px));
+    font:500 10px/1 var(--mono);letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);white-space:nowrap;}
+  /* Profile */
+  .pfHead{display:flex;align-items:center;gap:20px;margin:24px 0 16px;}
+  .avatar{width:88px;height:88px;border-radius:50%;
+    border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;
+    font:400 italic 28px/1 var(--serif);color:var(--amber);background:var(--bg-2);}
+  .pfName{font:400 italic 40px/1 var(--serif);letter-spacing:-0.02em;color:var(--text);}
+  .pfSub{font:500 10px/1 var(--sans);letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--text-2);margin-top:8px;}
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;margin:24px 0;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .stat-cell{padding:20px 8px;border-right:1px solid var(--line);}
+  .stat-cell:last-child{border-right:0;}
+  .stat-n{font:400 italic 40px/1 var(--serif);color:var(--amber);font-variant-numeric:tabular-nums;}
+  .stat-l{font:500 10px/1 var(--sans);letter-spacing:0.2em;
+    text-transform:uppercase;color:var(--text-2);margin-top:8px;}
+  /* Invite form */
+  .field{padding:16px 0;border-bottom:1px solid var(--line);}
+  .field-label{display:block;font:500 10px/1 var(--sans);letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--amber);margin-bottom:8px;}
+  .field-val{font:500 17px/1.3 var(--serif);color:var(--text);letter-spacing:-0.01em;}
+  .commit{display:block;text-align:center;padding:18px 0;margin-top:24px;
+    border-top:1px solid var(--line-2);color:var(--amber);text-decoration:none;
+    font:500 11px/1 var(--sans);letter-spacing:0.24em;text-transform:uppercase;}
+  /* NAV */
+  .nav{flex-shrink:0;height:64px;width:100%;z-index:30;position:relative;
+    background:rgba(14,12,8,0.85);backdrop-filter:blur(24px);
+    border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;align-items:center;padding-bottom:8px;}
+  .nav-item{flex:1;text-align:center;cursor:pointer;user-select:none;
+    font:500 10px/1 var(--sans);letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--text-3);transition:color 180ms ease;}
+  .nav-item:hover{color:var(--text-2);}
+  .nav-item.on{color:var(--amber);}
+  .nav-item.on::after{content:"";display:block;width:4px;height:4px;
+    border-radius:50%;background:currentColor;margin:6px auto 0;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="stat"><span>21:47 · DK</span><span>WIFI · 87%</span></div>
+
+  <!-- SCREEN 1: HJEM -->
+  <section class="screen active" id="screen-hjem">
+    <div class="eyebrow">TORSDAG · 9. APRIL · AALBORG</div>
+    <h1 class="greet">God aften, <span class="you">Nikolaj.</span></h1>
+
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input placeholder="Søg begivenheder, steder..." readonly />
+    </div>
+
+    <div class="chips">
+      <div class="chip on">Alle</div>
+      <div class="chip">I aften</div>
+      <div class="chip">Koncerter</div>
+      <div class="chip">Sport</div>
+      <div class="chip">Mad &amp; drikke</div>
+      <div class="chip">Udendørs</div>
+    </div>
+
+    <div class="feature">
+      <img src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=700&q=90" alt="" />
+      <div class="feature-body">
+        <div class="feature-eyebrow">I AFTEN · JAZZ</div>
+        <div class="feature-title">Jazzkoncert i Nordkraft</div>
+        <div class="feature-meta">21:00 · NORDKRAFT · FRA 120 KR · 12 VENNER GÅR</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div class="eyebrow">DENNE UGE</div>
+      <div class="more">Se alle →</div>
+    </div>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">18</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Nattercup Aalborg 2026</div>
+          <div class="event-meta">Kildeparken · Lør · 14:00 → 22:00</div>
+          <div class="event-footer">
+            <span class="badge price">150 KR</span>
+            <span class="badge near">1.2 KM</span>
+            <span class="badge near">22 GÅR</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">20</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Limfjorden MTB Classic</div>
+          <div class="event-meta">Egholm Færgested · Man · 09:00 → 14:00</div>
+          <div class="event-footer">
+            <span class="badge free">GRATIS</span>
+            <span class="badge near">UDENDØRS</span>
+            <span class="badge near">8 GÅR</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">22</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Jazzkoncert i Nordkraft</div>
+          <div class="event-meta">Nordkraft · Ons · 20:30 → 23:30</div>
+          <div class="event-footer">
+            <span class="badge price">120 KR</span>
+            <span class="badge near">INDE</span>
+            <span class="badge near">12 GÅR</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">3</div><div class="m">MAJ</div></div>
+        <div class="event-body">
+          <div class="event-title">Street Food Festival</div>
+          <div class="event-meta">Aalborg Havn · Lør · 12:00 → 22:00</div>
+          <div class="event-footer">
+            <span class="badge free">GRATIS</span>
+            <span class="badge near">UDE</span>
+            <span class="badge near">47 GÅR</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">9</div><div class="m">MAJ</div></div>
+        <div class="event-body">
+          <div class="event-title">Aalborg Karneval · Opvarmning</div>
+          <div class="event-meta">Kildeparken · Fre · 19:00 → 02:00</div>
+          <div class="event-footer">
+            <span class="badge price">200 KR</span>
+            <span class="badge near">UDE</span>
+            <span class="badge near">128 GÅR</span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <!-- SCREEN 2: UDFORSK -->
+  <section class="screen" id="screen-udforsk">
+    <div class="eyebrow">UDFORSK · AALBORG · APRIL</div>
+    <h2 class="greet" style="font-size:40px;">Denne uge / <em style="color:var(--amber);">fortjener en aften ude</em>.</h2>
+    <div class="hairline amber"></div>
+
+    <div class="section-head">
+      <div class="eyebrow">KURATERET · 04 AFTENER</div>
+    </div>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">22</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Jazzkoncert i Nordkraft</div>
+          <div class="event-meta">Ons · 20:30 · Trompet fra Harlem, basen fra hjemmet</div>
+          <div class="event-footer">
+            <span class="badge price">FRA 120 KR</span>
+            <span class="badge near">JAZZ</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">25</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Vinsmagning · Søgaards Bryghus</div>
+          <div class="event-meta">Lør · 18:00 · 6 naturvine + tapas</div>
+          <div class="event-footer">
+            <span class="badge price">385 KR</span>
+            <span class="badge near">VIN</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">27</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Litteraturaften · Studenterhuset</div>
+          <div class="event-meta">Man · 19:30 · Ny dansk lyrik</div>
+          <div class="event-footer">
+            <span class="badge free">GRATIS</span>
+            <span class="badge near">LÆSNING</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">30</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Sen aften hos 1000fryd</div>
+          <div class="event-meta">Tor · 22:00 · House + afterhours til 04</div>
+          <div class="event-footer">
+            <span class="badge price">80 KR</span>
+            <span class="badge near">ELEKTRONIK</span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <!-- SCREEN 3: KORT -->
+  <section class="screen" id="screen-kort">
+    <div class="eyebrow">KORT · AALBORG CENTRUM · NU</div>
+    <h2 class="greet" style="font-size:40px;">Hvor er byen <em style="color:var(--amber);">vågen</em>?</h2>
+
+    <div class="map-bg">
+      <div class="map-pin" style="top:35%;left:32%;"></div>
+      <div class="map-label" style="top:35%;left:32%;">NORDKRAFT</div>
+      <div class="map-pin" style="top:55%;left:55%;"></div>
+      <div class="map-label" style="top:55%;left:55%;">1000FRYD</div>
+      <div class="map-pin" style="top:48%;left:72%;"></div>
+      <div class="map-label" style="top:48%;left:72%;">KILDEPARKEN</div>
+      <div class="map-pin" style="top:70%;left:40%;"></div>
+      <div class="map-label" style="top:70%;left:40%;">SØGAARDS</div>
+      <div class="map-pin" style="top:30%;left:62%;"></div>
+      <div class="map-label" style="top:30%;left:62%;">HAVNEN</div>
+    </div>
+
+    <div class="section-head">
+      <div class="eyebrow">I NÆRHEDEN · 0 → 2 KM</div>
+    </div>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d" style="font-size:28px;">0.4</div><div class="m">KM</div></div>
+        <div class="event-body">
+          <div class="event-title">Nordkraft</div>
+          <div class="event-meta">Kjellerups Torv 5 · Åben til 00:00</div>
+          <div class="event-footer"><span class="badge near">JAZZ · I AFTEN</span></div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d" style="font-size:28px;">0.8</div><div class="m">KM</div></div>
+        <div class="event-body">
+          <div class="event-title">1000fryd</div>
+          <div class="event-meta">Kattesundet 10 · Åben til 04:00</div>
+          <div class="event-footer"><span class="badge near">ELEKTRONIK</span></div>
+        </div>
+      </div>
+    </a>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d" style="font-size:28px;">1.2</div><div class="m">KM</div></div>
+        <div class="event-body">
+          <div class="event-title">Søgaards Bryghus</div>
+          <div class="event-meta">C.W. Obels Plads 1 · Åben til 23:00</div>
+          <div class="event-footer"><span class="badge near">ØL · VIN</span></div>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <!-- SCREEN 4: INVITER -->
+  <section class="screen" id="screen-inviter">
+    <div class="eyebrow">INVITÉR · NY AFTEN</div>
+    <h2 class="greet" style="font-size:48px;"><em>Saml dem.</em></h2>
+    <div class="hairline amber"></div>
+
+    <div class="field">
+      <label class="field-label">Titel</label>
+      <div class="field-val">Fredagsvin hos os</div>
+    </div>
+    <div class="field">
+      <label class="field-label">Sted</label>
+      <div class="field-val">Vesterbro 42, 9000 Aalborg</div>
+    </div>
+    <div class="field">
+      <label class="field-label">Tid · Start → Slut</label>
+      <div class="field-val">17. apr · 19:30 → 23:30</div>
+    </div>
+    <div class="field">
+      <label class="field-label">Gæster</label>
+      <div class="field-val">Anna · Sofie · Jonas · Lise · Mads · +6</div>
+    </div>
+    <div class="field">
+      <label class="field-label">Dresscode</label>
+      <div class="field-val">Afslappet · varmt</div>
+    </div>
+
+    <a class="commit" href="#" onclick="return false;">Send invitation →</a>
+  </section>
+
+  <!-- SCREEN 5: PROFIL -->
+  <section class="screen" id="screen-profil">
+    <div class="eyebrow">PROFIL · NIKOLAJ B.</div>
+    <div class="pfHead">
+      <div class="avatar">NB</div>
+      <div>
+        <div class="pfName">Nikolaj</div>
+        <div class="pfSub">MEDLEM SIDEN 2021 · AALBORG</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-cell">
+        <div class="stat-n">38</div>
+        <div class="stat-l">AFTENER</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-n">14</div>
+        <div class="stat-l">STEDER</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-n">09</div>
+        <div class="stat-l">VENNER</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div class="eyebrow">KRØNIK · SENESTE</div>
+    </div>
+
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">12</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Nordkraft · Jazz</div>
+          <div class="event-meta">Trompet fra Harlem, bas fra hjemmet · 5/5</div>
+        </div>
+      </div>
+    </a>
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">05</div><div class="m">APR</div></div>
+        <div class="event-body">
+          <div class="event-title">Søgaards · Vinsmagning</div>
+          <div class="event-meta">6 naturvine · tapas · 4/5</div>
+        </div>
+      </div>
+    </a>
+    <a class="event" href="#" onclick="return false;">
+      <div class="event-head">
+        <div class="event-date"><div class="d">29</div><div class="m">MAR</div></div>
+        <div class="event-body">
+          <div class="event-title">1000fryd · House</div>
+          <div class="event-meta">Derhen kl 23, derfra kl 04 · 5/5</div>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <nav class="nav">
+    <div class="nav-item on" data-target="screen-hjem" onclick="go('screen-hjem')">Hjem</div>
+    <div class="nav-item" data-target="screen-udforsk" onclick="go('screen-udforsk')">Udforsk</div>
+    <div class="nav-item" data-target="screen-kort" onclick="go('screen-kort')">Kort</div>
+    <div class="nav-item" data-target="screen-inviter" onclick="go('screen-inviter')">Invitér</div>
+    <div class="nav-item" data-target="screen-profil" onclick="go('screen-profil')">Dig</div>
+  </nav>
+</div>
+
+<script>
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var t=document.getElementById(id);
+  if(t) t.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
+  var btn=document.querySelector('[data-target="'+id+'"]');
+  if(btn) btn.classList.add('on');
+  var s=document.querySelector('.screen.active');
+  if(s) s.scrollTop=0;
+}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
