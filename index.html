@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B-Social | 3D Depth</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080C14;--layer1:#0D1420;--layer2:#111927;--layer3:#162030;
+  --accent:#5B8DEF;--accent2:#E85D75;--teal:#3DD6C8;
+  --text:#EEF2FF;--muted:rgba(238,242,255,0.45);
+  --nav-h:72px;--font-d:'Syne',sans-serif;--font-m:'Syne Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);font-family:var(--font-d);color:var(--text);overflow:hidden;}
+.app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:#040609;}
+  .app{height:90vh;max-height:932px;border-radius:24px;box-shadow:0 40px 120px rgba(0,0,0,0.8),0 0 0 1px rgba(91,141,239,0.2);}
+}
+
+/* Depth layers as background */
+.depth-bg{position:fixed;inset:0;max-width:430px;margin:0 auto;pointer-events:none;z-index:0;overflow:hidden;}
+.depth-plane{
+  position:absolute;border-radius:50%;
+  animation:depthFloat 20s infinite ease-in-out;
+}
+.dp1{width:500px;height:500px;top:-150px;left:-150px;
+  background:radial-gradient(circle,rgba(91,141,239,0.08) 0%,transparent 70%);
+  animation-delay:0s;}
+.dp2{width:400px;height:400px;bottom:-100px;right:-100px;
+  background:radial-gradient(circle,rgba(61,214,200,0.06) 0%,transparent 70%);
+  animation-delay:-8s;}
+.dp3{width:300px;height:300px;top:30%;left:10%;
+  background:radial-gradient(circle,rgba(232,93,117,0.06) 0%,transparent 70%);
+  animation-delay:-14s;}
+@keyframes depthFloat{
+  0%,100%{transform:translate(0,0);}
+  50%{transform:translate(20px,-20px);}
+}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;}
+.view.active{display:flex;}
+.view-enter{animation:depthIn 450ms cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes depthIn{from{opacity:0;transform:perspective(800px) rotateX(4deg) translateY(20px);}to{opacity:1;transform:perspective(800px) rotateX(0) translateY(0);}}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+24px);}
+.scroll-area::-webkit-scrollbar{display:none;} .scroll-area{-ms-overflow-style:none;scrollbar-width:none;}
+
+.status-bar{height:44px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 20px;font-family:var(--font-m);font-size:12px;color:var(--muted);z-index:20;position:relative;}
+
+/* LANDING */
+.land-3d{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 24px;position:relative;z-index:2;}
+/* Layered depth cards in background */
+.depth-cards-bg{
+  position:absolute;top:40px;left:20px;right:20px;bottom:220px;
+  perspective:600px;
+}
+.bg-card{
+  position:absolute;border-radius:20px;overflow:hidden;
+  width:85%;
+}
+.bg-card.c1{left:50%;bottom:0;transform:translateX(-50%) perspective(600px) rotateX(20deg) rotateY(5deg) translateZ(0px);z-index:3;height:200px;opacity:0.9;}
+.bg-card.c2{left:50%;bottom:20px;transform:translateX(-50%) perspective(600px) rotateX(20deg) rotateY(2deg) translateZ(-60px) scale(0.9);z-index:2;height:200px;opacity:0.5;}
+.bg-card.c3{left:50%;bottom:36px;transform:translateX(-50%) perspective(600px) rotateX(20deg) rotateY(0deg) translateZ(-120px) scale(0.82);z-index:1;height:200px;opacity:0.25;}
+.bg-card img{width:100%;height:100%;object-fit:cover;}
+.land-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.land-title{font-size:clamp(3rem,11vw,4.5rem);font-weight:800;line-height:0.88;letter-spacing:-3px;margin-bottom:12px;}
+.land-title .accent{color:var(--accent);}
+.land-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px;font-weight:400;}
+.btn-3d{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;background:linear-gradient(135deg,var(--accent),#3B6DD4);
+  color:white;font-family:var(--font-d);font-weight:700;font-size:16px;
+  padding:16px;border-radius:14px;border:none;cursor:pointer;
+  box-shadow:0 8px 30px rgba(91,141,239,0.35),0 2px 0 rgba(255,255,255,0.1) inset;
+  transform:translateY(0);transition:all 0.2s;
+}
+.btn-3d:active{transform:translateY(3px);box-shadow:0 4px 15px rgba(91,141,239,0.3);}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;width:100%;height:var(--nav-h);
+  background:rgba(8,12,20,0.88);border-top:1px solid rgba(91,141,239,0.15);
+  backdrop-filter:blur(30px);
+  display:flex;justify-content:space-around;align-items:center;
+  padding:0 8px 12px;z-index:200;
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--muted);background:none;border:none;
+  font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  padding:8px 16px;border-radius:12px;cursor:pointer;transition:all 0.3s;}
+.nav-item.active{color:var(--accent);background:rgba(91,141,239,0.1);}
+.nav-icon{width:22px;height:22px;stroke:currentColor;stroke-width:1.5;fill:none;}
+
+/* FEED */
+.feed-wrap{padding:16px 0;}
+.feed-hed{padding:0 20px 16px;}
+.feed-title{font-size:44px;font-weight:800;letter-spacing:-3px;line-height:0.9;margin-bottom:4px;}
+.feed-title .accent{color:var(--accent);}
+.feed-sub{font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:1px;}
+
+/* 3D CARDS */
+.card-3d-wrap{padding:0 20px;margin-bottom:16px;perspective:800px;}
+.card-3d{
+  border-radius:20px;overflow:hidden;position:relative;cursor:pointer;
+  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1),box-shadow 0.4s;
+  transform-style:preserve-3d;
+}
+.card-3d.lg{height:270px;} .card-3d.sm{height:170px;}
+.card-3d:hover{transform:perspective(800px) rotateY(-3deg) rotateX(2deg) translateZ(10px);}
+.card-3d.live-c{
+  box-shadow:0 0 0 2px var(--accent),0 20px 50px rgba(91,141,239,0.25);
+}
+.card-3d img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.55);}
+.card-grad{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(8,12,20,0.98) 0%,rgba(8,12,20,0.3) 55%,transparent 100%);
+}
+/* Layered depth shadow effect */
+.card-shadow-1,.card-shadow-2{
+  position:absolute;left:12px;right:12px;height:100%;border-radius:20px;
+  background:var(--layer1);z-index:-1;
+}
+.card-shadow-1{bottom:-8px;transform:scale(0.96);opacity:0.7;}
+.card-shadow-2{bottom:-14px;transform:scale(0.91);opacity:0.4;}
+.card-body{position:absolute;bottom:0;left:0;right:0;padding:18px;z-index:2;}
+.card-type{font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.card-title{font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px;line-height:1.1;}
+.card-meta{font-family:var(--font-m);font-size:10px;color:var(--muted);letter-spacing:1px;}
+.badge-live-3d{
+  position:absolute;top:14px;left:14px;z-index:3;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(91,141,239,0.2);border:1px solid rgba(91,141,239,0.5);
+  backdrop-filter:blur(10px);
+  color:var(--accent);font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  padding:6px 12px;border-radius:8px;
+}
+.badge-live-3d::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* SECTION HDR */
+.sec-3d{
+  padding:20px 20px 10px;display:flex;align-items:center;gap:10px;
+  font-family:var(--font-m);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
+}
+.sec-3d::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(91,141,239,0.2),transparent);}
+.sec-3d.live{color:var(--accent);}
+.sec-3d.live::after{background:linear-gradient(to right,rgba(91,141,239,0.4),transparent);}
+
+/* OB */
+.ob-3d{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 24px;position:relative;z-index:2;}
+.ob-title{font-size:44px;font-weight:800;letter-spacing:-2px;line-height:0.88;margin-bottom:8px;}
+.ob-sub{font-family:var(--font-m);font-size:11px;color:var(--muted);margin-bottom:28px;letter-spacing:1px;text-transform:uppercase;}
+.ob-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.ob-opt{
+  display:flex;align-items:center;gap:14px;
+  background:var(--layer1);border:1px solid rgba(91,141,239,0.12);
+  border-radius:14px;padding:16px 18px;cursor:pointer;transition:all 0.3s;
+  transform:translateY(0);box-shadow:0 4px 0 var(--bg);
+}
+.ob-opt:active{transform:translateY(2px);box-shadow:0 2px 0 var(--bg);}
+.ob-opt.act{border-color:var(--accent);background:rgba(91,141,239,0.08);box-shadow:0 4px 0 rgba(91,141,239,0.1);}
+.ob-dot{width:12px;height:12px;border-radius:4px;border:2px solid var(--muted);transition:all 0.3s;}
+.ob-opt.act .ob-dot{background:var(--accent);border-color:var(--accent);}
+.ob-opt-t{font-size:18px;font-weight:700;letter-spacing:-0.5px;}
+.ob-opt.act .ob-opt-t{color:var(--accent);}
+.ob-opt-s{font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:1px;}
+
+/* EXPLORE */
+.expl-stack{padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:2;}
+.expl-card{border-radius:18px;overflow:hidden;position:relative;height:165px;cursor:pointer;}
+.expl-card img{width:100%;height:100%;object-fit:cover;filter:brightness(0.5);}
+.expl-card-over{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(91,141,239,0.12),transparent 60%),
+             linear-gradient(to top,rgba(8,12,20,0.9),transparent 50%);
+  display:flex;align-items:flex-end;padding:12px;
+}
+.expl-label{font-size:18px;font-weight:800;letter-spacing:-0.5px;}
+.expl-num{position:absolute;top:10px;right:10px;font-family:var(--font-m);font-size:9px;letter-spacing:2px;color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="depth-bg">
+    <div class="depth-plane dp1"></div>
+    <div class="depth-plane dp2"></div>
+    <div class="depth-plane dp3"></div>
+  </div>
+
+  <!-- LANDING -->
+  <div id="v-landing" class="view active">
+    <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="land-3d">
+      <div class="depth-cards-bg">
+        <div class="bg-card c3"><img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=500&q=80&fit=crop" alt=""></div>
+        <div class="bg-card c2"><img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&q=80&fit=crop" alt=""></div>
+        <div class="bg-card c1"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=500&q=80&fit=crop" alt=""></div>
+      </div>
+      <div class="land-eyebrow">B-Social · 3D Strøm</div>
+      <div class="land-title">TID<br>FFLY<span class="accent">DER</span></div>
+      <div class="land-sub">Events i dybden — fremtid, nutid og fortid i ét rum.</div>
+      <button class="btn-3d" onclick="go('v-ob')">
+        Dyk ind
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="v-ob" class="view" style="background:var(--bg);">
+    <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="ob-3d">
+      <div class="land-eyebrow">Dybdekonfiguration</div>
+      <div class="ob-title">VÆL<span class="accent">G</span><br>DYBDE</div>
+      <div class="ob-sub">// Vælg dit lag i strømmen</div>
+      <div class="ob-opts">
+        <div class="ob-opt" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-opt-t">Fremtid</div><div class="ob-opt-s">NÆSTE MND +</div></div></div>
+        <div class="ob-opt" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-opt-t">Snart</div><div class="ob-opt-s">DENNE UGE</div></div></div>
+        <div class="ob-opt act" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-opt-t">Nu</div><div class="ob-opt-s">I DAG ·•·</div></div></div>
+      </div>
+      <button class="btn-3d" onclick="go('v-feed')">Indlæs strøm →</button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="v-feed" class="view" style="background:var(--bg);">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="scroll-area">
+      <div class="feed-hed">
+        <div style="font-family:var(--font-m);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">B-Social · Live</div>
+        <div class="feed-title">FLO<span class="accent">DEN</span></div>
+        <div class="feed-sub">EVENTS I DYBDEN · I DAG</div>
+      </div>
+
+      <div class="sec-3d">Fremtid</div>
+      <div class="card-3d-wrap">
+        <div class="card-3d sm">
+          <img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+          <div class="card-grad"></div>
+          <div class="card-body">
+            <div class="card-type">FEST · AUG</div>
+            <div class="card-title">Sommergalla i Skoven</div>
+            <div class="card-meta">14. AUGUST · FREDERIKSBERG</div>
+          </div>
+        </div>
+        <div class="card-shadow-1"></div>
+        <div class="card-shadow-2"></div>
+      </div>
+
+      <div class="sec-3d live">● Live Nu</div>
+      <div class="card-3d-wrap">
+        <div class="card-3d lg live-c">
+          <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=90&fit=crop" alt="">
+          <div class="card-grad"></div>
+          <div class="badge-live-3d">Live</div>
+          <div class="card-body">
+            <div class="card-type" style="color:var(--accent);">MUSIK · NU</div>
+            <div class="card-title">Jazz på Havnen</div>
+            <div class="card-meta">I GANG · SLUTTER 22:00 · NYHAVN</div>
+          </div>
+        </div>
+        <div class="card-shadow-1" style="background:rgba(91,141,239,0.05);"></div>
+        <div class="card-shadow-2" style="background:rgba(91,141,239,0.03);"></div>
+      </div>
+      <div class="card-3d-wrap" style="margin-top:0;">
+        <div class="card-3d sm">
+          <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=90&fit=crop" alt="">
+          <div class="card-grad"></div>
+          <div class="card-body">
+            <div class="card-type">MAD · STARTER 18:00</div>
+            <div class="card-title">Pop-up Street Food</div>
+            <div class="card-meta">VESTERBRO</div>
+          </div>
+        </div>
+        <div class="card-shadow-1"></div>
+        <div class="card-shadow-2"></div>
+      </div>
+
+      <div class="sec-3d" style="opacity:0.35;">Fortid</div>
+      <div class="card-3d-wrap" style="opacity:0.3;filter:grayscale(70%);">
+        <div class="card-3d sm">
+          <img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=90&fit=crop" alt="">
+          <div class="card-grad"></div>
+          <div class="card-body">
+            <div class="card-type">AFSLUTTET</div>
+            <div class="card-title">Byvandring</div>
+            <div class="card-meta">I GÅR</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+
+  <!-- EXPLORE -->
+  <div id="v-explore" class="view" style="background:var(--bg);">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="scroll-area">
+      <div class="feed-hed">
+        <div style="font-family:var(--font-m);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Kategorier</div>
+        <div class="feed-title">UDFORSK</div>
+      </div>
+      <div class="expl-stack">
+        <div class="expl-card"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=85&fit=crop" alt=""><div class="expl-card-over"><div class="expl-label">Musik</div></div><div class="expl-num">01</div></div>
+        <div class="expl-card"><img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&q=85&fit=crop" alt=""><div class="expl-card-over"><div class="expl-label">Aktiv</div></div><div class="expl-num">02</div></div>
+        <div class="expl-card"><img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=85&fit=crop" alt=""><div class="expl-card-over"><div class="expl-label">Mad</div></div><div class="expl-num">03</div></div>
+        <div class="expl-card"><img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=85&fit=crop" alt=""><div class="expl-card-over"><div class="expl-label">Wellness</div></div><div class="expl-num">04</div></div>
+      </div>
+      <div class="sec-3d live" style="margin-top:8px;">● Trending</div>
+      <div class="card-3d-wrap">
+        <div class="card-3d lg live-c">
+          <img src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=90&fit=crop" alt="">
+          <div class="card-grad"></div>
+          <div class="badge-live-3d">Hot</div>
+          <div class="card-body">
+            <div class="card-type" style="color:var(--accent);">KULTUR · NU</div>
+            <div class="card-title">Fjordhavnens Festival</div>
+            <div class="card-meta">LIVE · NORDHAVN</div>
+          </div>
+        </div>
+        <div class="card-shadow-1" style="background:rgba(91,141,239,0.05);"></div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item active" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="v-profile" class="view" style="background:var(--bg);">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="scroll-area">
+      <div style="padding:24px;">
+        <div style="font-family:var(--font-m);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Din profil</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+          <div style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--teal));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;box-shadow:0 8px 24px rgba(91,141,239,0.3);">SK</div>
+          <div><div style="font-size:26px;font-weight:800;letter-spacing:-1px;">Sara K.</div><div style="font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:1px;">@sara.strøm</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;">
+          <div style="background:var(--layer1);border-radius:14px;padding:16px 0;text-align:center;border:1px solid rgba(91,141,239,0.12);">
+            <div style="font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--accent);">47</div>
+            <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--muted);">EVENTS</div>
+          </div>
+          <div style="background:var(--layer1);border-radius:14px;padding:16px 0;text-align:center;border:1px solid rgba(91,141,239,0.12);">
+            <div style="font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--accent);">312</div>
+            <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--muted);">FØLGERE</div>
+          </div>
+          <div style="background:var(--layer1);border-radius:14px;padding:16px 0;text-align:center;border:1px solid rgba(91,141,239,0.12);">
+            <div style="font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--accent);">89</div>
+            <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--muted);">FØLGER</div>
+          </div>
+        </div>
+        <div class="sec-3d" style="padding:0 0 12px;">Gemte Events</div>
+        <div class="card-3d-wrap" style="padding:0;">
+          <div class="card-3d sm">
+            <img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+            <div class="card-grad"></div>
+            <div class="card-body"><div class="card-type">FEST</div><div class="card-title">Sommergalla</div><div class="card-meta">14. AUGUST</div></div>
+          </div>
+          <div class="card-shadow-1"></div>
+          <div class="card-shadow-2"></div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item active" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+</div>
+<script>
+let cur='v-landing';
+function go(id){const p=document.getElementById(cur),n=document.getElementById(id);n.classList.add('active','view-enter');setTimeout(()=>{p.classList.remove('active');n.classList.remove('view-enter');},450);cur=id;}
+function navTo(id,btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');go(id);}
+function selOb(el){document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('act'));el.classList.add('act');}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
