@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B·SOCIAL v2.6 — Copenhagen Events</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
+
+    :root {
+      --bg: #0C0C0D;
+      --bg-2: #141416;
+      --bg-3: #1C1C1F;
+      --line: rgba(255,255,255,0.06);
+      --line-2: rgba(184,115,51,0.25);
+      --text: #EDEDF0;
+      --text-2: #9B9BA3;
+      --text-3: #56565E;
+      --copper: #B87333;
+      --copper-2: #C98B4B;
+      --copper-dim: #6A4220;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 24px 12px;
+      background: var(--bg);
+    }
+
+    .phone {
+      width: 390px;
+      height: min(844px, calc(100vh - 48px));
+      border-radius: 44px;
+      background: var(--bg);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 50px 120px rgba(0,0,0,0.55),
+                  0 0 0 1px rgba(184,115,51,0.08),
+                  inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .phone::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.58, 0 0 0 0 0.58, 0 0 0 0 0.62, 0 0 0 0.018 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      background-repeat: repeat;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen-atlas { background: var(--bg); }
+    .screen-elevation { background: var(--bg); }
+    .screen-brief { background: var(--bg); }
+    .screen-index { background: var(--bg); }
+    .screen-portfolio { background: var(--bg); }
+
+    /* Status bar */
+    .status-bar {
+      height: 44px;
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--text-3);
+      flex-shrink: 0;
+    }
+
+    .status-time { flex: 1; text-align: center; }
+    .status-signal { flex: 1; text-align: right; }
+
+    /* Copper corner marker */
+    .corner-marker {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+    }
+
+    .corner-marker::before,
+    .corner-marker::after {
+      content: "";
+      position: absolute;
+      background: var(--copper);
+    }
+
+    .corner-marker.tl {
+      top: 16px;
+      left: 16px;
+    }
+
+    .corner-marker.tl::before {
+      width: 1px;
+      height: 18px;
+      top: 0;
+      left: 0;
+    }
+
+    .corner-marker.tl::after {
+      width: 18px;
+      height: 1px;
+      top: 0;
+      left: 0;
+    }
+
+    .corner-marker.tr {
+      top: 16px;
+      right: 16px;
+    }
+
+    .corner-marker.tr::before {
+      width: 1px;
+      height: 18px;
+      top: 0;
+      right: 0;
+    }
+
+    .corner-marker.tr::after {
+      width: 18px;
+      height: 1px;
+      top: 0;
+      right: 0;
+    }
+
+    .corner-marker.br {
+      bottom: 64px;
+      right: 16px;
+    }
+
+    .corner-marker.br::before {
+      width: 1px;
+      height: 18px;
+      bottom: 0;
+      right: 0;
+    }
+
+    .corner-marker.br::after {
+      width: 18px;
+      height: 1px;
+      bottom: 0;
+      right: 0;
+    }
+
+    /* ATLAS SCREEN */
+    .atlas-header {
+      padding: 24px 24px 0;
+      position: relative;
+    }
+
+    .atlas-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+      margin-bottom: 32px;
+    }
+
+    .atlas-headline {
+      font-family: "Inter Tight", sans-serif;
+      font-size: 56px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .atlas-subheadline {
+      font-size: 15px;
+      color: var(--text-2);
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    .atlas-cards {
+      padding: 0 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .card {
+      padding: 16px;
+      border-top: 1px solid var(--copper);
+      background: transparent;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+    }
+
+    .card-thumb {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      border: 1px solid var(--copper);
+      overflow: hidden;
+      background: var(--bg-2);
+    }
+
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(70%) contrast(1.08) brightness(0.88);
+    }
+
+    .card-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-name {
+      font-family: "Inter Tight", sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .card-meta {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      color: var(--text-3);
+      line-height: 1.4;
+    }
+
+    .atlas-footer {
+      padding: 24px;
+      border-top: 1px solid var(--copper);
+      text-align: left;
+    }
+
+    .atlas-footer a {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--copper);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* ELEVATION SCREEN */
+    .elevation-header {
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid var(--line);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+    }
+
+    .elevation-canvas {
+      padding: 32px 24px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 200px;
+      justify-content: center;
+    }
+
+    .building {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--copper);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .building-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 12px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .elevation-list {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .elevation-item {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .elevation-item:last-child {
+      border-bottom: none;
+    }
+
+    .elevation-marker {
+      width: 8px;
+      height: 8px;
+      background: var(--copper);
+      flex-shrink: 0;
+    }
+
+    .elevation-item-text {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    /* BRIEF SCREEN */
+    .brief-header {
+      padding: 24px 24px 0;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+      margin-bottom: 32px;
+    }
+
+    .brief-form {
+      padding: 0 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      display: flex;
+      margin-bottom: 24px;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .form-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+      white-space: nowrap;
+      min-width: 60px;
+    }
+
+    .form-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--copper);
+      color: var(--text);
+      font-family: "Inter", sans-serif;
+      font-size: 15px;
+      padding: 8px 0;
+      outline: none;
+    }
+
+    .form-input::placeholder {
+      color: var(--text-3);
+    }
+
+    .brief-footer {
+      padding: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .brief-submit {
+      background: transparent;
+      border: 1px solid var(--copper);
+      padding: 12px 24px;
+      color: var(--copper);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .brief-submit:hover {
+      background: rgba(184,115,51,0.08);
+      color: var(--copper-2);
+      border-color: var(--copper-2);
+    }
+
+    /* INDEX SCREEN */
+    .index-header {
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid var(--line);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+    }
+
+    .index-list {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .index-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .index-row:last-child {
+      border-bottom: none;
+    }
+
+    .index-num {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      color: var(--text-3);
+      min-width: 24px;
+    }
+
+    .index-avatar {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-2);
+      border: 1px solid var(--copper);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Inter Tight", sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--copper);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .index-avatar::before,
+    .index-avatar::after {
+      content: "";
+      position: absolute;
+      background: var(--copper);
+    }
+
+    .index-avatar::before {
+      width: 6px;
+      height: 1px;
+      top: 4px;
+      left: 4px;
+    }
+
+    .index-avatar::after {
+      width: 1px;
+      height: 6px;
+      top: 4px;
+      left: 4px;
+    }
+
+    .index-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .index-name {
+      font-family: "Inter Tight", sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .index-status {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    /* PORTFOLIO SCREEN */
+    .portfolio-content {
+      padding: 32px 24px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .portfolio-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      position: relative;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .portfolio-avatar {
+      width: 96px;
+      height: 96px;
+      background: var(--bg-2);
+      border: 1px solid var(--copper);
+      position: relative;
+    }
+
+    .portfolio-avatar::before,
+    .portfolio-avatar::after {
+      content: "";
+      position: absolute;
+      background: var(--copper);
+    }
+
+    .portfolio-avatar::before {
+      width: 10px;
+      height: 1px;
+      top: 8px;
+      left: 8px;
+    }
+
+    .portfolio-avatar::after {
+      width: 1px;
+      height: 10px;
+      top: 8px;
+      left: 8px;
+    }
+
+    .portfolio-name {
+      font-family: "Inter Tight", sans-serif;
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .portfolio-meta {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+    }
+
+    .portfolio-stats {
+      display: flex;
+      justify-content: space-around;
+      padding: 24px 0;
+      border-top: 1px solid var(--copper);
+      border-bottom: 1px solid var(--copper);
+      gap: 0;
+    }
+
+    .stat-block {
+      flex: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .stat-block:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1px;
+      height: 40%;
+      background: var(--copper);
+    }
+
+    .stat-number {
+      font-family: "Inter Tight", sans-serif;
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+    }
+
+    .portfolio-builds {
+      flex: 1;
+    }
+
+    .builds-title {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-3);
+      margin-bottom: 16px;
+    }
+
+    .build-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      gap: 8px;
+    }
+
+    .build-item:last-child {
+      border-bottom: none;
+    }
+
+    .build-name {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .build-date {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    /* NAV BAR */
+    .nav {
+      flex-shrink: 0;
+      height: 64px;
+      width: 100%;
+      background: rgba(12,12,13,0.9);
+      backdrop-filter: blur(24px);
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .nav-item {
+      font: 400 10px/1 "JetBrains Mono", monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      cursor: pointer;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .nav-item:hover {
+      color: var(--text-2);
+    }
+
+    .nav-item.on {
+      color: var(--copper);
+    }
+
+    .nav-item.on::before {
+      content: "";
+      display: block;
+      width: 16px;
+      height: 1px;
+      background: var(--copper);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="phone">
+      <!-- STATUS BAR (shared) -->
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <span class="status-signal">📶</span>
+      </div>
+
+      <!-- ATLAS SCREEN -->
+      <div class="screen screen-atlas active" id="screen-atlas">
+        <div class="atlas-header">
+          <div class="corner-marker tl"></div>
+          <div class="corner-marker tr"></div>
+          <div class="atlas-tag">B·SOCIAL / v2.6 / KBH</div>
+          <h1 class="atlas-headline">Fire steder med liv</h1>
+          <p class="atlas-subheadline">Kurateret for din onsdag aften.</p>
+        </div>
+        <div class="atlas-cards">
+          <div class="card">
+            <div class="card-thumb">
+              <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=500&q=90" alt="La Fontaine">
+            </div>
+            <div class="card-content">
+              <div class="card-name">La Fontaine</div>
+              <div class="card-meta">Kompagnistræde · 0.4 km<br>PLADS TIL 4 · 21:30</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-thumb">
+              <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=500&q=90" alt="Jolene">
+            </div>
+            <div class="card-content">
+              <div class="card-name">Jolene</div>
+              <div class="card-meta">Flæsketorvet · 0.8 km<br>PLADS TIL 2 · 22:00</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-thumb">
+              <img src="https://images.unsplash.com/photo-1514361892635-6b07e31e75f9?w=500&q=90" alt="Absalon">
+            </div>
+            <div class="card-content">
+              <div class="card-name">Absalon</div>
+              <div class="card-meta">Sønder Boulevard · 1.2 km<br>PLADS TIL 3 · 21:45</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-thumb">
+              <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=500&q=90" alt="KB3">
+            </div>
+            <div class="card-content">
+              <div class="card-name">KB3</div>
+              <div class="card-meta">Ved Stranden 10 · 0.6 km<br>PLADS TIL 1 · 23:15</div>
+            </div>
+          </div>
+        </div>
+        <div class="atlas-footer">
+          <a onclick="go('screen-elevation')">Learn the atlas →</a>
+        </div>
+      </div>
+
+      <!-- ELEVATION SCREEN -->
+      <div class="screen screen-elevation" id="screen-elevation">
+        <div class="elevation-header">
+          ELEVATION · 14.04
+        </div>
+        <div class="elevation-canvas">
+          <div class="building" style="height: 80px;">
+            <div class="building-label">NØRREBRO<br>04 EVENTS</div>
+          </div>
+          <div class="building" style="height: 120px;">
+            <div class="building-label">VESTERBRO<br>07 EVENTS</div>
+          </div>
+          <div class="building" style="height: 60px;">
+            <div class="building-label">INDRE BY<br>03 EVENTS</div>
+          </div>
+          <div class="building" style="height: 100px;">
+            <div class="building-label">CHRISTIANIA<br>05 EVENTS</div>
+          </div>
+        </div>
+        <div class="elevation-list">
+          <div class="elevation-item">
+        
+</div></div></div></div></div>
+
+
+
+
+
+<section class="screen" id="screen-brief" style="padding:56px 24px 90px;color:#EDEDF0;font-family:'Inter',sans-serif;overflow-y:auto;background:#0C0C0D;">
+  <div style="font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;color:#B87333;margin-bottom:8px;">BRIEF · 2026.04.14 · DRAFT</div>
+  <div style="font:600 56px/0.95 'Inter Tight','Inter',sans-serif;letter-spacing:-0.03em;color:#EDEDF0;margin:20px 0 8px;">Ny invitation</div>
+  <div style="font:400 14px/1.4 'Inter',sans-serif;color:#9B9BA3;margin-bottom:32px;">Byg din aften. Vælg sted, tid, og gæster.</div>
+  <div style="padding:16px 0;border-bottom:1px solid rgba(184,115,51,0.18);"><label style="display:block;font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#B87333;margin-bottom:6px;">Titel</label><div style="font:600 17px/1.3 'Inter Tight','Inter',sans-serif;color:#EDEDF0;">Fredagsvin hos os</div></div>
+  <div style="padding:16px 0;border-bottom:1px solid rgba(184,115,51,0.18);"><label style="display:block;font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#B87333;margin-bottom:6px;">Sted</label><div style="font:600 17px/1.3 'Inter Tight','Inter',sans-serif;color:#EDEDF0;">Jægersborggade 42, 2200 Kbh N</div></div>
+  <div style="padding:16px 0;border-bottom:1px solid rgba(184,115,51,0.18);"><label style="display:block;font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#B87333;margin-bottom:6px;">Tid · Start → Slut</label><div style="font:500 17px/1.3 'JetBrains Mono',monospace;color:#EDEDF0;">2026.04.17 · 19:30 → 23:30</div></div>
+  <div style="padding:16px 0;border-bottom:1px solid rgba(184,115,51,0.18);"><label style="display:block;font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#B87333;margin-bottom:6px;">Max Gæster</label><div style="font:500 17px/1.3 'JetBrains Mono',monospace;color:#EDEDF0;">12</div></div>
+  <div style="padding:16px 0;border-bottom:1px solid rgba(184,115,51,0.18);"><label style="display:block;font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#B87333;margin-bottom:6px;">Dresscode</label><div style="font:600 17px/1.3 'Inter Tight','Inter',sans-serif;color:#EDEDF0;">Afslappet · varmt</div></div>
+  <a href="#" onclick="return false;" style="display:block;margin-top:24px;padding:18px 0;border-top:1px solid rgba(184,115,51,0.25);font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:0.18em;color:#B87333;text-decoration:none;text-transform:uppercase;text-align:center;">Commit →</a>
+</section>
+
+<section class="screen" id="screen-index" style="padding:56px 24px 90px;color:#EDEDF0;font-family:'Inter',sans-serif;overflow-y:auto;background:#0C0C0D;">
+  <div style="font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;color:#B87333;margin-bottom:8px;">STUDIO · INDEX · 24 MEMBERS</div>
+  <div style="font:600 96px/0.9 'Inter Tight','Inter',sans-serif;letter-spacing:-0.045em;color:#EDEDF0;margin:12px 0 16px;">24</div>
+  <div style="font:500 11px/1.4 'JetBrains Mono',monospace;letter-spacing:0.12em;color:#9B9BA3;text-transform:uppercase;margin-bottom:20px;">Members · 06 Online</div>
+  <div style="height:1px;background:rgba(184,115,51,0.18);margin:16px 0;"></div>
+
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">01.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">SH</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Sara Holm</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#B87333;">ONLINE</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">22:47</span>
+  </div>
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">02.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">MB</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Mikkel Bach</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#B87333;">ONLINE</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">22:44</span>
+  </div>
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">03.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">AL</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Anna Lund</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#B87333;">ONLINE</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">22:41</span>
+  </div>
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">04.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">JD</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Jonas Dahl</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#B87333;">ON WAY</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">22:35</span>
+  </div>
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">05.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">SN</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Sofie Nielsen</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#B87333;">ONLINE</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">22:32</span>
+  </div>
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">06.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">FV</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Frederik Vik</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#56565E;">QUIET</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">21:55</span>
+  </div>
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">07.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">CF</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Clara Frost</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#56565E;">QUIET</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">21:23</span>
+  </div>
+  <div style="display:grid;grid-template-columns:28px 44px 1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(184,115,51,0.12);">
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;">08.</span>
+    <div style="width:40px;height:40px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.08em;">EK</div>
+    <span style="font:600 15px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.01em;color:#EDEDF0;">Emil Kristensen</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;color:#56565E;">OFFLINE</span>
+    <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">20:11</span>
+  </div>
+</section>
+
+<section class="screen" id="screen-portf" style="padding:56px 24px 90px;color:#EDEDF0;font-family:'Inter',sans-serif;overflow-y:auto;background:#0C0C0D;">
+  <div style="font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;color:#B87333;margin-bottom:8px;">PORTFOLIO · MEMBER · 0247</div>
+  <div style="display:flex;align-items:center;gap:20px;margin:24px 0;">
+    <div style="width:96px;height:96px;border:1px solid rgba(184,115,51,0.3);background:#141416;display:flex;align-items:center;justify-content:center;font:500 28px/1 'JetBrains Mono',monospace;color:#B87333;letter-spacing:0.05em;">NK</div>
+    <div>
+      <div style="font:600 32px/1 'Inter Tight','Inter',sans-serif;letter-spacing:-0.02em;color:#EDEDF0;">Nika</div>
+      <div style="font:500 10px/1.4 'JetBrains Mono',monospace;letter-spacing:0.14em;color:#9B9BA3;margin-top:8px;">MEMBER · KBH · SINCE 2019.07.12</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;margin:24px 0;border-top:1px solid rgba(184,115,51,0.18);border-bottom:1px solid rgba(184,115,51,0.18);">
+    <div style="padding:20px 8px;border-right:1px solid rgba(184,115,51,0.12);"><div style="font:600 40px/1 'Inter Tight',sans-serif;letter-spacing:-0.03em;color:#EDEDF0;">47</div><div style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#9B9BA3;margin-top:6px;">AFTENER</div></div>
+    <div style="padding:20px 8px;border-right:1px solid rgba(184,115,51,0.12);"><div style="font:600 40px/1 'Inter Tight',sans-serif;letter-spacing:-0.03em;color:#EDEDF0;">12</div><div style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#9B9BA3;margin-top:6px;">VENUES</div></div>
+    <div style="padding:20px 8px;"><div style="font:600 40px/1 'Inter Tight',sans-serif;letter-spacing:-0.03em;color:#EDEDF0;">23</div><div style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;color:#9B9BA3;margin-top:6px;">FREDAGE</div></div>
+  </div>
+  <div style="font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:0.14em;color:#B87333;margin:24px 0 12px;">RECENT BUILDS</div>
+  <div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;padding:12px 0;border-bottom:1px solid rgba(184,115,51,0.12);align-items:baseline;"><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">2026.04.12</span><span style="font:600 14px/1 'Inter Tight',sans-serif;color:#EDEDF0;">La Fontaine</span><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;letter-spacing:0.12em;">JAZZ</span></div>
+  <div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;padding:12px 0;border-bottom:1px solid rgba(184,115,51,0.12);align-items:baseline;"><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">2026.04.05</span><span style="font:600 14px/1 'Inter Tight',sans-serif;color:#EDEDF0;">Jolene</span><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;letter-spacing:0.12em;">HOUSE</span></div>
+  <div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;padding:12px 0;border-bottom:1px solid rgba(184,115,51,0.12);align-items:baseline;"><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#9B9BA3;">2026.03.29</span><span style="font:600 14px/1 'Inter Tight',sans-serif;color:#EDEDF0;">Ved Stranden 10</span><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#56565E;letter-spacing:0.12em;">VIN</span></div>
+</section>
+
+<script>
+(function(){
+  var items = [["ATLAS","screen-atlas"],["ELEV","screen-elevation"],["BRIEF","screen-atlas"],["INDEX","screen-atlas"],["PORTF","screen-atlas"]];
+  function init(){
+    // 1. Remove any previous _nav
+    var old = document.getElementById('_nav_inject'); if(old) old.remove();
+    var oldStyle = document.getElementById('_nav_style'); if(oldStyle) oldStyle.remove();
+
+    // 2. Find container - prefer .phone, fallback to body
+    var phone = document.querySelector('.phone') || document.body;
+
+    // 3. Setup screens: hide all except first, give first .active
+    var screens = document.querySelectorAll('.screen');
+    screens.forEach(function(s,i){
+      if(i===0){ s.classList.add('active'); s.style.display = ''; }
+      else { s.classList.remove('active'); s.style.display = 'none'; }
+    });
+
+    // 4. Inject style
+    var st = document.createElement('style');
+    st.id = '_nav_style';
+    st.textContent = '#_nav_inject{position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(0,0,0,0.78);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:9999;padding-bottom:6px;}#_nav_inject .ni{flex:1;text-align:center;cursor:pointer;user-select:none;font:500 9px/1.2 "JetBrains Mono",ui-monospace,monospace;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.45);padding:6px 2px;transition:color 180ms ease;}#_nav_inject .ni:hover{color:rgba(255,255,255,0.85);}#_nav_inject .ni.on{color:rgba(255,255,255,0.98);}#_nav_inject .ni.on::after{content:"";display:block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:4px auto 0;}';
+    document.head.appendChild(st);
+
+    // 5. Make phone position:relative so absolute nav lands inside
+    var cs = window.getComputedStyle(phone);
+    if(cs.position === 'static') phone.style.position = 'relative';
+
+    // 6. Build nav
+    var nav = document.createElement('div');
+    nav.id = '_nav_inject';
+    items.forEach(function(it, idx){
+      var btn = document.createElement('div');
+      btn.className = 'ni' + (idx===0 ? ' on' : '');
+      btn.textContent = it[0];
+      btn.setAttribute('data-t', it[1]);
+      btn.onclick = function(){ go(it[1]); };
+      nav.appendChild(btn);
+    });
+    phone.appendChild(nav);
+
+    // 7. Pad bottom of active screen so nav doesn't overlap
+    screens.forEach(function(s){
+      var pb = parseInt(window.getComputedStyle(s).paddingBottom) || 0;
+      if(pb < 70) s.style.paddingBottom = '80px';
+    });
+  }
+
+  window.go = function(id){
+    var all = document.querySelectorAll('.screen');
+    all.forEach(function(s){ s.classList.remove('active'); s.style.display = 'none'; });
+    var t = document.getElementById(id);
+    if(t){ t.classList.add('active'); t.style.display = ''; }
+    document.querySelectorAll('#_nav_inject .ni').forEach(function(n){ n.classList.remove('on'); });
+    var btn = document.querySelector('#_nav_inject .ni[data-t="'+id+'"]');
+    if(btn) btn.classList.add('on');
+  };
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
