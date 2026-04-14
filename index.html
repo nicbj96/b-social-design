@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B-Social | Holographic</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050508;--surface:rgba(15,15,25,0.8);
+  --text:#F0F0FF;--muted:rgba(240,240,255,0.45);
+  --nav-h:70px;--font:'Lexend',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);font-family:var(--font);color:var(--text);overflow:hidden;}
+.app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:#020203;}
+  .app{height:90vh;max-height:932px;border-radius:28px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.06),0 40px 100px rgba(0,0,0,0.8);}
+}
+
+/* HOLO BACKGROUND */
+.holo-bg{
+  position:fixed;inset:0;max-width:430px;margin:0 auto;pointer-events:none;z-index:0;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 20% 10%,rgba(255,0,128,0.12) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 20%,rgba(0,128,255,0.1) 0%,transparent 50%),
+    radial-gradient(ellipse at 50% 60%,rgba(128,0,255,0.1) 0%,transparent 50%),
+    radial-gradient(ellipse at 10% 80%,rgba(0,255,200,0.08) 0%,transparent 40%),
+    radial-gradient(ellipse at 90% 80%,rgba(255,200,0,0.08) 0%,transparent 40%);
+  animation:holoShift 12s infinite ease-in-out;
+}
+@keyframes holoShift{
+  0%,100%{filter:hue-rotate(0deg);}
+  33%{filter:hue-rotate(60deg);}
+  66%{filter:hue-rotate(-40deg);}
+}
+
+/* HOLO GRADIENT UTILITY */
+.holo{
+  background:linear-gradient(135deg,
+    #ff006680,#ff666680,#ffcc0080,#00ff8880,#0066ff80,#8800ff80,#ff006680
+  );
+  background-size:400% 400%;
+  animation:holoRainbow 8s infinite ease;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+@keyframes holoRainbow{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+.holo-border{
+  background:linear-gradient(135deg,#ff0066,#ff9900,#00ff88,#0066ff,#8800ff,#ff0066);
+  background-size:400% 400%;
+  animation:holoRainbow 6s infinite ease;
+  padding:1.5px;border-radius:22px;
+}
+.holo-border-inner{background:var(--bg);border-radius:20.5px;overflow:hidden;}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;}
+.view.active{display:flex;}
+.view-enter{animation:holoIn 400ms cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes holoIn{from{opacity:0;filter:hue-rotate(90deg) blur(4px);}to{opacity:1;filter:hue-rotate(0deg) blur(0);}}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+20px);}
+.scroll-area::-webkit-scrollbar{display:none;} .scroll-area{-ms-overflow-style:none;scrollbar-width:none;}
+.status-bar{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-size:13px;color:var(--muted);position:relative;z-index:20;}
+
+/* LANDING */
+.land-wrap{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:40px 24px;position:relative;z-index:2;}
+.holo-logo{
+  display:inline-flex;align-items:center;gap:10px;margin-bottom:24px;
+  font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+}
+.holo-orb{
+  width:36px;height:36px;border-radius:50%;
+  background:conic-gradient(#ff0066,#ff9900,#00ff88,#0066ff,#8800ff,#ff0066);
+  animation:spin 4s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.land-title{font-size:clamp(3rem,11vw,4.5rem);font-weight:900;line-height:0.85;letter-spacing:-3px;margin-bottom:16px;}
+.land-sub{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:36px;font-weight:300;}
+.btn-holo{
+  position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  padding:1.5px;border-radius:16px;cursor:pointer;
+  background:linear-gradient(135deg,#ff0066,#ff9900,#00ff88,#0066ff,#8800ff,#ff0066);
+  background-size:300% 300%;animation:holoRainbow 5s infinite;
+}
+.btn-holo-inner{
+  width:100%;background:rgba(5,5,8,0.7);border-radius:14.5px;
+  padding:16px;display:flex;align-items:center;justify-content:center;gap:10px;
+  font-weight:700;font-size:16px;
+  backdrop-filter:blur(10px);
+}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;width:100%;height:var(--nav-h);
+  background:rgba(5,5,8,0.85);border-top:1px solid rgba(255,255,255,0.06);
+  backdrop-filter:blur(30px);display:flex;justify-content:space-around;align-items:center;
+  padding:0 8px 12px;z-index:200;
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--muted);background:none;border:none;
+  font-size:10px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;
+  padding:8px 16px;border-radius:12px;cursor:pointer;transition:all 0.3s;}
+.nav-item.active{background:rgba(255,255,255,0.05);}
+.nav-item.active .nav-label{background:linear-gradient(90deg,#ff0066,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-icon{width:22px;height:22px;stroke:currentColor;stroke-width:1.5;fill:none;}
+.nav-item.active .nav-icon{stroke:url(#holo-grad);}
+
+/* FEED */
+.feed-header{padding:16px 20px 12px;position:relative;z-index:2;}
+.feed-title{font-size:44px;font-weight:900;letter-spacing:-2px;line-height:0.88;margin-bottom:4px;}
+.feed-sub{font-size:13px;color:var(--muted);font-weight:300;}
+
+/* HOLO PILLS */
+.h-pills{display:flex;gap:8px;overflow-x:auto;padding:0 20px 12px;position:relative;z-index:2;}
+.h-pills::-webkit-scrollbar{display:none;}
+.h-pill{white-space:nowrap;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.3s;position:relative;}
+.h-pill-inner{
+  padding:8px 18px;border-radius:999px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--muted);
+  transition:all 0.3s;
+}
+.h-pill.act .h-pill-inner{
+  background:transparent;color:transparent;
+  background-image:linear-gradient(135deg,#ff0066,#ff9900,#00ff88,#0066ff);
+  -webkit-background-clip:text;background-clip:text;
+  border-color:rgba(255,255,255,0.15);
+}
+
+/* SECTION */
+.h-sec{padding:16px 20px 8px;display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);position:relative;z-index:2;}
+.h-sec::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.05);}
+.h-sec.live{background:linear-gradient(90deg,#ff0066,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* HOLO CARD */
+.h-card-wrap{margin:0 20px 16px;position:relative;z-index:2;}
+.h-card{border-radius:22px;overflow:hidden;position:relative;cursor:pointer;}
+.h-card.lg{height:270px;} .h-card.sm{height:170px;}
+/* Holographic shimmer overlay */
+.h-card::after{
+  content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(135deg,
+    rgba(255,0,102,0.08) 0%,rgba(255,153,0,0.04) 20%,rgba(0,255,136,0.06) 40%,
+    rgba(0,102,255,0.08) 60%,rgba(136,0,255,0.04) 80%,rgba(255,0,102,0.06) 100%
+  );
+  background-size:200% 200%;
+  animation:holoCardShimmer 4s infinite ease;
+}
+@keyframes holoCardShimmer{
+  0%{background-position:0% 0%;}
+  50%{background-position:100% 100%;}
+  100%{background-position:0% 0%;}
+}
+.h-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.5) saturate(1.2);}
+.h-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,5,8,0.97) 0%,rgba(5,5,8,0.3) 55%,transparent 100%);}
+.h-body{position:absolute;bottom:0;left:0;right:0;padding:18px;z-index:4;}
+.h-cat{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;background:linear-gradient(90deg,#ff0066,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.h-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px;line-height:1.1;}
+.h-meta{font-size:12px;color:rgba(240,240,255,0.5);}
+.h-live-badge{
+  position:absolute;top:14px;left:14px;z-index:5;
+  display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;
+  background:rgba(5,5,8,0.6);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.1);font-size:11px;font-weight:700;
+}
+.h-live-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:linear-gradient(90deg,#ff0066,#ff9900);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* Now card holo border */
+.h-card-now-wrap{
+  padding:1.5px;border-radius:23.5px;
+  background:linear-gradient(135deg,#ff0066,#ff9900,#00ff88,#0066ff,#8800ff,#ff0066);
+  background-size:300% 300%;animation:holoRainbow 5s infinite;
+  margin:0 20px 16px;position:relative;z-index:2;
+}
+.h-card-now{border-radius:22px;overflow:hidden;position:relative;cursor:pointer;height:270px;}
+.h-card-now::after{
+  content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,0,102,0.12),rgba(0,255,136,0.08),rgba(0,102,255,0.1));
+  background-size:200% 200%;animation:holoCardShimmer 3s infinite ease;
+}
+.h-card-now img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.5) saturate(1.2);}
+
+/* OB */
+.ob-holo{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:36px 24px;position:relative;z-index:2;}
+.ob-title{font-size:44px;font-weight:900;letter-spacing:-2px;line-height:0.88;margin-bottom:10px;}
+.ob-sub{font-size:15px;color:var(--muted);margin-bottom:28px;font-weight:300;line-height:1.6;}
+.ob-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.ob-opt{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+  border-radius:16px;padding:16px 18px;cursor:pointer;transition:all 0.3s;
+}
+.ob-opt.act{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.15);}
+.ob-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);transition:all 0.3s;}
+.ob-opt.act .ob-dot{border:none;background:conic-gradient(#ff0066,#ff9900,#00ff88,#0066ff,#8800ff,#ff0066);animation:spin 3s linear infinite;}
+.ob-t{font-size:17px;font-weight:600;margin-bottom:2px;}
+.ob-opt.act .ob-t{background:linear-gradient(90deg,#ff0066,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.ob-s{font-size:13px;color:var(--muted);font-weight:300;}
+
+/* EXPLORE */
+.expl-holo{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 20px;position:relative;z-index:2;}
+.expl-h{border-radius:20px;overflow:hidden;position:relative;height:160px;cursor:pointer;}
+.expl-h img{width:100%;height:100%;object-fit:cover;filter:brightness(0.45) saturate(1.3);}
+.expl-h::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,0,102,0.1),rgba(0,102,255,0.08));
+  opacity:0;transition:opacity 0.3s;
+}
+.expl-h:hover::after{opacity:1;}
+.expl-h-over{position:absolute;inset:0;z-index:2;background:linear-gradient(to top,rgba(5,5,8,0.88),transparent 55%);display:flex;align-items:flex-end;padding:12px;}
+.expl-h-label{font-size:18px;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="app">
+  <svg width="0" height="0" style="position:absolute">
+    <defs><linearGradient id="holo-grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#ff0066"/><stop offset="100%" style="stop-color:#0066ff"/></linearGradient></defs>
+  </svg>
+  <div class="holo-bg"></div>
+
+  <!-- LANDING -->
+  <div id="v-landing" class="view active">
+    <div class="status-bar"><span>9:41</span><span>◈◈◈ 100%</span></div>
+    <div class="land-wrap">
+      <div class="holo-logo">
+        <div class="holo-orb"></div>
+        <span class="holo">B—SOCIAL</span>
+      </div>
+      <div class="land-title"><span class="holo">Tid<br>fly<br>der.</span></div>
+      <div class="land-sub">Fremtid er opstrøms. Nutid skinner. Fortid glimrer i vandet bag dig.</div>
+      <div class="btn-holo" onclick="go('v-ob')">
+        <div class="btn-holo-inner">
+          <span class="holo">Træd i strømmen</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="v-ob" class="view">
+    <div class="status-bar"><span>9:41</span><span>◈◈◈ 100%</span></div>
+    <div class="ob-holo">
+      <div class="ob-title"><span class="holo">Hvornår skinner du?</span></div>
+      <div class="ob-sub">Vælg dit sted i det holografiske tidsfelt.</div>
+      <div class="ob-opts">
+        <div class="ob-opt" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-t">Fremtid</div><div class="ob-s">Næste måned og frem</div></div></div>
+        <div class="ob-opt" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-t">Snart</div><div class="ob-s">Denne uge</div></div></div>
+        <div class="ob-opt act" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-t">Nu</div><div class="ob-s">I dag og i morgen</div></div></div>
+      </div>
+      <div class="btn-holo" onclick="go('v-feed')"><div class="btn-holo-inner"><span class="holo">Åbn spektret →</span></div></div>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="v-feed" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>◈◈◈ 100%</span></div>
+    <div class="scroll-area">
+      <div class="feed-header">
+        <div class="feed-title"><span class="holo">Floden</span></div>
+        <div class="feed-sub">Holografisk tidslinje · Nær dig</div>
+      </div>
+      <div class="h-pills">
+        <div class="h-pill"><div class="h-pill-inner">August</div></div>
+        <div class="h-pill"><div class="h-pill-inner">Juli</div></div>
+        <div class="h-pill"><div class="h-pill-inner">Uge</div></div>
+        <div class="h-pill act"><div class="h-pill-inner">Nu</div></div>
+        <div class="h-pill"><div class="h-pill-inner">I går</div></div>
+      </div>
+      <div class="h-sec">Fremtid</div>
+      <div class="h-card-wrap">
+        <div class="h-card sm">
+          <img class="h-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+          <div class="h-grad"></div>
+          <div class="h-body"><div class="h-cat">Fest</div><div class="h-title">Sommergalla i Skoven</div><div class="h-meta">14. August · Frederiksberg</div></div>
+        </div>
+      </div>
+      <div class="h-sec live">◈ Live Nu</div>
+      <div class="h-card-now-wrap">
+        <div class="h-card-now">
+          <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=90&fit=crop" alt="">
+          <div class="h-grad" style="z-index:2;"></div>
+          <div class="h-live-badge" style="z-index:5;">Live</div>
+          <div class="h-body" style="z-index:5;">
+            <div class="h-cat">Musik</div><div class="h-title">Jazz på Havnen</div>
+            <div class="h-meta">I gang · slutter 22:00 · Nyhavn</div>
+          </div>
+        </div>
+      </div>
+      <div class="h-card-wrap">
+        <div class="h-card sm">
+          <img class="h-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=90&fit=crop" alt="">
+          <div class="h-grad"></div>
+          <div class="h-body"><div class="h-cat">Mad</div><div class="h-title">Pop-up Street Food</div><div class="h-meta">Starter 18:00 · Vesterbro</div></div>
+        </div>
+      </div>
+      <div class="h-sec" style="opacity:0.3;">Fortid</div>
+      <div class="h-card-wrap" style="opacity:0.25;filter:grayscale(80%);">
+        <div class="h-card sm">
+          <img class="h-img" src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=90&fit=crop" alt="">
+          <div class="h-grad"></div>
+          <div class="h-body"><div class="h-title">Byvandring</div><div class="h-meta">Afsluttet · I går</div></div>
+        </div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Floden</span></button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-label">Udforsk</span></button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Profil</span></button>
+    </nav>
+  </div>
+
+  <!-- EXPLORE -->
+  <div id="v-explore" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>◈◈◈ 100%</span></div>
+    <div class="scroll-area">
+      <div class="feed-header"><div class="feed-title"><span class="holo">Udforsk</span></div><div class="feed-sub">Alle kategorier · Spektrum</div></div>
+      <div class="expl-holo">
+        <div class="expl-h"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=85&fit=crop" alt=""><div class="expl-h-over"><div class="expl-h-label">Musik</div></div></div>
+        <div class="expl-h"><img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&q=85&fit=crop" alt=""><div class="expl-h-over"><div class="expl-h-label">Aktiv</div></div></div>
+        <div class="expl-h"><img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=85&fit=crop" alt=""><div class="expl-h-over"><div class="expl-h-label">Mad</div></div></div>
+        <div class="expl-h"><img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=85&fit=crop" alt=""><div class="expl-h-over"><div class="expl-h-label">Wellness</div></div></div>
+      </div>
+      <div class="h-sec live" style="margin-top:4px;">◈ Trending</div>
+      <div class="h-card-now-wrap" style="margin-bottom:16px;">
+        <div class="h-card-now">
+          <img src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=90&fit=crop" alt="">
+          <div class="h-grad" style="z-index:2;"></div>
+          <div class="h-live-badge" style="z-index:5;">Live</div>
+          <div class="h-body" style="z-index:5;"><div class="h-cat">Kultur</div><div class="h-title">Fjordhavnens Festival</div><div class="h-meta">I gang nu · Nordhavn</div></div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Floden</span></button>
+      <button class="nav-item active" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-label">Udforsk</span></button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Profil</span></button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="v-profile" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>◈◈◈ 100%</span></div>
+    <div class="scroll-area">
+      <div style="padding:24px;position:relative;z-index:2;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+          <div style="width:72px;height:72px;border-radius:50%;padding:2px;background:conic-gradient(#ff0066,#ff9900,#00ff88,#0066ff,#8800ff,#ff0066);animation:spin 4s linear infinite;">
+            <div style="width:100%;height:100%;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;background:conic-gradient(rgba(255,0,102,0.3),rgba(0,102,255,0.3));">SK</div>
+          </div>
+          <div><div style="font-size:26px;font-weight:700;"><span class="holo">Sara K.</span></div><div style="font-size:13px;color:var(--muted);">@sara.strøm</div></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:24px;">
+          <div style="flex:1;padding:16px;text-align:center;border-radius:16px;background:rgba(255,0,102,0.08);border:1px solid rgba(255,0,102,0.15);">
+            <div style="font-size:28px;font-weight:700;"><span style="background:linear-gradient(90deg,#ff0066,#ff9900);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">47</span></div>
+            <div style="font-size:11px;color:var(--muted);">EVENTS</div>
+          </div>
+          <div style="flex:1;padding:16px;text-align:center;border-radius:16px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.12);">
+            <div style="font-size:28px;font-weight:700;"><span style="background:linear-gradient(90deg,#00ff88,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">312</span></div>
+            <div style="font-size:11px;color:var(--muted);">FØLGERE</div>
+          </div>
+          <div style="flex:1;padding:16px;text-align:center;border-radius:16px;background:rgba(136,0,255,0.06);border:1px solid rgba(136,0,255,0.12);">
+            <div style="font-size:28px;font-weight:700;"><span style="background:linear-gradient(90deg,#8800ff,#ff0066);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">89</span></div>
+            <div style="font-size:11px;color:var(--muted);">FØLGER</div>
+          </div>
+        </div>
+        <div class="h-sec" style="padding:0 0 12px;">Gemte Events</div>
+        <div class="h-card-wrap" style="margin:0;">
+          <div class="h-card sm">
+            <img class="h-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+            <div class="h-grad"></div>
+            <div class="h-body"><div class="h-cat">Fest</div><div class="h-title">Sommergalla</div><div class="h-meta">14. August</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Floden</span></button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-label">Udforsk</span></button>
+      <button class="nav-item active" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Profil</span></button>
+    </nav>
+  </div>
+</div>
+<script>
+let cur='v-landing';
+function go(id){const p=document.getElementById(cur),n=document.getElementById(id);n.classList.add('active','view-enter');setTimeout(()=>{p.classList.remove('active');n.classList.remove('view-enter');},400);cur=id;}
+function navTo(id,btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');go(id);}
+function selOb(el){document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('act'));el.classList.add('act');}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
