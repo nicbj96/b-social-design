@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="da"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>B-Social Concept 11 — Purple Luxe</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#08080E,#121218);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;overflow:hidden}
+.phone{position:relative;z-index:10;width:430px;height:min(860px,calc(100vh - 40px));background:#08080E;border-radius:44px;box-shadow:0 20px 60px rgba(0,0,0,0.8);overflow:hidden;display:flex;flex-direction:column}
+.sbar{height:44px;background:#08080E;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:12px;font-weight:600;color:#FFFFFF}
+.wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;scroll-behavior:smooth}
+.wrap::-webkit-scrollbar{width:3px}.wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:99px}
+.scr{display:none;padding:20px 20px 20px;animation:fadeUp .35s ease}
+.scr.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+.nav{flex-shrink:0;height:75px;width:100%;background:#08080Eee;backdrop-filter:blur(20px);display:flex;justify-content:space-around;align-items:center;padding:0 10px;border-top:1px solid rgba(255,255,255,0.08);z-index:50}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 16px;border-radius:14px;color:rgba(255,255,255,0.4);font-size:10px;font-weight:600;transition:color .2s}
+.ni.on{color:#6C63FF}
+.ni .ico{font-size:22px}
+h1{font-family:'Instrument Serif',serif;font-size:32px;font-weight:700;color:#FFFFFF;line-height:1.2}
+h2{font-family:'Instrument Serif',serif;font-size:22px;font-weight:700;color:#FFFFFF;margin-bottom:16px}
+h3{font-size:15px;font-weight:600;color:#FFFFFF;margin-bottom:12px}
+p,.sub{color:rgba(255,255,255,0.5);font-size:14px;line-height:1.6}
+.gl{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:18px}
+.btn{padding:14px 28px;border:none;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.bp{background:linear-gradient(135deg,#6C63FF,#8B85FF);color:#fff}.bp:active{transform:scale(.96)}
+.bt{background:none;color:rgba(255,255,255,0.5);padding:0;border:none;cursor:pointer;font-size:13px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600}
+.blv{background:rgba(76,175,80,.15);color:#4CAF50;border:1px solid rgba(76,175,80,.3)}
+.blv::before{content:'';width:6px;height:6px;background:#4CAF50;border-radius:50%;animation:pu 2s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+.pill{padding:7px 16px;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:999px;color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.pill.on{border-color:#6C63FF;color:#6C63FF}
+.hl{color:#6C63FF;font-style:italic}
+.ecard{position:relative;border-radius:18px;overflow:hidden;height:180px;margin-bottom:14px;background-size:cover;background-position:center}
+.ecard::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,.15) 50%,transparent 100%)}
+.ecard-body{position:absolute;bottom:0;left:0;right:0;padding:16px;z-index:2}
+.ecard .badge{position:absolute;top:12px;right:12px;z-index:2}
+.etitle{font-weight:600;color:#fff;font-size:15px;margin-bottom:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.emeta{font-size:12px;color:rgba(255,255,255,.8)}
+.ecard.tall{height:220px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcard{position:relative;border-radius:16px;overflow:hidden;min-height:130px;background-size:cover;background-position:center}
+.mcard:first-child{grid-row:span 2;min-height:270px}
+.mcard::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.65) 0%,transparent 60%)}
+.mcard-body{position:absolute;bottom:0;left:0;right:0;padding:12px;z-index:2}
+.pcard{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1;background-size:cover;background-position:center}
+.pcard::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.5),transparent 60%)}
+.pcard-body{position:absolute;bottom:0;left:0;right:0;padding:10px;z-index:2;color:#fff;font-size:12px;font-weight:600}
+.avs{display:flex}.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#8B85FF);border:2px solid #08080E;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff;margin-left:-8px}.av:first-child{margin-left:0}
+.fb{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;background:linear-gradient(135deg,#6C63FF,#8B85FF);color:#fff;position:relative}
+.fb::after{content:'';position:absolute;width:8px;height:8px;background:#4CAF50;border:2px solid #08080E;border-radius:50%;bottom:0;right:0}
+.sgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.scard{padding:14px;text-align:center;border-radius:14px}
+.snum{font-family:'Instrument Serif',serif;font-size:22px;font-weight:700;color:#6C63FF}.slbl{font-size:11px;color:rgba(255,255,255,0.5)}
+.pbar{width:100%;height:6px;background:rgba(255,255,255,0.05);border-radius:99px;overflow:hidden;margin-bottom:20px}
+.pfill{height:100%;background:linear-gradient(90deg,#6C63FF,#8B85FF);width:80%;border-radius:99px}
+.stitle{font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.bcard{padding:12px;border-radius:14px;display:flex;gap:12px;margin-bottom:10px}
+.scroll-row{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:6px}
+</style></head><body>
+<div class="phone"><div class="sbar"><div>9:41</div><div>●●● 100%</div></div>
+<div class="wrap">
+
+<!-- LANDING -->
+<div class="scr on" id="s-land">
+<div style="text-align:center;padding:60px 0 20px">
+<div style="font-family:'Instrument Serif',serif;font-size:28px;color:#FFFFFF;letter-spacing:2px">B-Social</div>
+<div style="margin:16px auto;width:fit-content" class="badge blv">LIVE NU</div>
+<h1 style="margin:30px 0 12px">Oplev natten <span class="hl">sammen.</span></h1>
+<p>Find events. Mød venner. Del oplevelser i København.</p>
+<div style="margin:30px 0"><button class="btn bp" onclick="go('home')">Kom i gang →</button></div>
+<p class="sub" style="margin-bottom:12px">12.847 brugere i København</p>
+<div class="avs" style="justify-content:center"><div class="av">S</div><div class="av">M</div><div class="av">L</div><div class="av">K</div></div>
+<div style="margin-top:20px"><button class="bt" onclick="go('home')">Har du allerede en konto? Log ind</button></div>
+</div></div>
+
+<!-- HOME -->
+<div class="scr" id="s-home">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+<div style="font-family:'Instrument Serif',serif;font-size:20px;color:#FFFFFF">Godaften, Nicolaj 👋</div><div style="font-size:20px">🔔</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+<div class="gl" style="padding:18px;border-radius:20px"><div style="font-family:'Instrument Serif',serif;font-size:28px;color:#6C63FF">🔥 127</div><div class="sub" style="font-size:12px">Trending i dag</div></div>
+<div class="gl" style="padding:18px;border-radius:20px"><div style="font-family:'Instrument Serif',serif;font-size:28px;color:#6C63FF">📍 23</div><div class="sub" style="font-size:12px">Nær dig nu</div></div></div>
+<div class="gl" style="padding:14px;border-radius:20px;display:flex;gap:10px;overflow-x:auto;margin-bottom:20px">
+<div class="fb">👤</div><div class="fb">👤</div><div class="fb">👤</div><div class="fb">👤</div>
+<div style="flex-shrink:0;font-size:12px;color:rgba(255,255,255,0.5);display:flex;align-items:center">+12 aktive</div></div>
+<h3>Populære events</h3>
+<div class="ecard tall" style="background-image:url(https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&h=400&fit=crop)">
+<span class="badge blv" style="position:absolute;top:12px;right:12px;z-index:2">LIVE NU</span>
+<div class="ecard-body"><div class="etitle">Midsommer på Taget</div><div class="emeta">I gang · slutter 22:00 · Nyhavn · 34 venner</div></div></div>
+<div class="ecard" style="background-image:url(https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&h=400&fit=crop)">
+<div class="ecard-body"><div class="etitle">Jazz på Havnen</div><div class="emeta">Starter 18:00 · Indre By</div></div></div>
+<div class="ecard" style="background-image:url(https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&h=400&fit=crop)">
+<div class="ecard-body"><div class="etitle">Sunset Yoga Session</div><div class="emeta">Morgen 18:30 · Fælledparken</div></div></div>
+</div>
+
+<!-- FEED -->
+<div class="scr" id="s-feed">
+<h2>Floden</h2>
+<div class="scroll-row">
+<span class="pill on" onclick="pill(this)">Nu</span><span class="pill" onclick="pill(this)">I dag</span>
+<span class="pill" onclick="pill(this)">Denne uge</span><span class="pill" onclick="pill(this)">Alle</span></div>
+<div class="ecard tall" style="background-image:url(https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=400&fit=crop)">
+<span class="badge blv" style="position:absolute;top:12px;right:12px;z-index:2">LIVE NU</span>
+<div class="ecard-body"><div class="etitle">Jazz på Havnen</div><div class="emeta">I gang · slutter 22:00 · Nyhavn · 12 venner</div></div></div>
+<div class="ecard" style="background-image:url(https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=400&fit=crop)">
+<div class="ecard-body"><div class="etitle">Pop-up Street Food</div><div class="emeta">Starter 18:00 · Vesterbro</div></div></div>
+<div class="ecard" style="background-image:url(https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=600&h=400&fit=crop)">
+<div class="ecard-body"><div class="etitle">Sommergalla i Skoven</div><div class="emeta">14. August · Frederiksberg Have</div></div></div>
+<div class="ecard" style="background-image:url(https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&h=400&fit=crop)">
+<div class="ecard-body"><div class="etitle">Electric Dreams Festival</div><div class="emeta">21. August · Roskilde</div></div></div>
+<div class="ecard" style="background-image:url(https://images.unsplash.com/photo-1461896836934-bd45ba8fcb52?w=600&h=400&fit=crop)">
+<div class="ecard-body"><div class="etitle">Morgenløb i Fælledparken</div><div class="emeta">Hver lørdag 08:00 · Østerbro</div></div></div>
+</div>
+
+<!-- EXPLORE -->
+<div class="scr" id="s-explore">
+<h2>Udforsk</h2>
+<input type="text" readonly placeholder="🔍 Søg events, steder, venner..." style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:999px;color:#FFFFFF;font-size:14px;margin-bottom:14px;outline:none">
+<div class="scroll-row">
+<span class="pill on" onclick="pill(this)">Musik</span><span class="pill" onclick="pill(this)">Mad & Drikke</span>
+<span class="pill" onclick="pill(this)">Kultur</span><span class="pill" onclick="pill(this)">Sport</span>
+<span class="pill" onclick="pill(this)">Natteliv</span><span class="pill" onclick="pill(this)">Natur</span></div>
+<div class="mgrid">
+<div class="mcard" style="background-image:url(https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&h=400&fit=crop)"><div class="mcard-body"><div class="etitle">Electronic Beats</div><div class="emeta">Klub K · 8 venner</div></div></div>
+<div class="mcard" style="background-image:url(https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=400&fit=crop)"><div class="mcard-body"><div class="etitle">Indie Night</div><div class="emeta">Pumpehuset · 24</div></div></div>
+<div class="mcard" style="background-image:url(https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&h=400&fit=crop)"><div class="mcard-body"><div class="etitle">Live Jazz</div><div class="emeta">Mojo · 15</div></div></div>
+<div class="mcard" style="background-image:url(https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&h=400&fit=crop)"><div class="mcard-body"><div class="etitle">Rooftop Vibes</div><div class="emeta">Nimb · 42</div></div></div>
+<div class="mcard" style="background-image:url(https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&h=400&fit=crop)"><div class="mcard-body"><div class="etitle">House Party</div><div class="emeta">Nørrebro · 31</div></div></div>
+<div class="mcard" style="background-image:url(https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=600&h=400&fit=crop)"><div class="mcard-body"><div class="etitle">Kanalrundfart</div><div class="emeta">Nyhavn · 18</div></div></div>
+</div></div>
+
+<!-- PROFILE -->
+<div class="scr" id="s-profil">
+<div style="text-align:center;margin-bottom:28px;position:relative">
+<button style="position:absolute;top:0;right:0;background:rgba(0,0,0,0.08);border:1px solid #6C63FF;padding:7px 16px;border-radius:999px;color:#6C63FF;font-size:12px;font-weight:600;cursor:pointer">Rediger</button>
+<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#8B85FF);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 14px;border:2px solid #6C63FF">🌙</div>
+<div style="font-family:'Instrument Serif',serif;font-size:20px;color:#FFFFFF">Nicolaj Jensen</div>
+<div class="sub" style="font-size:13px;margin:4px 0 10px">@nicolaj · Aalborg</div>
+<p>Elsker musik, mad og gode venner ✨</p></div>
+<div class="sgrid">
+<div class="gl scard"><div class="snum">47</div><div class="slbl">Events</div></div>
+<div class="gl scard"><div class="snum">312</div><div class="slbl">Venner</div></div>
+<div class="gl scard"><div class="snum">🔥 7</div><div class="slbl">Streak</div></div></div>
+<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:6px"><span>Profil færdig</span><span>80%</span></div>
+<div class="pbar"><div class="pfill"></div></div>
+<div class="stitle">Mine Events</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+<div class="pcard" style="background-image:url(https://images.unsplash.com/photo-1506157786151-b8491531f063?w=300&h=300&fit=crop)"><div class="pcard-body">Indie Night · Ons</div></div>
+<div class="pcard" style="background-image:url(https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop)"><div class="pcard-body">Jazz Aften · Fre</div></div></div>
+<div class="stitle">Achievements</div>
+<div class="gl bcard"><div style="font-size:22px">🎵</div><div><div style="font-size:13px;font-weight:600;color:#FFFFFF">Musikelsker</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">Deltaget i 15+ musik events</div></div></div>
+<div class="gl bcard"><div style="font-size:22px">🌟</div><div><div style="font-size:13px;font-weight:600;color:#FFFFFF">Trendsætter</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">Host for 5+ populære events</div></div></div>
+<div class="gl bcard"><div style="font-size:22px">🎉</div><div><div style="font-size:13px;font-weight:600;color:#FFFFFF">Party Pro</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">7 dage streak aktiv</div></div></div>
+</div>
+
+</div>
+<div class="nav" id="nav" style="display:none">
+<div class="ni on" onclick="go('home')"><div class="ico">🏠</div><div>Hjem</div></div>
+<div class="ni" onclick="go('feed')"><div class="ico">📱</div><div>Feed</div></div>
+<div class="ni" onclick="go('explore')"><div class="ico">🔍</div><div>Udforsk</div></div>
+<div class="ni" onclick="go('profil')"><div class="ico">👤</div><div>Profil</div></div>
+</div></div>
+<script>
+var screens={"land":"s-land","home":"s-home","feed":"s-feed","explore":"s-explore","profil":"s-profil"};
+var navMap={"home":0,"feed":1,"explore":2,"profil":3};
+function go(name){
+  Object.values(screens).forEach(function(id){document.getElementById(id).classList.remove("on")});
+  document.getElementById(screens[name]).classList.add("on");
+  document.getElementById("nav").style.display=(name==="land")?"none":"flex";
+  document.querySelectorAll(".ni").forEach(function(el,i){el.classList.remove("on");if(navMap[name]===i)el.classList.add("on")});
+  document.querySelector(".wrap").scrollTop=0;
+}
+function pill(el){el.parentElement.querySelectorAll(".pill").forEach(function(p){p.classList.remove("on")});el.classList.add("on")}
+</script>
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body></html>
