@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B-Social | Neon Tokyo</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050508;--surface:#0d0d14;--surface2:#12121c;
+  --cyan:#00F5FF;--pink:#FF0080;--purple:#7B2FBE;
+  --yellow:#FFE600;
+  --text:#E8E8FF;--muted:rgba(232,232,255,0.45);
+  --grid-line:rgba(123,47,190,0.15);
+  --nav-h:70px;
+  --font-body:'Space Grotesk',sans-serif;
+  --font-mono:'Space Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);font-family:var(--font-body);color:var(--text);overflow:hidden;}
+.app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:#020204;}
+  .app{height:90vh;max-height:932px;border-radius:4px;
+    box-shadow:0 0 0 1px var(--purple),0 0 60px rgba(0,245,255,0.2),0 0 120px rgba(255,0,128,0.1);}
+}
+
+/* GRID BG */
+.grid-bg{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  max-width:430px;margin:0 auto;overflow:hidden;
+  background-image:
+    linear-gradient(var(--grid-line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+  background-size:40px 40px;
+  mask-image:radial-gradient(ellipse at 50% 0%,black 40%,transparent 80%);
+}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;}
+.view.active{display:flex;}
+.view-enter{animation:glitchIn 300ms steps(3) forwards;}
+@keyframes glitchIn{
+  0%{opacity:0;clip-path:inset(0 0 100% 0);}
+  33%{clip-path:inset(0 0 60% 0);transform:translateX(-4px);}
+  66%{clip-path:inset(0 0 20% 0);transform:translateX(4px);}
+  100%{opacity:1;clip-path:inset(0 0 0% 0);transform:translateX(0);}
+}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+20px);}
+.scroll-area::-webkit-scrollbar{display:none;} .scroll-area{-ms-overflow-style:none;scrollbar-width:none;}
+
+/* STATUS BAR */
+.status-bar{height:44px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 20px;font-family:var(--font-mono);font-size:11px;color:var(--cyan);
+  position:relative;z-index:20;border-bottom:1px solid rgba(0,245,255,0.1);}
+
+/* NEON TEXT */
+.neon-cyan{color:var(--cyan);text-shadow:0 0 10px var(--cyan),0 0 30px rgba(0,245,255,0.5);}
+.neon-pink{color:var(--pink);text-shadow:0 0 10px var(--pink),0 0 30px rgba(255,0,128,0.5);}
+.neon-purple{color:var(--purple);text-shadow:0 0 10px var(--purple);}
+
+/* LANDING */
+.landing-inner{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 24px;position:relative;z-index:2;}
+.scan-line{
+  position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,0.015) 2px,rgba(0,245,255,0.015) 4px);
+  animation:scan 8s linear infinite;z-index:1;
+}
+@keyframes scan{0%{background-position:0 0;}100%{background-position:0 400px;}}
+.land-tag{font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--cyan);margin-bottom:20px;text-transform:uppercase;}
+.land-title{
+  font-size:clamp(3rem,11vw,4rem);font-weight:700;line-height:0.9;
+  margin-bottom:16px;letter-spacing:-2px;
+}
+.land-title .line2{display:block;-webkit-text-stroke:1px var(--pink);color:transparent;text-shadow:0 0 20px rgba(255,0,128,0.5);}
+.land-sub{font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:36px;letter-spacing:0.5px;}
+.btn-neon{
+  display:inline-flex;align-items:center;gap:12px;width:100%;justify-content:center;
+  background:transparent;border:1px solid var(--cyan);
+  color:var(--cyan);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  padding:16px 24px;cursor:pointer;position:relative;overflow:hidden;
+  box-shadow:0 0 20px rgba(0,245,255,0.2),inset 0 0 20px rgba(0,245,255,0.05);
+  transition:all 0.3s;
+}
+.btn-neon:hover{box-shadow:0 0 40px rgba(0,245,255,0.4),inset 0 0 30px rgba(0,245,255,0.1);}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;width:100%;height:var(--nav-h);
+  background:rgba(5,5,8,0.9);border-top:1px solid rgba(123,47,190,0.4);
+  display:flex;justify-content:space-around;align-items:center;
+  padding:0 8px 10px;z-index:200;
+  box-shadow:0 -4px 30px rgba(123,47,190,0.2);
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--muted);background:none;border:none;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;
+  padding:8px 16px;cursor:pointer;transition:all 0.3s;}
+.nav-item.active{color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+.nav-icon{width:20px;height:20px;stroke:currentColor;stroke-width:1.5;fill:none;}
+
+/* FEED */
+.feed-header{padding:16px 20px 0;position:relative;z-index:2;}
+.feed-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--cyan);margin-bottom:8px;text-transform:uppercase;}
+.feed-title{font-size:48px;font-weight:700;letter-spacing:-3px;line-height:0.9;margin-bottom:16px;}
+.time-tabs{
+  display:flex;gap:0;overflow-x:auto;margin:0 -20px;padding:0 20px;
+  border-bottom:1px solid rgba(123,47,190,0.3);
+}
+.time-tabs::-webkit-scrollbar{display:none;}
+.ttab{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);padding:12px 16px;white-space:nowrap;cursor:pointer;
+  border-bottom:2px solid transparent;transition:all 0.3s;
+}
+.ttab.act{color:var(--cyan);border-bottom-color:var(--cyan);text-shadow:0 0 8px var(--cyan);}
+
+/* NEO CARD */
+.neo-card{
+  margin:16px 20px 0;position:relative;cursor:pointer;
+  border:1px solid rgba(123,47,190,0.3);overflow:hidden;
+  transition:all 0.3s;
+}
+.neo-card:hover{border-color:var(--cyan);box-shadow:0 0 30px rgba(0,245,255,0.15);}
+.neo-card.live-card{border-color:rgba(0,245,255,0.4);box-shadow:0 0 20px rgba(0,245,255,0.1);}
+.neo-card.sm{height:160px;} .neo-card.lg{height:260px;}
+.neo-img{width:100%;height:100%;object-fit:cover;filter:brightness(0.5) saturate(1.2) hue-rotate(-10deg);}
+.neo-grad{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(5,5,8,0.95) 0%,rgba(5,5,8,0.3) 60%,transparent 100%);
+}
+/* Scanline overlay on cards */
+.neo-card::before{
+  content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px);
+}
+.neo-corner{
+  position:absolute;z-index:5;width:12px;height:12px;
+  border-color:var(--cyan);border-style:solid;
+}
+.neo-corner.tl{top:8px;left:8px;border-width:2px 0 0 2px;}
+.neo-corner.tr{top:8px;right:8px;border-width:2px 2px 0 0;}
+.neo-corner.bl{bottom:8px;left:8px;border-width:0 0 2px 2px;}
+.neo-corner.br{bottom:8px;right:8px;border-width:0 2px 2px 0;}
+.neo-body{position:absolute;bottom:0;left:0;right:0;padding:16px;z-index:4;}
+.neo-cat{font-family:var(--font-mono);font-size:9px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:6px;}
+.neo-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;line-height:1.1;margin-bottom:6px;}
+.neo-meta{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1px;}
+.live-badge{
+  position:absolute;top:12px;right:12px;z-index:5;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--bg);background:var(--cyan);padding:4px 10px;
+  box-shadow:0 0 15px var(--cyan);
+}
+.live-badge::before{content:'▶ ';}
+
+/* SECTION HDR */
+.sec-hdr{
+  display:flex;align-items:center;gap:12px;padding:20px 20px 0;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);position:relative;z-index:2;
+}
+.sec-hdr::after{content:'';flex:1;height:1px;background:rgba(123,47,190,0.3);}
+.sec-hdr.live-sec{color:var(--cyan);text-shadow:0 0 8px var(--cyan);}
+.sec-hdr.live-sec::after{background:rgba(0,245,255,0.3);}
+
+/* OB */
+.ob-inner{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 24px;position:relative;z-index:2;}
+.ob-title{font-size:40px;font-weight:700;letter-spacing:-2px;line-height:0.9;margin-bottom:8px;}
+.ob-sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:32px;letter-spacing:1px;text-transform:uppercase;}
+.ob-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:32px;}
+.ob-opt{
+  display:flex;justify-content:space-between;align-items:center;
+  border:1px solid rgba(123,47,190,0.3);padding:16px 20px;cursor:pointer;transition:all 0.3s;
+}
+.ob-opt.act{border-color:var(--cyan);background:rgba(0,245,255,0.05);box-shadow:0 0 20px rgba(0,245,255,0.1);}
+.ob-opt-l{font-size:20px;font-weight:700;letter-spacing:-0.5px;}
+.ob-opt.act .ob-opt-l{color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+.ob-opt-r{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--muted);}
+.ob-opt.act .ob-opt-r{color:var(--cyan);}
+
+/* EXPLORE */
+.expl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px 20px;position:relative;z-index:2;}
+.expl-tile{position:relative;height:170px;overflow:hidden;border:1px solid rgba(123,47,190,0.3);cursor:pointer;transition:all 0.3s;}
+.expl-tile:hover{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,245,255,0.15);}
+.expl-tile img{width:100%;height:100%;object-fit:cover;filter:brightness(0.4) saturate(1.5);}
+.expl-tile-label{position:absolute;bottom:10px;left:12px;font-size:18px;font-weight:700;letter-spacing:-0.5px;}
+.expl-tile-num{position:absolute;top:8px;right:10px;font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--cyan);}
+/* Neon border glow on tile hover */
+.expl-tile::after{
+  content:'';position:absolute;inset:0;opacity:0;
+  box-shadow:inset 0 0 20px rgba(0,245,255,0.2);transition:opacity 0.3s;
+}
+.expl-tile:hover::after{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="grid-bg"></div>
+
+  <!-- LANDING -->
+  <div id="v-landing" class="view active">
+    <div class="scan-line"></div>
+    <div class="status-bar">
+      <span>SYS_9:41</span>
+      <span class="neon-cyan">◈ ONLINE</span>
+    </div>
+    <div class="landing-inner">
+      <div class="land-tag">B-Social // Version 2.0 // Tokyo Grid</div>
+      <div class="land-title">
+        TID<br>
+        <span class="line2">FLYDER</span>
+      </div>
+      <div class="land-sub">
+        // Fremtid er opstrøms<br>
+        // Nutid er her<br>
+        // Fortid flyder forbi
+      </div>
+      <button class="btn-neon" onclick="go('v-ob')">▶ INITIALISER STRØM</button>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="v-ob" class="view" style="background:var(--bg);">
+    <div class="status-bar"><span>SYS_9:41</span><span class="neon-cyan">KALIBRERING</span></div>
+    <div class="ob-inner">
+      <div class="land-tag">Tidszone kalibrering</div>
+      <div class="ob-title">SELECT<br>STREAM</div>
+      <div class="ob-sub">// Vælg dit sted i strømmen</div>
+      <div class="ob-opts">
+        <div class="ob-opt" onclick="selOb(this)">
+          <div class="ob-opt-l">FREMTID</div>
+          <div class="ob-opt-r">+30 DAGE</div>
+        </div>
+        <div class="ob-opt" onclick="selOb(this)">
+          <div class="ob-opt-l">SNART</div>
+          <div class="ob-opt-r">+7 DAGE</div>
+        </div>
+        <div class="ob-opt act" onclick="selOb(this)">
+          <div class="ob-opt-l">NU</div>
+          <div class="ob-opt-r">T+0 ◈</div>
+        </div>
+      </div>
+      <button class="btn-neon" onclick="go('v-feed')" style="border-color:var(--pink);color:var(--pink);box-shadow:0 0 20px rgba(255,0,128,0.2);">▶ LOAD STRØM</button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="v-feed" class="view" style="background:var(--bg);">
+    <div class="status-bar"><span>SYS_9:41</span><span class="neon-cyan">● LIVE</span></div>
+    <div class="scroll-area">
+      <div class="feed-header">
+        <div class="feed-eyebrow">// B-Social strøm aktiv</div>
+        <div class="feed-title neon-cyan" style="text-shadow:none;color:var(--text);">FLO<span style="color:var(--cyan);text-shadow:0 0 20px var(--cyan);">DEN</span></div>
+        <div class="time-tabs">
+          <div class="ttab">AUG</div>
+          <div class="ttab">JUL</div>
+          <div class="ttab">UGE</div>
+          <div class="ttab act">NU</div>
+          <div class="ttab">GÅR</div>
+        </div>
+      </div>
+
+      <div class="sec-hdr">// Fremtid</div>
+      <div class="neo-card sm">
+        <img class="neo-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+        <div class="neo-grad"></div>
+        <div class="neo-corner tl"></div><div class="neo-corner tr"></div>
+        <div class="neo-corner bl"></div><div class="neo-corner br"></div>
+        <div class="neo-body">
+          <div class="neo-cat">01_FEST</div>
+          <div class="neo-title">Sommergalla i Skoven</div>
+          <div class="neo-meta">14.AUG // FREDERIKSBERG</div>
+        </div>
+      </div>
+
+      <div class="sec-hdr live-sec">◈ // Live Nu</div>
+      <div class="neo-card lg live-card">
+        <img class="neo-img" src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=90&fit=crop" alt="">
+        <div class="neo-grad"></div>
+        <div class="neo-corner tl" style="border-color:var(--cyan);"></div>
+        <div class="neo-corner tr" style="border-color:var(--cyan);"></div>
+        <div class="neo-corner bl" style="border-color:var(--cyan);"></div>
+        <div class="neo-corner br" style="border-color:var(--cyan);"></div>
+        <div class="live-badge">Live</div>
+        <div class="neo-body">
+          <div class="neo-cat" style="color:var(--cyan);">02_MUSIK</div>
+          <div class="neo-title">Jazz på Havnen</div>
+          <div class="neo-meta">NU AKTIV // SLUTTER 22:00 // NYHAVN</div>
+        </div>
+      </div>
+      <div class="neo-card sm">
+        <img class="neo-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=90&fit=crop" alt="">
+        <div class="neo-grad"></div>
+        <div class="neo-corner tl"></div><div class="neo-corner tr"></div>
+        <div class="neo-corner bl"></div><div class="neo-corner br"></div>
+        <div class="neo-body">
+          <div class="neo-cat">03_MAD</div>
+          <div class="neo-title">Pop-up Street Food</div>
+          <div class="neo-meta">STARTER 18:00 // VESTERBRO</div>
+        </div>
+      </div>
+
+      <div class="sec-hdr" style="opacity:0.35;">// Fortid</div>
+      <div class="neo-card sm" style="opacity:0.25;filter:grayscale(80%);">
+        <img class="neo-img" src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=90&fit=crop" alt="">
+        <div class="neo-grad"></div>
+        <div class="neo-body">
+          <div class="neo-cat">XX_AFSLUTTET</div>
+          <div class="neo-title">Byvandring</div>
+          <div class="neo-meta">I GÅR // OFFLINE</div>
+        </div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="navTo('v-feed',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>STRØM
+      </button>
+      <button class="nav-item" onclick="navTo('v-explore',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SCAN
+      </button>
+      <button class="nav-item" onclick="navTo('v-profile',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>USER
+      </button>
+    </nav>
+  </div>
+
+  <!-- EXPLORE -->
+  <div id="v-explore" class="view" style="background:var(--bg);">
+    <div class="status-bar"><span>SYS_9:41</span><span class="neon-cyan">SCAN_MODE</span></div>
+    <div class="scroll-area">
+      <div class="feed-header" style="padding-bottom:12px;">
+        <div class="feed-eyebrow">// System kategori scan</div>
+        <div class="feed-title">SCAN<span style="color:var(--pink);text-shadow:0 0 20px var(--pink);">NER</span></div>
+      </div>
+      <div class="expl-grid">
+        <div class="expl-tile">
+          <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=85&fit=crop" alt="">
+          <div class="expl-tile-num" style="color:var(--cyan);">01</div>
+          <div class="expl-tile-label">Musik</div>
+        </div>
+        <div class="expl-tile">
+          <img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&q=85&fit=crop" alt="">
+          <div class="expl-tile-num">02</div>
+          <div class="expl-tile-label">Aktiv</div>
+        </div>
+        <div class="expl-tile">
+          <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=85&fit=crop" alt="">
+          <div class="expl-tile-num">03</div>
+          <div class="expl-tile-label">Mad</div>
+        </div>
+        <div class="expl-tile">
+          <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=85&fit=crop" alt="">
+          <div class="expl-tile-num">04</div>
+          <div class="expl-tile-label">Wellness</div>
+        </div>
+      </div>
+      <div class="sec-hdr live-sec" style="margin-top:4px;">◈ // Hot Signal</div>
+      <div class="neo-card lg live-card">
+        <img class="neo-img" src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=90&fit=crop" alt="">
+        <div class="neo-grad"></div>
+        <div class="live-badge">Hot</div>
+        <div class="neo-corner tl" style="border-color:var(--cyan);"></div>
+        <div class="neo-corner tr" style="border-color:var(--cyan);"></div>
+        <div class="neo-corner bl" style="border-color:var(--cyan);"></div>
+        <div class="neo-corner br" style="border-color:var(--cyan);"></div>
+        <div class="neo-body">
+          <div class="neo-cat" style="color:var(--cyan);">HOT_KULTUR</div>
+          <div class="neo-title">Fjordhavnens Festival</div>
+          <div class="neo-meta">LIVE // NORDHAVN // ◈</div>
+        </div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>STRØM
+      </button>
+      <button class="nav-item active" onclick="navTo('v-explore',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SCAN
+      </button>
+      <button class="nav-item" onclick="navTo('v-profile',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>USER
+      </button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="v-profile" class="view" style="background:var(--bg);">
+    <div class="status-bar"><span>SYS_9:41</span><span class="neon-cyan">USER_PROFILE</span></div>
+    <div class="scroll-area">
+      <div style="padding:24px;">
+        <div class="feed-eyebrow" style="margin-bottom:16px;">// Bruger identitet</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid rgba(123,47,190,0.3);">
+          <div style="width:64px;height:64px;border:1px solid var(--cyan);box-shadow:0 0 15px rgba(0,245,255,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--cyan);">SK</div>
+          <div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:-1px;">Sara K.</div>
+            <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--cyan);">@SARA.STRØM</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:28px;">
+          <div style="border:1px solid rgba(123,47,190,0.3);padding:16px 0;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);">47</div>
+            <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted);">EVENTS</div>
+          </div>
+          <div style="border:1px solid rgba(123,47,190,0.3);padding:16px 0;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);">312</div>
+            <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted);">FØLGERE</div>
+          </div>
+          <div style="border:1px solid rgba(123,47,190,0.3);padding:16px 0;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);">89</div>
+            <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted);">FØLGER</div>
+          </div>
+        </div>
+        <div class="feed-eyebrow" style="margin-bottom:12px;">// Gemte Events</div>
+        <div class="neo-card sm" style="margin:0;">
+          <img class="neo-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+          <div class="neo-grad"></div>
+          <div class="neo-corner tl"></div><div class="neo-corner tr"></div>
+          <div class="neo-corner bl"></div><div class="neo-corner br"></div>
+          <div class="neo-body">
+            <div class="neo-cat">SAVED_01</div>
+            <div class="neo-title">Sommergalla</div>
+            <div class="neo-meta">14.AUG</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>STRØM
+      </button>
+      <button class="nav-item" onclick="navTo('v-explore',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SCAN
+      </button>
+      <button class="nav-item active" onclick="navTo('v-profile',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>USER
+      </button>
+    </nav>
+  </div>
+</div>
+<script>
+let cur='v-landing';
+function go(id){
+  const p=document.getElementById(cur),n=document.getElementById(id);
+  n.classList.add('active','view-enter');
+  setTimeout(()=>{p.classList.remove('active');n.classList.remove('view-enter');},300);
+  cur=id;
+}
+function navTo(id,btn){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  go(id);
+}
+function selOb(el){
+  document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('act'));
+  el.classList.add('act');
+}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
