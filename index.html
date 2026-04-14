@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B-Social | Minimal Luxury</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F4EF;--ink:#1A1612;--cream:#EDE8DF;--warm-white:#FAF8F4;
+  --gold:#B8965A;--gold-dim:rgba(184,150,90,0.2);
+  --text:var(--ink);--muted:#8C8379;--rule:rgba(26,22,18,0.1);
+  --nav-h:66px;
+  --font-serif:'EB Garamond',serif;--font-sans:'Jost',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);font-family:var(--font-sans);color:var(--ink);overflow:hidden;}
+.app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:#EAE6DF;}
+  .app{height:90vh;max-height:932px;box-shadow:0 20px 80px rgba(26,22,18,0.15),0 0 0 1px rgba(26,22,18,0.06);}
+}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;background:var(--bg);}
+.view.active{display:flex;}
+.view-enter{animation:luxIn 600ms cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes luxIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+20px);}
+.scroll-area::-webkit-scrollbar{display:none;} .scroll-area{-ms-overflow-style:none;scrollbar-width:none;}
+
+/* STATUS BAR */
+.status-bar{height:40px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 24px;font-family:var(--font-sans);font-size:11px;letter-spacing:1px;color:var(--muted);
+  border-bottom:1px solid var(--rule);position:relative;z-index:20;}
+
+/* MASTHEAD */
+.masthead{
+  padding:14px 24px 12px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--rule);
+}
+.brand{font-family:var(--font-serif);font-size:20px;font-weight:400;letter-spacing:3px;text-transform:uppercase;}
+.brand-sub{font-size:10px;font-weight:300;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+
+/* LANDING */
+.land-hero{flex:1;display:grid;grid-template-rows:1fr auto;}
+.land-img-zone{position:relative;overflow:hidden;}
+.land-img{width:100%;height:100%;object-fit:cover;filter:brightness(0.8) contrast(0.95) saturate(0.85);}
+.land-caption{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:32px 24px 24px;
+  background:linear-gradient(to top,rgba(247,244,239,1) 0%,rgba(247,244,239,0.7) 40%,transparent 100%);
+}
+.land-kicker{font-family:var(--font-sans);font-size:10px;font-weight:400;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.land-title{font-family:var(--font-serif);font-size:clamp(2.5rem,9vw,3.5rem);font-weight:400;line-height:1.0;margin-bottom:0;color:var(--ink);}
+.land-title em{font-style:italic;}
+.land-bottom{padding:24px 24px 28px;}
+.land-tagline{font-family:var(--font-serif);font-size:15px;font-weight:400;font-style:italic;color:var(--muted);line-height:1.7;margin-bottom:24px;}
+.btn-lux{
+  display:flex;align-items:center;justify-content:center;gap:14px;width:100%;
+  background:var(--ink);color:var(--bg);
+  font-family:var(--font-sans);font-size:11px;font-weight:400;letter-spacing:4px;text-transform:uppercase;
+  padding:16px;cursor:pointer;border:none;transition:all 0.3s;
+}
+.btn-lux:hover{background:var(--gold);}
+.btn-lux.outline{background:transparent;color:var(--ink);border:1px solid var(--ink);}
+.btn-lux.outline:hover{background:var(--ink);color:var(--bg);}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;width:100%;height:var(--nav-h);
+  background:var(--warm-white);border-top:1px solid var(--rule);
+  display:flex;justify-content:space-around;align-items:center;
+  padding:0 8px 10px;z-index:200;
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;
+  color:var(--muted);background:none;border:none;
+  font-family:var(--font-sans);font-size:9px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;
+  padding:8px 16px;cursor:pointer;transition:all 0.3s;}
+.nav-item.active{color:var(--gold);}
+.nav-icon{width:20px;height:20px;stroke:currentColor;stroke-width:1.2;fill:none;}
+
+/* FEED */
+.feed-header{padding:24px 24px 16px;border-bottom:1px solid var(--rule);}
+.feed-title{font-family:var(--font-serif);font-size:40px;font-weight:400;line-height:1.0;margin-bottom:4px;}
+.feed-title em{font-style:italic;color:var(--gold);}
+.feed-sub{font-family:var(--font-sans);font-size:11px;font-weight:300;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+
+/* TIME PILLS */
+.time-row{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--rule);}
+.time-row::-webkit-scrollbar{display:none;}
+.tpill{
+  font-family:var(--font-sans);font-size:10px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;
+  padding:12px 16px;white-space:nowrap;cursor:pointer;color:var(--muted);border-right:1px solid var(--rule);
+  transition:all 0.3s;background:var(--warm-white);
+}
+.tpill:last-child{border-right:none;}
+.tpill.act{color:var(--gold);background:var(--bg);}
+
+/* SECTION */
+.lux-sec{padding:24px 24px 12px;display:flex;align-items:center;gap:16px;}
+.lux-sec-rule{flex:1;height:1px;background:var(--rule);}
+.lux-sec-label{font-family:var(--font-sans);font-size:9px;font-weight:400;letter-spacing:4px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.lux-sec.live-s .lux-sec-label{color:var(--gold);}
+.lux-sec.live-s .lux-sec-rule{background:var(--gold-dim);}
+
+/* LUX CARD */
+.lux-card{margin:0 24px 20px;position:relative;cursor:pointer;transition:all 0.4s;}
+.lux-card:hover{transform:translateY(-2px);}
+.lux-card.hero{display:flex;flex-direction:column;}
+.lux-card-img{width:100%;overflow:hidden;}
+.lux-card.hero .lux-card-img{height:240px;}
+.lux-card.sm{display:flex;gap:0;border:1px solid var(--rule);}
+.lux-card.sm .lux-card-img{width:100px;height:100px;flex-shrink:0;}
+.lux-card img{width:100%;height:100%;object-fit:cover;filter:brightness(0.75) contrast(0.95) saturate(0.8);transition:filter 0.4s;}
+.lux-card:hover img{filter:brightness(0.8) contrast(1) saturate(0.9);}
+.lux-card.now-c img{filter:brightness(0.7) contrast(1) saturate(0.85);}
+.lux-card-body{padding:14px 0 0;}
+.lux-card.sm .lux-card-body{padding:14px 14px;flex:1;display:flex;flex-direction:column;justify-content:center;border-left:1px solid var(--rule);}
+.lux-kicker{font-family:var(--font-sans);font-size:9px;font-weight:400;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.lux-title{font-family:var(--font-serif);font-size:22px;font-weight:400;line-height:1.1;margin-bottom:5px;}
+.lux-card.sm .lux-title{font-size:17px;}
+.lux-title em{font-style:italic;}
+.lux-meta{font-family:var(--font-sans);font-size:11px;font-weight:300;color:var(--muted);letter-spacing:0.5px;}
+.live-badge-lux{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--font-sans);font-size:9px;font-weight:400;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:6px;
+}
+.live-badge-lux::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);animation:luxPulse 2s infinite;}
+@keyframes luxPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+/* Now card: subtle gold border */
+.lux-card.now-c{border:1px solid var(--gold-dim);}
+.lux-card.now-c .lux-card-img{height:260px;}
+
+/* OB */
+.ob-lux{flex:1;display:flex;flex-direction:column;}
+.ob-lux-top{
+  flex:1;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:32px 24px 28px;border-bottom:1px solid var(--rule);
+}
+.ob-title{font-family:var(--font-serif);font-size:42px;font-weight:400;line-height:1.0;margin-bottom:8px;}
+.ob-title em{font-style:italic;color:var(--gold);}
+.ob-sub{font-family:var(--font-serif);font-size:15px;font-style:italic;color:var(--muted);font-weight:400;line-height:1.6;}
+.ob-opts{display:flex;flex-direction:column;}
+.ob-opt{
+  display:flex;align-items:center;gap:0;cursor:pointer;border-bottom:1px solid var(--rule);
+  transition:background 0.25s;
+}
+.ob-opt:hover{background:var(--cream);}
+.ob-opt.act{background:var(--cream);}
+.ob-opt.act .ob-opt-ind{color:var(--gold);border-right-color:var(--gold-dim);}
+.ob-opt.act .ob-opt-title{color:var(--gold);}
+.ob-opt-ind{
+  width:52px;padding:20px 0;text-align:center;
+  font-family:var(--font-serif);font-size:12px;font-style:italic;color:var(--muted);
+  border-right:1px solid var(--rule);flex-shrink:0;
+}
+.ob-opt-body{flex:1;padding:16px 20px;}
+.ob-opt-title{font-family:var(--font-serif);font-size:20px;font-weight:400;margin-bottom:2px;transition:color 0.3s;}
+.ob-opt-sub{font-family:var(--font-sans);font-size:12px;font-weight:300;color:var(--muted);letter-spacing:0.5px;}
+.ob-btn-wrap{padding:20px 24px;}
+
+/* EXPLORE */
+.expl-lux{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);}
+.expl-tile{position:relative;height:180px;overflow:hidden;cursor:pointer;background:var(--bg);}
+.expl-tile img{width:100%;height:100%;object-fit:cover;filter:brightness(0.65) contrast(0.95) saturate(0.7);transition:all 0.4s;}
+.expl-tile:hover img{filter:brightness(0.7) contrast(1) saturate(0.85);}
+.expl-tile-over{position:absolute;inset:0;background:linear-gradient(to top,rgba(247,244,239,0.85),transparent 55%);display:flex;flex-direction:column;justify-content:flex-end;padding:14px;}
+.expl-tile-num{font-family:var(--font-sans);font-size:9px;letter-spacing:3px;color:var(--gold);margin-bottom:3px;}
+.expl-tile-label{font-family:var(--font-serif);font-size:20px;font-weight:400;font-style:italic;color:var(--ink);}
+
+/* PROFILE */
+.profile-lux{padding:28px 24px;}
+.profile-initial{
+  width:72px;height:72px;border:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-serif);font-size:28px;font-style:italic;color:var(--gold);
+  margin-bottom:16px;background:var(--cream);
+}
+.profile-name{font-family:var(--font-serif);font-size:30px;font-weight:400;margin-bottom:4px;}
+.profile-handle{font-family:var(--font-sans);font-size:11px;font-weight:300;letter-spacing:2px;color:var(--muted);margin-bottom:24px;}
+.stat-lux{display:flex;gap:0;border:1px solid var(--rule);margin-bottom:28px;}
+.stat-item{flex:1;padding:16px 0;text-align:center;border-right:1px solid var(--rule);}
+.stat-item:last-child{border-right:none;}
+.stat-num{font-family:var(--font-serif);font-size:28px;font-weight:400;color:var(--gold);}
+.stat-label{font-family:var(--font-sans);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- LANDING -->
+  <div id="v-landing" class="view active">
+    <div class="status-bar"><span>9:41</span><span>B — Social</span></div>
+    <div class="masthead">
+      <div><div class="brand">B — Social</div></div>
+      <div class="brand-sub">Dansk · 2025</div>
+    </div>
+    <div class="land-hero">
+      <div class="land-img-zone">
+        <img class="land-img" src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=900&q=95&fit=crop" alt="">
+        <div class="land-caption">
+          <div class="land-kicker">Oplev strømmen</div>
+          <div class="land-title">Tid<br>fly<em>der.</em></div>
+        </div>
+      </div>
+      <div class="land-bottom">
+        <div class="land-tagline">"Fremtid er opstrøms. Nutid er her.<br>Fortid glider stille forbi."</div>
+        <button class="btn-lux" onclick="go('v-ob')">Træd i floden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="v-ob" class="view">
+    <div class="status-bar"><span>9:41</span><span>B — Social</span></div>
+    <div class="masthead"><div class="brand">B — Social</div><div class="brand-sub">Personlig</div></div>
+    <div class="ob-lux">
+      <div class="ob-lux-top">
+        <div class="ob-title">Hvornår er<br>du <em>klar?</em></div>
+        <div class="ob-sub">Vælg dit sted i tidens strøm.</div>
+      </div>
+      <div class="ob-opts">
+        <div class="ob-opt" onclick="selOb(this)">
+          <div class="ob-opt-ind">i.</div>
+          <div class="ob-opt-body"><div class="ob-opt-title">Fremtid</div><div class="ob-opt-sub">Næste måned og frem</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb(this)">
+          <div class="ob-opt-ind">ii.</div>
+          <div class="ob-opt-body"><div class="ob-opt-title">Snart</div><div class="ob-opt-sub">Denne uge</div></div>
+        </div>
+        <div class="ob-opt act" onclick="selOb(this)">
+          <div class="ob-opt-ind">iii.</div>
+          <div class="ob-opt-body"><div class="ob-opt-title">Nu</div><div class="ob-opt-sub">I dag og i morgen</div></div>
+        </div>
+      </div>
+      <div class="ob-btn-wrap"><button class="btn-lux" onclick="go('v-feed')">Se strømmen</button></div>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="v-feed" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>B — Social</span></div>
+    <div class="masthead"><div class="brand" style="font-size:17px;">Flo<em style="font-style:italic;color:var(--gold);">den</em></div><div class="brand-sub">I dag · Nær dig</div></div>
+    <div class="scroll-area">
+      <div class="time-row">
+        <div class="tpill">Aug</div><div class="tpill">Jul</div><div class="tpill">Uge</div>
+        <div class="tpill act">Nu</div><div class="tpill">I går</div>
+      </div>
+
+      <div class="lux-sec"><div class="lux-sec-rule"></div><div class="lux-sec-label">Fremtid</div><div class="lux-sec-rule"></div></div>
+      <div class="lux-card sm">
+        <img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=300&q=90&fit=crop" alt="">
+        <div class="lux-card-body">
+          <div class="lux-kicker">Fest</div>
+          <div class="lux-title">Sommergalla <em>i Skoven</em></div>
+          <div class="lux-meta">14. August · Frederiksberg</div>
+        </div>
+      </div>
+
+      <div class="lux-sec live-s"><div class="lux-sec-rule"></div><div class="lux-sec-label">● Live Nu</div><div class="lux-sec-rule"></div></div>
+      <div class="lux-card hero now-c">
+        <div class="lux-card-img">
+          <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=90&fit=crop" alt="">
+        </div>
+        <div class="lux-card-body">
+          <div class="live-badge-lux">Live nu</div>
+          <div class="lux-title">Jazz <em>på Havnen</em></div>
+          <div class="lux-meta">I gang · slutter 22:00 · Nyhavn</div>
+        </div>
+      </div>
+      <div class="lux-card sm">
+        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&q=90&fit=crop" alt="">
+        <div class="lux-card-body">
+          <div class="lux-kicker">Mad</div>
+          <div class="lux-title">Pop-up <em>Street Food</em></div>
+          <div class="lux-meta">Starter 18:00 · Vesterbro</div>
+        </div>
+      </div>
+
+      <div class="lux-sec" style="opacity:0.4;"><div class="lux-sec-rule"></div><div class="lux-sec-label">Fortid</div><div class="lux-sec-rule"></div></div>
+      <div class="lux-card sm" style="opacity:0.3;filter:grayscale(60%);">
+        <img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=300&q=90&fit=crop" alt="">
+        <div class="lux-card-body">
+          <div class="lux-title">Byvandring</div>
+          <div class="lux-meta">Afsluttet · I går</div>
+        </div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+
+  <!-- EXPLORE -->
+  <div id="v-explore" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>B — Social</span></div>
+    <div class="masthead"><div class="brand" style="font-size:17px;">Ud<em style="font-style:italic;color:var(--gold);">forsk</em></div><div class="brand-sub">Kategorier</div></div>
+    <div class="scroll-area">
+      <div class="expl-lux">
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=85&fit=crop" alt=""><div class="expl-tile-over"><div class="expl-tile-num">01</div><div class="expl-tile-label">Musik</div></div></div>
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&q=85&fit=crop" alt=""><div class="expl-tile-over"><div class="expl-tile-num">02</div><div class="expl-tile-label">Aktiv</div></div></div>
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=85&fit=crop" alt=""><div class="expl-tile-over"><div class="expl-tile-num">03</div><div class="expl-tile-label">Mad</div></div></div>
+        <div class="expl-tile"><img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=85&fit=crop" alt=""><div class="expl-tile-over"><div class="expl-tile-num">04</div><div class="expl-tile-label">Wellness</div></div></div>
+      </div>
+      <div class="lux-sec live-s" style="margin-top:8px;"><div class="lux-sec-rule"></div><div class="lux-sec-label">● Trending</div><div class="lux-sec-rule"></div></div>
+      <div class="lux-card hero now-c" style="margin-bottom:16px;">
+        <div class="lux-card-img"><img src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=90&fit=crop" alt=""></div>
+        <div class="lux-card-body">
+          <div class="live-badge-lux">Live nu</div>
+          <div class="lux-title">Fjordhavnens <em>Festival</em></div>
+          <div class="lux-meta">I gang nu · Nordhavn</div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item active" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="v-profile" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>B — Social</span></div>
+    <div class="masthead"><div class="brand" style="font-size:17px;">Pro<em style="font-style:italic;color:var(--gold);">fil</em></div><div class="brand-sub">Sara K.</div></div>
+    <div class="scroll-area">
+      <div class="profile-lux">
+        <div class="profile-initial">S</div>
+        <div class="profile-name">Sara K.</div>
+        <div class="profile-handle">@sara.strøm</div>
+        <div class="stat-lux">
+          <div class="stat-item"><div class="stat-num">47</div><div class="stat-label">Events</div></div>
+          <div class="stat-item"><div class="stat-num">312</div><div class="stat-label">Følgere</div></div>
+          <div class="stat-item"><div class="stat-num">89</div><div class="stat-label">Følger</div></div>
+        </div>
+        <div class="lux-sec" style="padding:0 0 16px;"><div class="lux-sec-rule"></div><div class="lux-sec-label">Gemte Events</div><div class="lux-sec-rule"></div></div>
+        <div class="lux-card hero" style="margin:0;">
+          <div class="lux-card-img" style="height:200px;">
+            <img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+          </div>
+          <div class="lux-card-body">
+            <div class="lux-kicker">Fest</div>
+            <div class="lux-title">Sommergalla <em>i Skoven</em></div>
+            <div class="lux-meta">14. August</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item active" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+</div>
+<script>
+let cur='v-landing';
+function go(id){const p=document.getElementById(cur),n=document.getElementById(id);n.classList.add('active','view-enter');setTimeout(()=>{p.classList.remove('active');n.classList.remove('view-enter');},600);cur=id;}
+function navTo(id,btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');go(id);}
+function selOb(el){document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('act'));el.classList.add('act');}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
