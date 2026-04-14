@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B·Social — Copenhagen Social Events | Arctic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-arctic-black: #080a0c;
+            --color-arctic-panel: #141820;
+            --color-arctic-panel-light: #1e2632;
+            --color-arctic-blue: #9ac4d8;
+            --color-arctic-pale: #c0d8e8;
+            --color-arctic-white: #f6f8fa;
+            --color-text-white: #f1f4f8;
+            --color-text-muted: #a0b0c0;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-serif: 'Crimson Text', serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        body {
+            background-color: var(--color-arctic-black);
+            color: var(--color-text-white);
+            font-family: var(--font-sans);
+            overflow: hidden;
+            letter-spacing: 0.3px;
+        }
+
+        .phone-frame {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 390px;
+            height: 844px;
+            background: linear-gradient(180deg, var(--color-arctic-black) 0%, #0f1219 100%);
+            border-radius: 60px;
+            border: 12px solid #000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), inset 0 0 40px rgba(154, 196, 216, 0.03);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(180deg, var(--color-arctic-panel) 0%, var(--color-arctic-black) 100%);
+            border-bottom: 0.5px solid rgba(154, 196, 216, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--color-text-muted);
+        }
+
+        .status-time {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .screen-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--color-arctic-black);
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            animation: fadeIn 0.35s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .screen-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            scroll-behavior: smooth;
+        }
+
+        .screen-content::-webkit-scrollbar {
+            width: 2px;
+        }
+
+        .screen-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .screen-content::-webkit-scrollbar-thumb {
+            background: rgba(154, 196, 216, 0.15);
+            border-radius: 1px;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            height: 70px;
+            background: linear-gradient(180deg, rgba(20, 24, 32, 0.3) 0%, var(--color-arctic-black) 100%);
+            border-top: 0.5px solid rgba(154, 196, 216, 0.06);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-around;
+            padding-top: 8px;
+            gap: 0;
+        }
+
+        .nav-button {
+            flex: 1;
+            height: 62px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            font-family: var(--font-sans);
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-top: 1px solid transparent;
+            position: relative;
+        }
+
+        .nav-button:hover {
+            color: var(--color-text-white);
+        }
+
+        .nav-button.active {
+            color: var(--color-arctic-blue);
+            border-top-color: var(--color-arctic-blue);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-button.active .nav-icon {
+            opacity: 1;
+        }
+
+        /* Header */
+        .screen-header {
+            padding-bottom: 12px;
+            border-bottom: 0.5px solid rgba(154, 196, 216, 0.08);
+            margin-bottom: 16px;
+        }
+
+        .screen-header h1 {
+            font-family: var(--font-sans);
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: -0.3px;
+            color: var(--color-arctic-white);
+            margin-bottom: 4px;
+        }
+
+        .screen-header p {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Card Styling - Clean Minimal */
+        .card {
+            background: linear-gradient(135deg, rgba(20, 38, 48, 0.3) 0%, rgba(14, 18, 24, 0.2) 100%);
+            border: 0.5px solid rgba(154, 196, 216, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(154, 196, 216, 0.02) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .card:hover {
+            background: linear-gradient(135deg, rgba(20, 38, 48, 0.5) 0%, rgba(14, 18, 24, 0.35) 100%);
+            border-color: rgba(154, 196, 216, 0.16);
+            box-shadow: 0 4px 16px rgba(154, 196, 216, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .card-icon {
+            font-size: 24px;
+            opacity: 0.7;
+            flex-shrink: 0;
+        }
+
+        .card-title {
+            font-family: var(--font-sans);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-arctic-white);
+            margin-bottom: 2px;
+            letter-spacing: 0.2px;
+        }
+
+        .card-venue {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
+        }
+
+        .card-description {
+            font-size: 12px;
+            color: var(--color-text-white);
+            line-height: 1.45;
+            margin-bottom: 10px;
+            opacity: 0.85;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 10px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            padding-top: 8px;
+            border-top: 0.5px solid rgba(154, 196, 216, 0.06);
+        }
+
+        .card-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.2px;
+        }
+
+        /* Subtle Gradient Dividers */
+        .arctic-line {
+            height: 0.5px;
+            background: linear-gradient(90deg, rgba(154, 196, 216, 0), rgba(154, 196, 216, 0.1), rgba(154, 196, 216, 0));
+            margin: 10px 0;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            background: rgba(20, 38, 48, 0.25);
+            border: 0.5px solid rgba(154, 196, 216, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            color: var(--color-text-white);
+            font-size: 13px;
+            width: 100%;
+            margin-bottom: 16px;
+            transition: all 0.25s ease;
+            letter-spacing: 0.2px;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: rgba(154, 196, 216, 0.2);
+            background: rgba(20, 38, 48, 0.4);
+            box-shadow: 0 0 16px rgba(154, 196, 216, 0.08);
+        }
+
+        .search-bar::placeholder {
+            color: var(--color-text-muted);
+            letter-spacing: 0.2px;
+        }
+
+        /* Section Labels */
+        .section-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            margin: 14px 0 8px 0;
+        }
+
+        /* Filter Pills */
+        .filter-group {
+            display: flex;
+            gap: 7px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            background: rgba(154, 196, 216, 0.05);
+            border: 0.5px solid rgba(154, 196, 216, 0.1);
+            border-radius: 18px;
+            padding: 6px 11px;
+            font-size: 11px;
+            color: var(--color-text-white);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-mono);
+            letter-spacing: 0.2px;
+        }
+
+        .filter-pill:hover,
+        .filter-pill.active {
+            background: rgba(154, 196, 216, 0.12);
+            border-color: rgba(154, 196, 216, 0.2);
+            color: var(--color-arctic-blue);
+        }
+
+        /* Button */
+        .btn {
+            background: linear-gradient(180deg, rgba(154, 196, 216, 0.15) 0%, rgba(154, 196, 216, 0.08) 100%);
+            color: var(--color-text-white);
+            border: 0.5px solid rgba(154, 196, 216, 0.15);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            width: 100%;
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(180deg, rgba(154, 196, 216, 0.2) 0%, rgba(154, 196, 216, 0.12) 100%);
+            border-color: rgba(154, 196, 216, 0.25);
+            color: var(--color-arctic-pale);
+            box-shadow: 0 4px 12px rgba(154, 196, 216, 0.08);
+        }
+
+        /* Featured Card */
+        .featured-card {
+            background: linear-gradient(135deg, rgba(20, 38, 48, 0.4) 0%, rgba(14, 18, 24, 0.25) 100%);
+            border: 0.5px solid rgba(154, 196, 216, 0.12);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 14px;
+            position: relative;
+            overflow: hidden;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(154, 196, 216, 0.06);
+        }
+
+        .featured-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(circle, rgba(154, 196, 216, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .featured-event {
+            position: relative;
+            z-index: 1;
+        }
+
+        .featured-time {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 0.8px;
+            color: var(--color-arctic-blue);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .featured-title {
+            font-family: var(--font-sans);
+            font-size: 21px;
+            font-weight: 400;
+            color: var(--color-arctic-white);
+            margin-bottom: 6px;
+            line-height: 1.2;
+            letter-spacing: -0.2px;
+        }
+
+        .featured-venue {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            letter-spacing: 0.2px;
+        }
+
+        /* Map Placeholder */
+        .map-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(20, 38, 48, 0.3) 0%, rgba(14, 18, 24, 0.2) 100%);
+            border: 0.5px solid rgba(154, 196, 216, 0.08);
+            border-radius: 12px;
+            margin: 8px 0 16px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-muted);
+            font-size: 12px;
+            font-family: var(--font-mono);
+        }
+
+        /* Inputs */
+        .invite-input {
+            background: rgba(20, 38, 48, 0.25);
+            border: 0.5px solid rgba(154, 196, 216, 0.08);
+            border-radius: 8px;
+            padding: 11px 12px;
+            font-family: var(--font-sans);
+            color: var(--color-text-white);
+            font-size: 13px;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: all 0.25s ease;
+            letter-spacing: 0.2px;
+        }
+
+        .invite-input:focus {
+            outline: none;
+            border-color: rgba(154, 196, 216, 0.2);
+            background: rgba(20, 38, 48, 0.4);
+            box-shadow: 0 0 16px rgba(154, 196, 216, 0.08);
+        }
+
+        /* Profile Section */
+        .profile-section {
+            text-align: center;
+            padding: 18px 0;
+            border-bottom: 0.5px solid rgba(154, 196, 216, 0.08);
+            margin-bottom: 16px;
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(154, 196, 216, 0.1) 0%, rgba(154, 196, 216, 0.04) 100%);
+            border: 0.5px solid rgba(154, 196, 216, 0.15);
+            border-radius: 12px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 2px 8px rgba(154, 196, 216, 0.04);
+        }
+
+        .profile-name {
+            font-family: var(--font-sans);
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--color-arctic-white);
+            margin-bottom: 4px;
+            letter-spacing: -0.2px;
+        }
+
+        .profile-handle {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--color-text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        /* Stats */
+        .stat-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 9px;
+            margin-top: 14px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            background: rgba(20, 38, 48, 0.25);
+            border: 0.5px solid rgba(154, 196, 216, 0.08);
+            border-radius: 10px;
+            padding: 11px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: var(--font-sans);
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--color-arctic-blue);
+            margin-bottom: 3px;
+            letter-spacing: -0.1px;
+        }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--color-text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Settings Items */
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px;
+            background: rgba(20, 38, 48, 0.2);
+            border: 0.5px solid rgba(154, 196, 216, 0.06);
+            border-radius: 8px;
+            margin-bottom: 9px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .settings-item:hover {
+            background: rgba(20, 38, 48, 0.35);
+            border-color: rgba(154, 196, 216, 0.12);
+        }
+
+        .settings-label {
+            font-size: 13px;
+            color: var(--color-text-white);
+            letter-spacing: 0.2px;
+        }
+
+        .settings-value {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 24px;
+            background: rgba(154, 196, 216, 0.08);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: 0.5px solid rgba(154, 196, 216, 0.1);
+        }
+
+        .toggle-switch.active {
+            background: rgba(154, 196, 216, 0.2);
+            border-color: rgba(154, 196, 216, 0.3);
+        }
+
+        .toggle-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--color-text-white);
+            border-radius: 10px;
+            top: 2px;
+            left: 2px;
+            transition: all 0.25s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-indicator {
+            left: 18px;
+            background: var(--color-arctic-blue);
+        }
+
+        /* Event List */
+        .event-list-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 11px;
+            padding: 9px;
+            background: rgba(20, 38, 48, 0.15);
+            border-radius: 8px;
+            border-left: 1.5px solid rgba(154, 196, 216, 0.12);
+        }
+
+        .event-list-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        .event-list-content {
+            flex: 1;
+            font-size: 12px;
+        }
+
+        .event-list-title {
+            color: var(--color-text-white);
+            margin-bottom: 2px;
+            font-weight: 400;
+            letter-spacing: 0.1px;
+        }
+
+        .event-list-info {
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 0.2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .phone-frame {
+                border-width: 8px;
+                border-radius: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="status-time">08:19</span>
+            <span>●●●●●</span>
+        </div>
+
+        <!-- Screen Container -->
+        <div class="screen-container">
+            <!-- SCREEN: Hjem (Home) -->
+            <div class="screen active" id="screen-hjem">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Hjem</h1>
+                        <p>København • I dag</p>
+                    </div>
+
+                    <div class="featured-card">
+                        <div class="featured-event">
+                            <div class="featured-time">KL. 09:00 • CULTURE BOX</div>
+                            <div class="featured-title">Morgen-Brunch & Netværk</div>
+                            <div class="featured-venue">Moderne kafé møde</div>
+                        </div>
+                    </div>
+
+                    <div class="section-label">Dagens begivenheder</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">☕</div>
+                            <div>
+                                <div class="card-title">Startup Morgenmøde</div>
+                                <div class="card-venue">CULTURE BOX — Mødelokale</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Mødes med andre iværksættere og dele idéer. Kaffe og networking i en åben og professionel atmosfære.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">⏰ kl. 09:00</div>
+                            <div class="card-meta-item">👥 34 tilmeldt</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📚</div>
+                            <div>
+                                <div class="card-title">Bogklub Session</div>
+                                <div class="card-venue">IDEAL BAR — Læsekrog</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Diskussion af "Sommerfugle & Mennesker". Frisk perspektiv på moderne litteratur fra Norden.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">⏰ kl. 18:00</div>
+                            <div class="card-meta-item">👥 16 går</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🏃</div>
+                            <div>
+                                <div class="card-title">Løbeklub Aften</div>
+                                <div class="card-venue">VED STRANDEN 10 — Start</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Aftenløb gennem København. 5 km rutinen for alle niveauer med socialt møde bagefter.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">⏰ kl. 18:30</div>
+                            <div class="card-meta-item">👥 42 interesseret</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Udforsk (Explore) -->
+            <div class="screen" id="screen-udforsk">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Udforsk</h1>
+                        <p>Find begivenheder</p>
+                    </div>
+
+                    <input type="text" class="search-bar" placeholder="Søg efter aktiviteter...">
+
+                    <div class="section-label">Kategorier</div>
+                    <div class="filter-group">
+                        <div class="filter-pill active">Wellness</div>
+                        <div class="filter-pill">Tech</div>
+                        <div class="filter-pill">Netværk</div>
+                        <div class="filter-pill">Sport</div>
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="filter-pill">Uddannelse</div>
+                        <div class="filter-pill">Kultur</div>
+                        <div class="filter-pill">Mad</div>
+                    </div>
+
+                    <div class="section-label">Denne uge</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🧘</div>
+                            <div>
+                                <div class="card-title">Yoga & Meditasjon</div>
+                                <div class="card-venue">MIKKELLER — Studio</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Mindfulness-økt for alle nivåer. Avslappet tilnærming til yoga og indre ro i moderne København.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 Tor 15/5</div>
+                            <div class="card-meta-item">⏰ 17:00</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">💻</div>
+                            <div>
+                                <div class="card-title">AI Workshop</div>
+                                <div class="card-venue">RUST — Tech-rom</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Praktisk workshop i AI-verktøy. Lær å bruke maskinlæring i dine prosjekter fra erfarne instruktører.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 Fre 16/5</div>
+                            <div class="card-meta-item">👥 52 påmeldt</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🍽️</div>
+                            <div>
+                                <div class="card-title">Nordisk Matfestival</div>
+                                <div class="card-venue">REFFEN — Matmarked</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Tre dager med skandinavisk mat og drikke. Møt lokale kokker, malere og matentusiaster.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 17-19 mai</div>
+                            <div class="card-meta-item">👥 2.3K</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎨</div>
+                            <div>
+                                <div class="card-title">Design Sprint</div>
+                                <div class="card-venue">KB3 — Workshop-rom</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Lær moderne design-metoder. Praktisk workshop hvor du lager egne produktkonsepter fra 0 til 100.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 Man 20/5</div>
+                            <div class="card-meta-item">👥 28 registrert</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Kort (Map) -->
+            <div class="screen" id="screen-kort">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Kort</h1>
+                        <p>Lokale steder</p>
+                    </div>
+
+                    <div class="map-placeholder">📍 Interaktivt kart over København</div>
+
+                    <div class="section-label">Nærmeste steder</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">☕</div>
+                            <div>
+                                <div class="card-title">Warpigs</div>
+                                <div class="card-venue">Vesterbro • Kafé & Bar</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Moderne kafé med rolig atmosfære. Møtested for frigjort folk og smågrupper som vil diskutere.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📍 0,6 km</div>
+                            <div class="card-meta-item">⭐ 4,7/5</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎭</div>
+                            <div>
+                                <div class="card-title">Kind of Blue</div>
+                                <div class="card-venue">Nyhavn • Klubb</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Jazzklubben på Nyhavn. Intim setting for musikkelskere og de som liker å møte andre mennesker.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📍 1,4 km</div>
+                            <div class="card-meta-item">🔗 5 events i dag</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🌿</div>
+                            <div>
+                                <div class="card-title">Absalon</div>
+                                <div class="card-venue">Sortedam • Park & Kultursted</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Grønt område ved søen. Sted for piknik, diskusjon og naturmøter hele året rundt.</div>
+                        <div class="arctic-line"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📍 2,1 km</div>
+                            <div class="card-meta-item">🔗 12 events denne månaden</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Invitér (Invite) -->
+            <div class="screen" id="screen-inviter">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Invitér</h1>
+                        <p>Del med venner</p>
+                    </div>
+
+                    <div class="section-label">Legg til kontakt</div>
+
+                    <input type="email" class="invite-input" placeholder="E-postadresse...">
+                    <input type="tel" class="invite-input" placeholder="Eller telefonnummer...">
+
+                    <button class="btn">+ Legg til venner</button>
+
+                    <div class="section-label" style="margin-top: 18px;">Dine kontakter</div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Kristine Andersen</div>
+                            <div class="event-list-info">@kristine_tech • Aktuell i dag</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Per Hansen</div>
+                            <div class="event-list-info">@per_fitness • Treningscoach</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Annika Søren</div>
+                            <div class="event-list-info">@annika_food • Matblogger</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Lars Møller</div>
+                            <div class="event-list-info">@lars_design • Designeren</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Julie Christensen</div>
+                            <div class="event-list-info">@julie_wellness • Yogainstruktør</div>
+                        </div>
+                    </div>
+
+                    <div class="section-label" style="margin-top: 18px;">Nylig delt</div>
+
+                    <div class="card" style="opacity: 0.75;">
+                        <div class="card-header">
+                            <div class="card-icon">☕</div>
+                            <div>
+                                <div class="card-title">Startup Morgenmøte</div>
+                                <div class="card-venue">CULTURE BOX</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Delt med Kristine, Per og Lars</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Dig (Profile) -->
+            <div class="screen" id="screen-dig">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Dig</h1>
+                        <p>Profil & Valg</p>
+                    </div>
+
+                    <div class="profile-section">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-name">Søren Nordberg</div>
+                        <div class="profile-handle">@soren.nordberg</div>
+                    </div>
+
+                    <div class="stat-group">
+                        <div class="stat-item">
+                            <div class="stat-number">31</div>
+                            <div class="stat-label">Begivenheter</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">164</div>
+                            <div class="stat-label">Kontakter</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">19</div>
+                            <div class="stat-label">Favoritter</div>
+                        </div>
+                    </div>
+
+                    <div class="section-label">Mine begivenheter</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📋</div>
+                            <div>
+                                <div class="card-title">Påmeldt (6)</div>
+                                <div class="card-venue">Kommende arrangementer</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">💭</div>
+                            <div>
+                                <div class="card-title">Interessert (14)</div>
+                                <div class="card-venue">Mulige arrangementer</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">👥</div>
+                            <div>
+                                <div class="card-title">Kontakter (164)</div>
+                                <div class="card-venue">Ditt nettverk</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-label">Instillinger</div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Varsler</div>
+                        <div class="toggle-switch active">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Posisjondeling</div>
+                        <div class="toggle-switch">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Privat profil</div>
+                        <div class="toggle-switch">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Arktisk tema</div>
+                        <div class="toggle-switch active">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <button class="btn" style="background: rgba(154, 196, 216, 0.08); border-color: rgba(154, 196, 216, 0.15); margin-top: 18px;">Logg ut</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <button class="nav-button active" onclick="go('hjem')">
+                <div class="nav-icon">🏠</div>
+                <div>Hjem</div>
+            </button>
+            <button class="nav-button" onclick="go('udforsk')">
+                <div class="nav-icon">🔍</div>
+                <div>Udforsk</div>
+            </button>
+            <button class="nav-button" onclick="go('kort')">
+                <div class="nav-icon">📍</div>
+                <div>Kort</div>
+            </button>
+            <button class="nav-button" onclick="go('inviter')">
+                <div class="nav-icon">💌</div>
+                <div>Invitér</div>
+            </button>
+            <button class="nav-button" onclick="go('dig')">
+                <div class="nav-icon">👤</div>
+                <div>Dig</div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function go(screen) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
+
+            const targetScreen = document.getElementById(`screen-${screen}`);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                targetScreen.querySelector('.screen-content').scrollTop = 0;
+            }
+
+            const buttons = document.querySelectorAll('.nav-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.nav-button').classList.add('active');
+        }
+    </script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
