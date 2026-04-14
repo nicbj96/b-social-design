@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B-Social | Organic Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;1,300;1,600&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1410;--surface:#22180e;
+  --terra:#C4704A;--sage:#7A9E7E;--cream:#F0E6D3;--sand:#D4B896;
+  --warm:#E8C99A;--dark-warm:#2A1F12;
+  --text:var(--cream);--muted:rgba(240,230,211,0.5);
+  --nav-h:70px;
+  --font-d:'Fraunces',serif;--font-b:'Nunito',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);font-family:var(--font-b);color:var(--text);overflow:hidden;}
+.app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:#100e0b;}
+  .app{height:90vh;max-height:932px;border-radius:32px;overflow:hidden;box-shadow:0 20px 80px rgba(0,0,0,0.6);}
+}
+
+/* Organic blob bg */
+.blob-bg{position:fixed;inset:0;pointer-events:none;z-index:0;max-width:430px;margin:0 auto;overflow:hidden;}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);animation:blobFloat 15s infinite ease-in-out;}
+.blob-1{width:350px;height:350px;background:rgba(196,112,74,0.2);top:-100px;right:-80px;animation-delay:0s;}
+.blob-2{width:280px;height:280px;background:rgba(122,158,126,0.15);bottom:10%;left:-60px;animation-delay:-6s;}
+.blob-3{width:200px;height:200px;background:rgba(212,184,150,0.1);top:40%;left:50%;animation-delay:-11s;}
+@keyframes blobFloat{
+  0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}
+  33%{transform:translate(20px,-15px) scale(1.08) rotate(5deg);}
+  66%{transform:translate(-15px,20px) scale(0.94) rotate(-3deg);}
+}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;}
+.view.active{display:flex;}
+.view-enter{animation:fluidIn 500ms cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes fluidIn{from{opacity:0;transform:translateY(32px);}to{opacity:1;transform:translateY(0);}}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+20px);}
+.scroll-area::-webkit-scrollbar{display:none;} .scroll-area{-ms-overflow-style:none;scrollbar-width:none;}
+
+/* STATUS BAR */
+.status-bar{height:44px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 24px;font-size:13px;color:var(--muted);position:relative;z-index:20;}
+
+/* LANDING */
+.land-hero{
+  position:relative;overflow:hidden;flex:1;
+  display:flex;flex-direction:column;justify-content:flex-end;
+}
+.land-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.45) saturate(0.8);}
+/* Organic blob mask at bottom */
+.land-blob-mask{
+  position:absolute;bottom:-2px;left:0;right:0;height:200px;
+  background:var(--bg);
+  clip-path:ellipse(80% 60% at 50% 100%);
+  z-index:2;
+}
+.land-content{position:relative;z-index:3;padding:0 28px 40px;}
+.land-leaf{
+  width:48px;height:48px;border-radius:0 50% 50% 50%;
+  background:linear-gradient(135deg,var(--sage),var(--terra));
+  margin-bottom:20px;display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.land-title{font-family:var(--font-d);font-size:clamp(3rem,10vw,4rem);font-weight:300;line-height:0.9;margin-bottom:12px;}
+.land-title em{font-style:italic;color:var(--terra);}
+.land-sub{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px;font-weight:300;}
+.btn-organic{
+  display:flex;align-items:center;justify-content:center;gap:12px;width:100%;
+  background:linear-gradient(135deg,var(--terra),#D4845C);
+  color:#fff;font-size:16px;font-weight:600;
+  padding:17px 28px;border-radius:999px;border:none;cursor:pointer;
+  box-shadow:0 8px 30px rgba(196,112,74,0.35);transition:all 0.3s;
+}
+.btn-organic:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(196,112,74,0.45);}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;width:100%;height:var(--nav-h);
+  background:rgba(26,20,16,0.92);border-top:1px solid rgba(240,230,211,0.08);
+  backdrop-filter:blur(20px);
+  display:flex;justify-content:space-around;align-items:center;
+  padding:0 8px 12px;z-index:200;
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;
+  color:var(--muted);background:none;border:none;
+  font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;
+  padding:8px 16px;cursor:pointer;transition:all 0.3s;}
+.nav-item.active{color:var(--terra);}
+.nav-icon{width:22px;height:22px;stroke:currentColor;stroke-width:1.5;fill:none;}
+
+/* FEED */
+.feed-header{padding:20px 24px 0;position:relative;z-index:2;}
+.feed-title{font-family:var(--font-d);font-size:44px;font-weight:300;line-height:0.9;margin-bottom:4px;}
+.feed-title em{font-style:italic;color:var(--terra);}
+.feed-sub{font-size:13px;color:var(--muted);margin-bottom:16px;font-weight:300;}
+
+/* Organic pills */
+.o-pills{display:flex;gap:8px;overflow-x:auto;padding:0 24px 16px;margin:0 -24px;}
+.o-pills::-webkit-scrollbar{display:none;}
+.o-pill{
+  white-space:nowrap;padding:8px 20px;border-radius:999px;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s;
+  background:rgba(240,230,211,0.07);border:1px solid rgba(240,230,211,0.12);color:var(--muted);
+}
+.o-pill.act{background:var(--terra);color:#fff;border-color:var(--terra);box-shadow:0 4px 16px rgba(196,112,74,0.3);}
+
+/* SECTION */
+.o-sec{padding:20px 24px 12px;display:flex;align-items:center;gap:12px;}
+.o-sec-leaf{width:8px;height:8px;border-radius:0 50% 50% 50%;background:var(--sage);transform:rotate(-45deg);}
+.o-sec-label{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.o-sec.live-sec .o-sec-leaf{background:var(--terra);box-shadow:0 0 8px rgba(196,112,74,0.5);}
+.o-sec.live-sec .o-sec-label{color:var(--terra);}
+.o-sec::after{content:'';flex:1;height:1px;background:rgba(240,230,211,0.07);}
+
+/* ORGANIC CARD */
+.o-card{
+  margin:0 24px 16px;border-radius:20px;overflow:hidden;position:relative;cursor:pointer;
+  transition:all 0.4s;
+}
+.o-card.lg{height:260px;} .o-card.sm{height:170px;}
+.o-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.4);}
+.o-card.live-border{box-shadow:0 0 0 2px var(--terra),0 8px 30px rgba(196,112,74,0.2);}
+.o-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.6) saturate(0.9);}
+.o-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(26,20,16,0.96) 0%,rgba(26,20,16,0.2) 55%,transparent 100%);}
+.o-badge-live{
+  position:absolute;top:14px;left:14px;z-index:2;
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--terra);color:#fff;font-size:11px;font-weight:700;
+  padding:5px 13px;border-radius:999px;letter-spacing:0.5px;
+}
+.o-badge-live::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.o-badge-cat{
+  position:absolute;top:14px;right:14px;z-index:2;
+  background:rgba(26,20,16,0.7);backdrop-filter:blur(10px);
+  color:var(--cream);font-size:11px;font-weight:600;padding:5px 12px;border-radius:999px;
+}
+.o-body{position:absolute;bottom:0;left:0;right:0;padding:18px 18px;}
+.o-title{font-family:var(--font-d);font-size:22px;font-weight:300;line-height:1.1;margin-bottom:6px;}
+.o-title em{font-style:italic;}
+.o-meta{font-size:12px;color:rgba(240,230,211,0.55);display:flex;gap:8px;}
+
+/* OB */
+.ob-hero{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 24px;position:relative;z-index:2;}
+.ob-icon{font-size:40px;margin-bottom:20px;}
+.ob-title{font-family:var(--font-d);font-size:42px;font-weight:300;line-height:0.9;margin-bottom:8px;}
+.ob-title em{font-style:italic;color:var(--terra);}
+.ob-sub{font-size:15px;color:var(--muted);font-weight:300;margin-bottom:28px;line-height:1.6;}
+.ob-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.ob-opt{
+  display:flex;align-items:center;gap:16px;
+  background:rgba(240,230,211,0.05);border:1px solid rgba(240,230,211,0.1);
+  border-radius:16px;padding:16px 20px;cursor:pointer;transition:all 0.3s;
+}
+.ob-opt.act{background:rgba(196,112,74,0.12);border-color:rgba(196,112,74,0.4);}
+.ob-dot{width:12px;height:12px;border-radius:0 50% 50% 50%;transform:rotate(-45deg);border:2px solid var(--muted);transition:all 0.3s;}
+.ob-opt.act .ob-dot{background:var(--terra);border-color:var(--terra);}
+.ob-opt-title{font-size:17px;font-weight:600;margin-bottom:2px;}
+.ob-opt.act .ob-opt-title{color:var(--terra);}
+.ob-opt-sub{font-size:13px;color:var(--muted);font-weight:300;}
+
+/* EXPLORE */
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 24px;position:relative;z-index:2;}
+.cat-tile{border-radius:20px;overflow:hidden;position:relative;height:160px;cursor:pointer;transition:all 0.3s;}
+.cat-tile:hover{transform:scale(1.02);}
+.cat-tile img{width:100%;height:100%;object-fit:cover;filter:brightness(0.55) saturate(0.8);}
+.cat-tile-over{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(26,20,16,0.85) 0%,transparent 60%);
+  display:flex;align-items:flex-end;padding:14px;
+}
+.cat-tile-label{font-family:var(--font-d);font-size:20px;font-weight:300;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="blob-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- LANDING -->
+  <div id="v-landing" class="view active">
+    <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="land-hero">
+      <img class="land-hero-img" src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=900&q=95&fit=crop" alt="">
+      <div class="land-blob-mask"></div>
+      <div class="land-content">
+        <div class="land-leaf">🌿</div>
+        <div class="land-title">Tid<br><em>flyder</em><br>naturligt.</div>
+        <div class="land-sub">Oplev øjeblikkets strøm.<br>Fra fremtid til fortid — alt sker nu.</div>
+        <button class="btn-organic" onclick="go('v-ob')">
+          Træd i strømmen
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="v-ob" class="view" style="background:var(--bg);">
+    <div class="status-bar"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="ob-hero">
+      <div class="ob-icon">🌿</div>
+      <div class="ob-title">Hvornår<br>blomstrer <em>du?</em></div>
+      <div class="ob-sub">Vælg dit sted i naturens strøm.</div>
+      <div class="ob-opts">
+        <div class="ob-opt" onclick="selOb(this)">
+          <div class="ob-dot"></div>
+          <div><div class="ob-opt-title">Fremtid</div><div class="ob-opt-sub">Næste måned og frem</div></div>
+        </div>
+        <div class="ob-opt" onclick="selOb(this)">
+          <div class="ob-dot"></div>
+          <div><div class="ob-opt-title">Snart</div><div class="ob-opt-sub">Denne uge</div></div>
+        </div>
+        <div class="ob-opt act" onclick="selOb(this)">
+          <div class="ob-dot"></div>
+          <div><div class="ob-opt-title">Nu</div><div class="ob-opt-sub">I dag og i morgen</div></div>
+        </div>
+      </div>
+      <button class="btn-organic" onclick="go('v-feed')">Se strømmen →</button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="v-feed" class="view" style="background:var(--bg);">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="scroll-area">
+      <div class="feed-header">
+        <div class="feed-title">Flo-<br><em>den</em></div>
+        <div class="feed-sub">Naturlig tidslinje · Nær dig</div>
+      </div>
+      <div class="o-pills" style="padding:0 24px 16px;">
+        <div class="o-pill">August</div>
+        <div class="o-pill">Juli</div>
+        <div class="o-pill">Uge</div>
+        <div class="o-pill act">Nu</div>
+        <div class="o-pill">I går</div>
+      </div>
+
+      <div class="o-sec">
+        <div class="o-sec-leaf"></div>
+        <div class="o-sec-label">Fremtid</div>
+      </div>
+      <div class="o-card sm">
+        <img class="o-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+        <div class="o-grad"></div>
+        <div class="o-badge-cat">Fest</div>
+        <div class="o-body">
+          <div class="o-title">Sommergalla <em>i Skoven</em></div>
+          <div class="o-meta"><span>14. August</span><span>·</span><span>Frederiksberg</span></div>
+        </div>
+      </div>
+
+      <div class="o-sec live-sec">
+        <div class="o-sec-leaf" style="background:var(--terra);"></div>
+        <div class="o-sec-label">● Live Nu</div>
+      </div>
+      <div class="o-card lg live-border">
+        <img class="o-img" src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=90&fit=crop" alt="">
+        <div class="o-grad"></div>
+        <div class="o-badge-live">Live</div>
+        <div class="o-badge-cat">Musik</div>
+        <div class="o-body">
+          <div class="o-title">Jazz <em>på Havnen</em></div>
+          <div class="o-meta"><span>I gang · slutter 22:00</span><span>·</span><span>Nyhavn</span></div>
+        </div>
+      </div>
+      <div class="o-card sm">
+        <img class="o-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=90&fit=crop" alt="">
+        <div class="o-grad"></div>
+        <div class="o-badge-cat">Mad</div>
+        <div class="o-body">
+          <div class="o-title">Pop-up <em>Street Food</em></div>
+          <div class="o-meta"><span>Starter 18:00</span><span>·</span><span>Vesterbro</span></div>
+        </div>
+      </div>
+
+      <div class="o-sec" style="opacity:0.4;">
+        <div class="o-sec-leaf" style="background:var(--muted);"></div>
+        <div class="o-sec-label">Fortid</div>
+      </div>
+      <div class="o-card sm" style="opacity:0.35;filter:grayscale(60%);">
+        <img class="o-img" src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=90&fit=crop" alt="">
+        <div class="o-grad"></div>
+        <div class="o-body">
+          <div class="o-title">Byvandring</div>
+          <div class="o-meta"><span>Afsluttet · I går</span></div>
+        </div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="navTo('v-feed',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden
+      </button>
+      <button class="nav-item" onclick="navTo('v-explore',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk
+      </button>
+      <button class="nav-item" onclick="navTo('v-profile',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil
+      </button>
+    </nav>
+  </div>
+
+  <!-- EXPLORE -->
+  <div id="v-explore" class="view" style="background:var(--bg);">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="scroll-area">
+      <div class="feed-header"><div class="feed-title">Ud-<br><em>forsk</em></div></div>
+      <div class="cat-grid">
+        <div class="cat-tile">
+          <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=85&fit=crop" alt="">
+          <div class="cat-tile-over"><div class="cat-tile-label">Musik</div></div>
+        </div>
+        <div class="cat-tile">
+          <img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&q=85&fit=crop" alt="">
+          <div class="cat-tile-over"><div class="cat-tile-label">Aktiv</div></div>
+        </div>
+        <div class="cat-tile">
+          <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=85&fit=crop" alt="">
+          <div class="cat-tile-over"><div class="cat-tile-label">Mad</div></div>
+        </div>
+        <div class="cat-tile">
+          <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=85&fit=crop" alt="">
+          <div class="cat-tile-over"><div class="cat-tile-label">Wellness</div></div>
+        </div>
+      </div>
+      <div class="o-sec live-sec" style="margin-top:8px;">
+        <div class="o-sec-leaf" style="background:var(--terra);"></div>
+        <div class="o-sec-label">Trending</div>
+      </div>
+      <div class="o-card lg live-border" style="margin-bottom:16px;">
+        <img class="o-img" src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=90&fit=crop" alt="">
+        <div class="o-grad"></div>
+        <div class="o-badge-live">Live</div>
+        <div class="o-body">
+          <div class="o-title">Fjordhavnens <em>Festival</em></div>
+          <div class="o-meta"><span>I gang nu</span><span>·</span><span>Nordhavn</span></div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden
+      </button>
+      <button class="nav-item active" onclick="navTo('v-explore',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk
+      </button>
+      <button class="nav-item" onclick="navTo('v-profile',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil
+      </button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="v-profile" class="view" style="background:var(--bg);">
+    <div class="status-bar" style="position:relative;z-index:2;"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="scroll-area">
+      <div style="padding:24px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;">
+          <div style="width:72px;height:72px;border-radius:0 50% 50% 50%;background:linear-gradient(135deg,var(--sage),var(--terra));display:flex;align-items:center;justify-content:center;font-size:28px;">🌿</div>
+          <div>
+            <div style="font-family:var(--font-d);font-size:28px;font-weight:300;font-style:italic;">Sara K.</div>
+            <div style="font-size:13px;color:var(--muted);">@sara.strøm</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:24px;margin-bottom:32px;padding:20px;background:rgba(240,230,211,0.05);border-radius:16px;border:1px solid rgba(240,230,211,0.08);">
+          <div style="text-align:center;flex:1;"><div style="font-size:26px;font-weight:600;color:var(--terra);">47</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Events</div></div>
+          <div style="text-align:center;flex:1;"><div style="font-size:26px;font-weight:600;color:var(--terra);">312</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Følgere</div></div>
+          <div style="text-align:center;flex:1;"><div style="font-size:26px;font-weight:600;color:var(--terra);">89</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Følger</div></div>
+        </div>
+        <div class="o-sec" style="padding:0 0 12px;"><div class="o-sec-leaf"></div><div class="o-sec-label">Gemte Events</div></div>
+        <div class="o-card sm" style="margin:0;">
+          <img class="o-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+          <div class="o-grad"></div>
+          <div class="o-body">
+            <div class="o-title">Sommergalla</div>
+            <div class="o-meta"><span>14. August</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item active" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+</div>
+<script>
+let cur='v-landing';
+function go(id){const p=document.getElementById(cur),n=document.getElementById(id);n.classList.add('active','view-enter');setTimeout(()=>{p.classList.remove('active');n.classList.remove('view-enter');},500);cur=id;}
+function navTo(id,btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');go(id);}
+function selOb(el){document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('act'));el.classList.add('act');}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
