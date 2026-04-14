@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B-Social | Aurora</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030A10;--surface:rgba(10,25,40,0.7);
+  --green:#00E5A0;--blue:#0EA5E9;--violet:#8B5CF6;--pink:#EC4899;
+  --text:#E8F4F8;--muted:rgba(232,244,248,0.5);
+  --nav-h:70px;--font:'Outfit',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);font-family:var(--font);color:var(--text);overflow:hidden;}
+.app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:#020609;}
+  .app{height:90vh;max-height:932px;border-radius:36px;overflow:hidden;box-shadow:0 0 100px rgba(0,229,160,0.15),0 0 200px rgba(139,92,246,0.1);}
+}
+
+/* ─── AURORA ANIMATION ─── */
+.aurora-bg{
+  position:fixed;inset:0;max-width:430px;margin:0 auto;
+  pointer-events:none;z-index:0;overflow:hidden;
+}
+.aurora-layer{
+  position:absolute;width:200%;height:200%;
+  top:-50%;left:-50%;
+  border-radius:40%;
+  filter:blur(60px);
+  animation:auroraFlow 18s infinite ease-in-out;
+  mix-blend-mode:screen;
+}
+.a1{
+  background:radial-gradient(ellipse at 30% 40%,rgba(0,229,160,0.25) 0%,transparent 60%);
+  animation-delay:0s;animation-duration:20s;
+}
+.a2{
+  background:radial-gradient(ellipse at 70% 30%,rgba(139,92,246,0.2) 0%,transparent 60%);
+  animation-delay:-7s;animation-duration:25s;
+}
+.a3{
+  background:radial-gradient(ellipse at 50% 70%,rgba(14,165,233,0.18) 0%,transparent 60%);
+  animation-delay:-14s;animation-duration:22s;
+}
+.a4{
+  background:radial-gradient(ellipse at 20% 80%,rgba(236,72,153,0.12) 0%,transparent 50%);
+  animation-delay:-5s;animation-duration:28s;
+}
+@keyframes auroraFlow{
+  0%,100%{transform:translate(0,0) rotate(0deg) scale(1);}
+  25%{transform:translate(5%,-5%) rotate(5deg) scale(1.05);}
+  50%{transform:translate(-5%,5%) rotate(-3deg) scale(0.97);}
+  75%{transform:translate(3%,3%) rotate(4deg) scale(1.03);}
+}
+/* Stars */
+.stars{
+  position:fixed;inset:0;max-width:430px;margin:0 auto;
+  pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 10%,rgba(255,255,255,0.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 45% 20%,rgba(255,255,255,0.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 15%,rgba(255,255,255,0.7) 0%,transparent 100%),
+    radial-gradient(1px 1px at 25% 35%,rgba(255,255,255,0.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 65% 45%,rgba(255,255,255,0.3) 0%,transparent 100%),
+    radial-gradient(2px 2px at 90% 25%,rgba(255,255,255,0.8) 0%,transparent 100%),
+    radial-gradient(1px 1px at 10% 60%,rgba(255,255,255,0.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 70%,rgba(255,255,255,0.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 35% 85%,rgba(255,255,255,0.3) 0%,transparent 100%),
+    radial-gradient(2px 2px at 75% 80%,rgba(255,255,255,0.6) 0%,transparent 100%);
+}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;}
+.view.active{display:flex;}
+.view-enter{animation:auroraIn 500ms ease forwards;}
+@keyframes auroraIn{from{opacity:0;filter:blur(8px);}to{opacity:1;filter:blur(0);}}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h)+20px);}
+.scroll-area::-webkit-scrollbar{display:none;} .scroll-area{-ms-overflow-style:none;scrollbar-width:none;}
+
+/* STATUS BAR */
+.status-bar{height:44px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 20px;font-size:13px;color:var(--muted);position:relative;z-index:20;}
+
+/* GLASS PANEL */
+.glass{
+  background:rgba(10,25,40,0.5);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+/* LANDING */
+.land-inner{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:40px 24px;position:relative;z-index:2;}
+.aurora-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);
+  backdrop-filter:blur(10px);border-radius:999px;
+  padding:8px 16px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  color:var(--green);margin-bottom:20px;width:fit-content;
+}
+.aurora-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:glow 2s infinite;}
+@keyframes glow{0%,100%{opacity:1;box-shadow:0 0 12px var(--green);}50%{opacity:0.5;box-shadow:0 0 4px var(--green);}}
+.land-title{font-size:clamp(3rem,10vw,4rem);font-weight:700;line-height:0.9;margin-bottom:16px;}
+.land-title span{
+  background:linear-gradient(135deg,var(--green),var(--blue),var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.land-sub{font-size:16px;color:var(--muted);line-height:1.65;margin-bottom:36px;font-weight:300;}
+.btn-aurora{
+  display:flex;align-items:center;justify-content:center;gap:12px;width:100%;
+  background:linear-gradient(135deg,rgba(0,229,160,0.2),rgba(139,92,246,0.2));
+  border:1px solid rgba(0,229,160,0.3);
+  backdrop-filter:blur(20px);color:white;font-weight:600;font-size:16px;
+  padding:17px;border-radius:20px;cursor:pointer;
+  box-shadow:0 0 40px rgba(0,229,160,0.15),0 0 80px rgba(139,92,246,0.1);
+  transition:all 0.3s;
+}
+.btn-aurora:hover{box-shadow:0 0 60px rgba(0,229,160,0.25);}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;width:100%;height:var(--nav-h);
+  background:rgba(3,10,16,0.7);
+  backdrop-filter:blur(40px);border-top:1px solid rgba(255,255,255,0.06);
+  display:flex;justify-content:space-around;align-items:center;
+  padding:0 8px 12px;z-index:200;
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--muted);background:none;border:none;
+  font-size:10px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;
+  padding:8px 16px;border-radius:14px;cursor:pointer;transition:all 0.3s;}
+.nav-item.active{color:var(--green);}
+.nav-icon{width:22px;height:22px;stroke:currentColor;stroke-width:1.5;fill:none;}
+
+/* FEED */
+.feed-header{padding:16px 20px 12px;position:relative;z-index:2;}
+.feed-title{font-size:40px;font-weight:700;line-height:0.9;margin-bottom:4px;}
+.feed-title span{background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.feed-sub{font-size:13px;color:var(--muted);font-weight:300;}
+.aurora-pills{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;position:relative;z-index:2;}
+.aurora-pills::-webkit-scrollbar{display:none;}
+.ap{
+  white-space:nowrap;padding:8px 18px;border-radius:999px;
+  font-size:12px;font-weight:500;cursor:pointer;transition:all 0.3s;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--muted);
+}
+.ap.act{
+  background:rgba(0,229,160,0.12);border-color:rgba(0,229,160,0.35);
+  color:var(--green);box-shadow:0 0 16px rgba(0,229,160,0.1);
+}
+
+/* SEC HDR */
+.a-sec{padding:16px 20px 8px;display:flex;align-items:center;gap:10px;position:relative;z-index:2;}
+.a-sec-dot{width:8px;height:8px;border-radius:50%;}
+.a-sec-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.a-sec::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.05);}
+.a-sec.live-s .a-sec-label{color:var(--green);}
+
+/* AURORA CARD */
+.a-card{
+  margin:0 20px 14px;border-radius:22px;overflow:hidden;position:relative;cursor:pointer;
+  transition:transform 0.3s,box-shadow 0.3s;
+}
+.a-card:hover{transform:translateY(-2px);}
+.a-card.lg{height:270px;} .a-card.sm{height:170px;}
+.a-card.now-c{box-shadow:0 0 0 1px rgba(0,229,160,0.3),0 16px 50px rgba(0,229,160,0.15);}
+.a-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.45) saturate(1.1);}
+.a-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(3,10,16,0.97) 0%,rgba(3,10,16,0.3) 55%,transparent 100%);}
+/* Aurora shimmer on card */
+.a-card::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(135deg,rgba(0,229,160,0.06) 0%,rgba(139,92,246,0.04) 50%,rgba(14,165,233,0.06) 100%);
+}
+.a-live{
+  position:absolute;top:14px;left:14px;z-index:3;
+  display:flex;align-items:center;gap:7px;
+  background:rgba(0,229,160,0.15);border:1px solid rgba(0,229,160,0.4);
+  backdrop-filter:blur(12px);border-radius:999px;
+  color:var(--green);font-size:11px;font-weight:700;padding:6px 14px;letter-spacing:0.5px;
+}
+.a-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:glow 1.5s infinite;}
+.a-cat{position:absolute;top:14px;right:14px;z-index:3;background:rgba(3,10,16,0.6);backdrop-filter:blur(10px);color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;padding:5px 12px;border-radius:999px;}
+.a-body{position:absolute;bottom:0;left:0;right:0;padding:18px;z-index:2;}
+.a-title{font-size:22px;font-weight:700;margin-bottom:6px;line-height:1.1;}
+.a-meta{font-size:12px;color:rgba(232,244,248,0.5);display:flex;gap:8px;}
+
+/* OB */
+.ob-inner{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:36px 24px;position:relative;z-index:2;}
+.ob-title{font-size:44px;font-weight:700;line-height:0.9;margin-bottom:10px;}
+.ob-sub{font-size:15px;color:var(--muted);margin-bottom:28px;font-weight:300;line-height:1.6;}
+.ob-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.ob-opt{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(10,25,40,0.5);border:1px solid rgba(255,255,255,0.07);
+  backdrop-filter:blur(20px);border-radius:16px;padding:16px 18px;cursor:pointer;transition:all 0.3s;
+}
+.ob-opt.act{background:rgba(0,229,160,0.08);border-color:rgba(0,229,160,0.35);}
+.ob-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--muted);transition:all 0.3s;}
+.ob-opt.act .ob-dot{background:var(--green);border-color:var(--green);box-shadow:0 0 12px var(--green);}
+.ob-t{font-size:17px;font-weight:600;margin-bottom:2px;}
+.ob-opt.act .ob-t{color:var(--green);}
+.ob-s{font-size:13px;color:var(--muted);font-weight:300;}
+
+/* EXPLORE */
+.cat-aurora{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 20px;position:relative;z-index:2;}
+.cat-a{border-radius:20px;overflow:hidden;position:relative;height:160px;cursor:pointer;transition:all 0.3s;}
+.cat-a:hover{transform:scale(1.02);}
+.cat-a img{width:100%;height:100%;object-fit:cover;filter:brightness(0.45) saturate(1.1);}
+.cat-a-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(3,10,16,0.9) 0%,transparent 60%);
+  display:flex;align-items:flex-end;padding:12px;
+}
+.cat-a-label{font-size:18px;font-weight:700;}
+/* Aurora glow on cat tile */
+.cat-a::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(135deg,rgba(0,229,160,0.08),rgba(139,92,246,0.06));opacity:0;transition:opacity 0.3s;}
+.cat-a:hover::before{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stars"></div>
+  <div class="aurora-bg">
+    <div class="aurora-layer a1"></div>
+    <div class="aurora-layer a2"></div>
+    <div class="aurora-layer a3"></div>
+    <div class="aurora-layer a4"></div>
+  </div>
+
+  <!-- LANDING -->
+  <div id="v-landing" class="view active">
+    <div class="status-bar"><span>9:41</span><span>◉ ●●●</span></div>
+    <div class="land-inner">
+      <div class="aurora-badge">Live Nu</div>
+      <div class="land-title"><span>Strøm-<br>men</span> er her.</div>
+      <div class="land-sub">Fremtid danser. Nutid lyser. Fortid vender tilbage til mørket.</div>
+      <button class="btn-aurora" onclick="go('v-ob')">
+        Dyk ind i strømmen
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="v-ob" class="view">
+    <div class="status-bar"><span>9:41</span><span>◉ ●●●</span></div>
+    <div class="ob-inner">
+      <div class="land-title" style="font-size:40px;margin-bottom:10px;"><span>Hvornår<br>danser du?</span></div>
+      <div class="ob-sub">Vælg dit sted i lysstrømmen.</div>
+      <div class="ob-opts">
+        <div class="ob-opt" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-t">Fremtid</div><div class="ob-s">Næste måned og frem</div></div></div>
+        <div class="ob-opt" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-t">Snart</div><div class="ob-s">Denne uge</div></div></div>
+        <div class="ob-opt act" onclick="selOb(this)"><div class="ob-dot"></div><div><div class="ob-t">Nu</div><div class="ob-s">I dag og i morgen</div></div></div>
+      </div>
+      <button class="btn-aurora" onclick="go('v-feed')">Åbn strømmen →</button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="v-feed" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>◉ ●●●</span></div>
+    <div class="scroll-area">
+      <div class="feed-header">
+        <div class="feed-title"><span>Flo</span>den</div>
+        <div class="feed-sub">Lysstrøm · Nær dig · I dag</div>
+      </div>
+      <div class="aurora-pills">
+        <div class="ap">Aug</div><div class="ap">Jul</div><div class="ap">Uge</div>
+        <div class="ap act">Nu</div><div class="ap">I går</div>
+      </div>
+
+      <div class="a-sec"><div class="a-sec-dot" style="background:var(--blue);box-shadow:0 0 8px var(--blue);"></div><div class="a-sec-label">Fremtid</div></div>
+      <div class="a-card sm">
+        <img class="a-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+        <div class="a-grad"></div><div class="a-cat">Fest</div>
+        <div class="a-body"><div class="a-title">Sommergalla i Skoven</div><div class="a-meta"><span>14. August</span><span>·</span><span>Frederiksberg</span></div></div>
+      </div>
+
+      <div class="a-sec live-s"><div class="a-sec-dot" style="background:var(--green);box-shadow:0 0 8px var(--green);animation:glow 1.5s infinite;"></div><div class="a-sec-label">● Live Nu</div></div>
+      <div class="a-card lg now-c">
+        <img class="a-img" src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=90&fit=crop" alt="">
+        <div class="a-grad"></div><div class="a-live">Live</div><div class="a-cat">Musik</div>
+        <div class="a-body"><div class="a-title">Jazz på Havnen</div><div class="a-meta"><span>I gang · slutter 22:00</span><span>·</span><span>Nyhavn</span></div></div>
+      </div>
+      <div class="a-card sm">
+        <img class="a-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=90&fit=crop" alt="">
+        <div class="a-grad"></div><div class="a-cat">Mad</div>
+        <div class="a-body"><div class="a-title">Pop-up Street Food</div><div class="a-meta"><span>Starter 18:00</span><span>·</span><span>Vesterbro</span></div></div>
+      </div>
+
+      <div class="a-sec" style="opacity:0.4;"><div class="a-sec-dot" style="background:var(--muted);"></div><div class="a-sec-label">Fortid</div></div>
+      <div class="a-card sm" style="opacity:0.3;filter:grayscale(60%);">
+        <img class="a-img" src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=90&fit=crop" alt="">
+        <div class="a-grad"></div>
+        <div class="a-body"><div class="a-title">Byvandring</div><div class="a-meta"><span>Afsluttet · I går</span></div></div>
+      </div>
+      <div style="height:40px;"></div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+
+  <!-- EXPLORE -->
+  <div id="v-explore" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>◉ ●●●</span></div>
+    <div class="scroll-area">
+      <div class="feed-header"><div class="feed-title"><span>Udforsk</span></div><div class="feed-sub">Alle kategorier</div></div>
+      <div class="cat-aurora">
+        <div class="cat-a"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=85&fit=crop" alt=""><div class="cat-a-overlay"><div class="cat-a-label">Musik</div></div></div>
+        <div class="cat-a"><img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&q=85&fit=crop" alt=""><div class="cat-a-overlay"><div class="cat-a-label">Aktiv</div></div></div>
+        <div class="cat-a"><img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=85&fit=crop" alt=""><div class="cat-a-overlay"><div class="cat-a-label">Mad</div></div></div>
+        <div class="cat-a"><img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=85&fit=crop" alt=""><div class="cat-a-overlay"><div class="cat-a-label">Wellness</div></div></div>
+      </div>
+      <div class="a-sec live-s" style="margin-top:4px;"><div class="a-sec-dot" style="background:var(--green);box-shadow:0 0 8px var(--green);"></div><div class="a-sec-label">Trending</div></div>
+      <div class="a-card lg now-c" style="margin-bottom:16px;">
+        <img class="a-img" src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=90&fit=crop" alt="">
+        <div class="a-grad"></div><div class="a-live">Live</div>
+        <div class="a-body"><div class="a-title">Fjordhavnens Festival</div><div class="a-meta"><span>I gang nu</span><span>·</span><span>Nordhavn</span></div></div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item active" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="v-profile" class="view">
+    <div class="status-bar" style="position:relative;z-index:20;"><span>9:41</span><span>◉ ●●●</span></div>
+    <div class="scroll-area">
+      <div style="padding:24px;position:relative;z-index:2;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+          <div style="width:72px;height:72px;border-radius:50%;background:conic-gradient(var(--green),var(--blue),var(--violet),var(--green));padding:2px;">
+            <div style="width:100%;height:100%;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;">SK</div>
+          </div>
+          <div><div style="font-size:26px;font-weight:700;">Sara K.</div><div style="font-size:13px;color:var(--green);">@sara.strøm</div></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:24px;">
+          <div style="flex:1;background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.2);border-radius:16px;padding:16px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--green);">47</div><div style="font-size:11px;color:var(--muted);">EVENTS</div>
+          </div>
+          <div style="flex:1;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:16px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--violet);">312</div><div style="font-size:11px;color:var(--muted);">FØLGERE</div>
+          </div>
+          <div style="flex:1;background:rgba(14,165,233,0.07);border:1px solid rgba(14,165,233,0.2);border-radius:16px;padding:16px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--blue);">89</div><div style="font-size:11px;color:var(--muted);">FØLGER</div>
+          </div>
+        </div>
+        <div class="a-sec" style="padding:0 0 12px;"><div class="a-sec-dot" style="background:var(--violet);box-shadow:0 0 8px var(--violet);"></div><div class="a-sec-label">Gemte Events</div></div>
+        <div class="a-card sm" style="margin:0;">
+          <img class="a-img" src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=90&fit=crop" alt="">
+          <div class="a-grad"></div>
+          <div class="a-body"><div class="a-title">Sommergalla</div><div class="a-meta"><span>14. August</span></div></div>
+        </div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="navTo('v-feed',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Floden</button>
+      <button class="nav-item" onclick="navTo('v-explore',this)"><svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Udforsk</button>
+      <button class="nav-item active" onclick="navTo('v-profile',this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+    </nav>
+  </div>
+</div>
+<script>
+let cur='v-landing';
+function go(id){const p=document.getElementById(cur),n=document.getElementById(id);n.classList.add('active','view-enter');setTimeout(()=>{p.classList.remove('active');n.classList.remove('view-enter');},500);cur=id;}
+function navTo(id,btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');go(id);}
+function selOb(el){document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('act'));el.classList.add('act');}
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
