@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>b—social · Amber Cabinet</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&display=swap');
+    
+    * { margin:0; padding:0; box-sizing:border-box; }
+    
+    :root {
+      --bg: #0F0D0A;
+      --bg-2: #161310;
+      --bg-3: #1C1813;
+      --line: rgba(212,151,60,0.09);
+      --line-2: rgba(212,151,60,0.22);
+      --text: #F2EBDB;
+      --text-2: #B3A785;
+      --text-3: #6E6449;
+      --amber: #D4973C;
+      --amber-ink: #8B5E1A;
+      --quote: #E8D3A0;
+    }
+    
+    html, body { width:100%; height:100%; background:var(--bg); overflow:hidden; }
+    
+    body {
+      font-family: Inter, sans-serif;
+      color: var(--text);
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .phone {
+      width: 390px;
+      height: min(844px, calc(100vh - 40px));
+      border-radius: 44px;
+      background: var(--bg);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 50px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,151,60,0.07),
+                  inset 0 1px 0 rgba(242,235,219,0.03);
+    }
+    
+    .phone::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.3;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.83, 0 0 0 0 0.59, 0 0 0 0 0.24, 0 0 0 0.03 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    }
+    
+    .phone-content {
+      flex: 1;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .phone-content::-webkit-scrollbar { width: 3px; }
+    .phone-content::-webkit-scrollbar-track { background: transparent; }
+    .phone-content::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 2px; }
+    
+    .screen {
+      display: none;
+      flex: 1;
+      padding: 0;
+      min-height: 100%;
+      position: relative;
+    }
+    
+    .screen.active { display: flex; flex-direction: column; }
+    
+    .status-bar {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-2);
+      font-weight: 500;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    
+    .status-bar-time { flex: 1; }
+    .status-bar-right { display: flex; gap: 4px; }
+    
+    .wordmark {
+      font-family: "Instrument Serif", serif;
+      font-size: 17px;
+      font-style: italic;
+      text-align: center;
+      padding: 12px 0;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    
+    .headline {
+      font-family: "Instrument Serif", serif;
+      font-size: 88px;
+      font-style: italic;
+      font-weight: 400;
+      line-height: 0.9;
+      padding: 0 24px;
+      color: var(--text);
+      text-align: center;
+    }
+    
+    .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--amber);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+    
+    .page-section {
+      padding: 0 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .divider {
+      height: 1px;
+      background: var(--line-2);
+      margin: 24px 0;
+    }
+    
+    .event-card {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--line-2);
+    }
+    
+    .event-card:last-child { border-bottom: none; }
+    
+    .card-title {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      margin: 12px 0;
+      line-height: 1.3;
+    }
+    
+    .pull-quote {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 17px;
+      color: var(--quote);
+      margin: 16px 0 12px 0;
+      line-height: 1.5;
+    }
+    
+    .attribution {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--amber);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    
+    .card-footer {
+      font-size: 11px;
+      color: var(--text-3);
+      line-height: 1.6;
+    }
+    
+    .story-card {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line-2);
+    }
+    
+    .story-image {
+      width: 100%;
+      height: 220px;
+      background: var(--bg-3);
+      border-radius: 2px;
+      margin-bottom: 12px;
+      object-fit: cover;
+      filter: sepia(0.35) saturate(0.85) contrast(1.05) brightness(0.78);
+    }
+    
+    .story-headline {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 24px;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    
+    .story-body {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    
+    .nav {
+      flex-shrink: 0;
+      height: 64px;
+      width: 100%;
+      background: rgba(15,13,10,0.88);
+      backdrop-filter: blur(24px);
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 8px;
+    }
+    
+    .nav-item {
+      font: 400 10px/1 Inter;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      cursor: pointer;
+      transition: color 0.2s;
+      position: relative;
+      padding-top: 8px;
+    }
+    
+    .nav-item:hover { color: var(--text-2); }
+    
+    .nav-item.on { color: var(--amber); }
+    
+    .nav-item.on::before {
+      content: "·";
+      display: block;
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--amber);
+      font-size: 20px;
+      line-height: 1;
+    }
+    
+    /* SCREEN: TONIGHT */
+    .section-headline {
+      font-size: 88px;
+      margin: 24px 0 8px 0;
+    }
+    
+    .date-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line-2);
+    }
+    
+    .date-eyebrow::before {
+      content: "";
+      width: 1px;
+      height: 14px;
+      background: var(--line-2);
+    }
+    
+    /* SCREEN: FEED */
+    .magazine-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    
+    .mag-feature {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .mag-feature.alt {
+      flex-direction: column-reverse;
+    }
+    
+    .mag-photo {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--bg-3);
+      border-radius: 2px;
+      margin-bottom: 16px;
+      object-fit: cover;
+      filter: sepia(0.35) saturate(0.85) contrast(1.05) brightness(0.78);
+    }
+    
+    .mag-feature.alt .mag-photo {
+      margin-bottom: 0;
+      margin-top: 16px;
+    }
+    
+    .mag-headline {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    
+    .mag-body {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    
+    /* SCREEN: PLAN */
+    .plan-section {
+      padding: 0;
+    }
+    
+    .plan-headline {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 48px;
+      font-weight: 400;
+      color: var(--text);
+      padding: 24px;
+      margin: 0;
+    }
+    
+    .invitation-form {
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line-2);
+    }
+    
+    .form-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--amber);
+      font-weight: 500;
+    }
+    
+    .form-value {
+      font-family: "Courier New", monospace;
+      font-size: 15px;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    
+    .guest-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    
+    .chip {
+      padding: 4px 12px;
+      border-radius: 2px;
+      background: var(--bg-3);
+      color: var(--text-2);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      border: 1px solid var(--line-2);
+    }
+    
+    .submit-link {
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--amber);
+      cursor: pointer;
+      border-bottom: 1px solid var(--amber);
+      display: inline-block;
+      padding-bottom: 2px;
+    }
+    
+    /* SCREEN: STORIES */
+    .stories-header {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--text);
+      padding: 24px;
+      padding-bottom: 12px;
+      margin: 0;
+    }
+    
+    /* SCREEN: PROFILE */
+    .profile-header {
+      padding: 24px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    
+    .profile-avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 2px;
+      background: var(--bg-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .profile-avatar-initials {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 44px;
+      color: var(--amber);
+      font-weight: 400;
+    }
+    
+    .profile-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding-top: 8px;
+    }
+    
+    .profile-name {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 40px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    
+    .profile-role {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--amber);
+      font-weight: 500;
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      padding: 24px;
+      border-bottom: 1px solid var(--line-2);
+    }
+    
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .stat-number {
+      font-family: "Instrument Serif", serif;
+      font-style: italic;
+      font-size: 28px;
+      color: var(--amber);
+      font-weight: 400;
+    }
+    
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+    
+    .places-section {
+      padding: 24px;
+    }
+    
+    .places-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--amber);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    
+    .place-row {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line-2);
+      align-items: center;
+    }
+    
+    .place-thumbnail {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-3);
+      border-radius: 2px;
+      flex-shrink: 0;
+      object-fit: cover;
+      filter: sepia(0.35) saturate(0.85) contrast(1.05) brightness(0.78);
+    }
+    
+    .place-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .place-name {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text);
+    }
+    
+    .place-meta {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="phone-content">
+      <!-- SCREEN: TONIGHT -->
+      <div id="screen-tonight" class="screen active">
+        <div class="status-bar">
+          <div class="status-bar-time">21:47</div>
+          <div class="status-bar-right">
+            <div>●●●●●</div>
+          </div>
+        </div>
+        
+        <div class="wordmark">b—social</div>
+        
+        <div class="page-section" style="justify-content: flex-start; padding-top: 12px;">
+          <h1 class="headline">i aften<br>har vi valgt</h1>
+          
+          <div style="padding: 0 24px;">
+            <div class="date-eyebrow">
+              <span style="flex: 1;">14. APRIL · KØBENHAVN</span>
+            </div>
+          </div>
+          
+          <div style="padding: 0 24px; flex: 1; overflow-y: auto;">
+            <div class="event-card">
+              <div class="eyebrow">JAZZ · LA FONTAINE</div>
+              <h2 class="card-title">Jazz efter midnat</h2>
+              <p class="pull-quote">"Bedste jazz i byen, intet slår det."</p>
+              <p class="attribution">— KRISTINE N., 28 · STAMGÆST</p>
+              <div class="card-footer">21:00 → 02:00 · KOMPAGNISTRÆDE 11 · FRA 80 KR</div>
+            </div>
+            
+            <div class="event-card">
+              <div class="eyebrow">WINE · HELSINGØR</div>
+              <h2 class="card-title">Naturvin fra Bordeaux</h2>
+              <p class="pull-quote">"Gik derhen kl 23, gik derfra kl 04. Ingen ur."</p>
+              <p class="attribution">— MIKKEL H., 31</p>
+              <div class="card-footer">20:00 → 23:30 · STRANDGADE 42 · FRA 120 KR</div>
+            </div>
+            
+            <div class="event-card">
+              <div class="eyebrow">GALLERY · NØRREBRO</div>
+              <h2 class="card-title">Kunstfotosamling</h2>
+              <p class="pull-quote">"Ikke turistet. Rigtigt København."</p>
+              <p class="attribution">— ANNA S., 26</p>
+              <div class="card-footer">19:00 → 22:00 · RANTZAUSGADE 18 · GRATIS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SCREEN: FEED -->
+      <div id="screen-feed" class="screen">
+        <div class="status-bar">
+          <div class="status-bar-time">21:47</div>
+          <div class="status-bar-right">
+            <div>●●●●●</div>
+          </div>
+        </div>
+        
+        <div class="wordmark">MAGASIN</div>
+        
+        <div class="page-section" style="padding: 24px; overflow-y: auto;">
+          <div class="magazine-grid">
+            <div class="mag-feature">
+              <img src="https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=600&q=90" alt="" class="mag-photo">
+              <div class="eyebrow">JAZZ · RENÆSSANCE</div>
+              <h2 class="mag-headline">Bebop i kælderen</h2>
+              <p class="mag-body">Trompeter fra Harlem. Basisten fra København siden '92.</p>
+              <p class="pull-quote">"Min faste fredag siden 2019."</p>
+              <p class="attribution">— JONAS B., 34 · MEDLEM SIDEN '19</p>
+            </div>
+            
+            <div class="mag-feature alt">
+              <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=90" alt="" class="mag-photo">
+              <div class="eyebrow">WINE · SKANDINAVIEN</div>
+              <h2 class="mag-headline">Orange vin fra Rhône</h2>
+              <p class="mag-body">Kiselsten og appelsin. Kort historie fra sommerens høst.</p>
+              <p class="pull-quote">"Et mørkt guld i gaden — gå ind."</p>
+              <p class="attribution">— SOFIE L., 29</p>
+            </div>
+            
+            <div class="mag-feature">
+              <img src="https://images.unsplash.com/photo-1514361892635-6b07e31e75f9?w=600&q=90" alt="" class="mag-photo">
+              <div class="eyebrow">SALON · FREDERIKSSTADEN</div>
+              <h2 class="mag-headline">Lysekrone og stemmer</h2>
+              <p class="mag-body">Klassisk dansk aften. Whisky, klassik, samtale.</p>
+              <p class="pull-quote">"Ordene er velvalgt her."</p>
+              <p class="attribution">— ERIK P., 42 · MEDLEM</p>
+            </div>
+            
+            <div class="mag-feature alt">
+              <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=90" alt="" class="mag-photo">
+              <div class="eyebrow">SUPPER · VESTERBRO</div>
+              <h2 class="mag-headline">Oksemedister og rødvin</h2>
+              <p class="mag-body">Tredelt menu. Fire venner. En nat uden telefon.</p>
+              <p class="pull-quote">"Sådan er det når man kender køkkenet."</p>
+              <p class="attribution">— ISABELLA C., 27</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SCREEN: PLAN -->
+      <div id="screen-plan" class="screen">
+        <div class="status-bar">
+          <div class="status-bar-time">21:47</div>
+          <div class="status-bar-right">
+            <div>●●●●●</div>
+          </div>
+        </div>
+        
+        <h2 class="plan-headline">Indbyd</h2>
+        
+        <div class="plan-section" style="overflow-y: auto; flex: 1;">
+          <div class="invitation-form">
+            <div class="form-field">
+              <label class="form-label">Titel</label>
+              <div class="form-value">Whisky & Jazz</div>
+            </div>
+            
+            <div class="form-field">
+              <label class="form-label">Sted</label>
+              <div class="form-value">La Fontaine, Kompagnistræde 11</div>
+            </div>
+            
+            <div class="form-field">
+              <label class="form-label">Tid</label>
+              <div class="form-value">22:00 — 02:00, 21. april</div>
+            </div>
+            
+            <div class="form-field">
+              <label class="form-label">Gæster</label>
+              <div class="guest-chips">
+                <div class="chip">Kristine</div>
+                <div class="chip">Mikkel</div>
+                <div class="chip">Anna</div>
+                <div class="chip">Jonas</div>
+              </div>
+            </div>
+            
+            <div class="form-field">
+              <label class="form-label">Dresscode (valgfri)</label>
+              <div class="form-value">Smart casual · Mørkt</div>
+            </div>
+            
+            <div class="submit-link">Send invitation →</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SCREEN: STORIES -->
+      <div id="screen-stories" class="screen">
+        <div class="status-bar">
+          <div class="status-bar-time">21:47</div>
+          <div class="status-bar-right">
+            <div>●●●●●</div>
+          </div>
+        </div>
+        
+        <h2 class="stories-header">Krøniken</h2>
+        
+        <div class="page-section" style="padding: 0 24px; overflow-y: auto;">
+          <div class="story-card">
+            <img src="https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=600&q=90" alt="" class="story-image">
+            <h3 class="story-headline">Jazz efter midnat</h3>
+            <p class="story-body">En nat som alle andre, men helt anderledes.</p>
+            <p class="pull-quote">"Der var liv i lokalet. Rigtig liv."</p>
+            <p class="attribution">— DU, APRIL 2026</p>
+            <div class="card-footer">21:00 · LA FONTAINE · MED KRISTINE & MIKKEL</div>
+          </div>
+          
+          <div class="story-card">
+            <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=90" alt="" class="story-image">
+            <h3 class="story-headline">Naturvin fra Bordeaux</h3>
+            <p class="story-body">Kiselsten på tungen. Taniner der ikke glemmes.</p>
+            <p class="pull-quote">"Dette er hvad jeg søger."</p>
+            <p class="attribution">— DU, MARTS 2026</p>
+            <div class="card-footer">20:00 · HELSINGØR · MED ANNA</div>
+          </div>
+          
+          <div class="story-card">
+            <img src="https://images.unsplash.com/photo-1514361892635-6b07e31e75f9?w=600&q=90" alt="" class="story-image">
+            <h3 class="story-headline">Klassisk dansk aften</h3>
+            <p class="story-body">Lamper blev dæmpet. Vejret blev ignoreret.</p>
+            <p class="pull-quote">"Sådan skal København være."</p>
+            <p class="attribution">— DU, FEBRUAR 2026</p>
+            <div class="card-footer">19:30 · FREDERIKSSTADEN · MED JONAS & ERIK</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SCREEN: PROFILE -->
+      <div id="screen-profile" class="screen">
+        <div class="status-bar">
+          <div class="status-bar-time">21:47</div>
+          <div class="status-bar-right">
+            <div>●●●●●</div>
+          </div>
+        </div>
+        
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <div class="profile-avatar-initials">CF</div>
+          </div>
+          <div class="profile-info">
+            <h1 class="profile-name">Clara</h1>
+            <p class="profile-role">MEDLEM SI
+</div></div></div></div></div>
+
+
+
+
+<script>
+(function(){
+  var items = [["I AFTEN","screen-tonight"],["MAGASIN","screen-feed"],["INDBYD","screen-plan"],["KRØNIK","screen-stories"],["DIG","screen-profile"]];
+  function init(){
+    // 1. Remove any previous _nav
+    var old = document.getElementById('_nav_inject'); if(old) old.remove();
+    var oldStyle = document.getElementById('_nav_style'); if(oldStyle) oldStyle.remove();
+
+    // 2. Find container - prefer .phone, fallback to body
+    var phone = document.querySelector('.phone') || document.body;
+
+    // 3. Setup screens: hide all except first, give first .active
+    var screens = document.querySelectorAll('.screen');
+    screens.forEach(function(s,i){
+      if(i===0){ s.classList.add('active'); s.style.display = ''; }
+      else { s.classList.remove('active'); s.style.display = 'none'; }
+    });
+
+    // 4. Inject style
+    var st = document.createElement('style');
+    st.id = '_nav_style';
+    st.textContent = '#_nav_inject{position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(0,0,0,0.78);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:9999;padding-bottom:6px;}#_nav_inject .ni{flex:1;text-align:center;cursor:pointer;user-select:none;font:500 9px/1.2 "JetBrains Mono",ui-monospace,monospace;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.45);padding:6px 2px;transition:color 180ms ease;}#_nav_inject .ni:hover{color:rgba(255,255,255,0.85);}#_nav_inject .ni.on{color:rgba(255,255,255,0.98);}#_nav_inject .ni.on::after{content:"";display:block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:4px auto 0;}';
+    document.head.appendChild(st);
+
+    // 5. Make phone position:relative so absolute nav lands inside
+    var cs = window.getComputedStyle(phone);
+    if(cs.position === 'static') phone.style.position = 'relative';
+
+    // 6. Build nav
+    var nav = document.createElement('div');
+    nav.id = '_nav_inject';
+    items.forEach(function(it, idx){
+      var btn = document.createElement('div');
+      btn.className = 'ni' + (idx===0 ? ' on' : '');
+      btn.textContent = it[0];
+      btn.setAttribute('data-t', it[1]);
+      btn.onclick = function(){ go(it[1]); };
+      nav.appendChild(btn);
+    });
+    phone.appendChild(nav);
+
+    // 7. Pad bottom of active screen so nav doesn't overlap
+    screens.forEach(function(s){
+      var pb = parseInt(window.getComputedStyle(s).paddingBottom) || 0;
+      if(pb < 70) s.style.paddingBottom = '80px';
+    });
+  }
+
+  window.go = function(id){
+    var all = document.querySelectorAll('.screen');
+    all.forEach(function(s){ s.classList.remove('active'); s.style.display = 'none'; });
+    var t = document.getElementById(id);
+    if(t){ t.classList.add('active'); t.style.display = ''; }
+    document.querySelectorAll('#_nav_inject .ni').forEach(function(n){ n.classList.remove('on'); });
+    var btn = document.querySelector('#_nav_inject .ni[data-t="'+id+'"]');
+    if(btn) btn.classList.add('on');
+  };
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
