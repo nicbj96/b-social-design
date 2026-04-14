@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B·Social — Copenhagen Social Events | Crystal Ice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-cold-black: #080a0e;
+            --color-frost-panel: #141820;
+            --color-frost-light: #1a2230;
+            --color-ice-accent: #b8d4e8;
+            --color-ice-white: #eef2f7;
+            --color-text-pale: #d9e3ed;
+            --color-text-muted: #9eb0c4;
+            --color-subtle-blue: #0f1723;
+            --font-serif: 'Playfair Display', 'Didot', serif;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        body {
+            background-color: var(--color-cold-black);
+            color: var(--color-text-pale);
+            font-family: var(--font-body);
+            overflow: hidden;
+        }
+
+        .phone-frame {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 390px;
+            height: 844px;
+            background: var(--color-cold-black);
+            border-radius: 60px;
+            border: 12px solid #000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), inset 0 0 40px rgba(184, 212, 232, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(180deg, var(--color-frost-panel) 0%, var(--color-cold-black) 100%);
+            border-bottom: 1px solid rgba(184, 212, 232, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--color-text-muted);
+        }
+
+        .status-time {
+            font-weight: 600;
+        }
+
+        .screen-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--color-cold-black);
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .screen-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            scroll-behavior: smooth;
+        }
+
+        .screen-content::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .screen-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .screen-content::-webkit-scrollbar-thumb {
+            background: rgba(184, 212, 232, 0.2);
+            border-radius: 2px;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            height: 70px;
+            background: linear-gradient(180deg, rgba(20, 24, 32, 0.4) 0%, var(--color-cold-black) 100%);
+            border-top: 1px solid rgba(184, 212, 232, 0.08);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-around;
+            padding-top: 8px;
+            gap: 0;
+        }
+
+        .nav-button {
+            flex: 1;
+            height: 62px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            font-family: var(--font-body);
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.25s ease;
+            border-top: 2px solid transparent;
+            position: relative;
+        }
+
+        .nav-button:hover {
+            color: var(--color-text-pale);
+        }
+
+        .nav-button.active {
+            color: var(--color-ice-accent);
+            border-top-color: var(--color-ice-accent);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            opacity: 0.7;
+        }
+
+        .nav-button.active .nav-icon {
+            opacity: 1;
+        }
+
+        /* Header */
+        .screen-header {
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(184, 212, 232, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .screen-header h1 {
+            font-family: var(--font-serif);
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+            color: var(--color-ice-white);
+            margin-bottom: 4px;
+        }
+
+        .screen-header p {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Card Styling - Frosted Glass Effect */
+        .card {
+            background: linear-gradient(135deg, rgba(26, 34, 48, 0.6) 0%, rgba(20, 24, 32, 0.4) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(184, 212, 232, 0.15);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(184, 212, 232, 0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .card:hover {
+            background: linear-gradient(135deg, rgba(26, 34, 48, 0.8) 0%, rgba(20, 24, 32, 0.6) 100%);
+            border-color: rgba(184, 212, 232, 0.25);
+            box-shadow: 0 8px 32px rgba(184, 212, 232, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .card-icon {
+            font-size: 24px;
+            opacity: 0.8;
+            flex-shrink: 0;
+        }
+
+        .card-title {
+            font-family: var(--font-serif);
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-ice-white);
+            margin-bottom: 2px;
+        }
+
+        .card-venue {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
+        }
+
+        .card-description {
+            font-size: 12px;
+            color: var(--color-text-pale);
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            padding-top: 8px;
+            border-top: 1px solid rgba(184, 212, 232, 0.08);
+        }
+
+        .card-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Crystalline Accent Line */
+        .crystal-accent {
+            height: 1px;
+            background: linear-gradient(90deg, rgba(184, 212, 232, 0), rgba(184, 212, 232, 0.4), rgba(184, 212, 232, 0));
+            margin: 12px 0;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            background: rgba(26, 34, 48, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(184, 212, 232, 0.12);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-family: var(--font-body);
+            color: var(--color-text-pale);
+            font-size: 13px;
+            width: 100%;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: rgba(184, 212, 232, 0.3);
+            background: rgba(26, 34, 48, 0.8);
+            box-shadow: 0 0 20px rgba(184, 212, 232, 0.1);
+        }
+
+        .search-bar::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        /* Section Labels */
+        .section-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            margin: 16px 0 8px 0;
+        }
+
+        /* Filter Pills */
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            background: rgba(184, 212, 232, 0.08);
+            border: 1px solid rgba(184, 212, 232, 0.15);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: var(--color-text-pale);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-mono);
+        }
+
+        .filter-pill:hover,
+        .filter-pill.active {
+            background: rgba(184, 212, 232, 0.2);
+            border-color: rgba(184, 212, 232, 0.3);
+            color: var(--color-ice-accent);
+        }
+
+        /* Diamond Ornaments */
+        .diamond-ornament {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: var(--color-ice-accent);
+            transform: rotate(45deg);
+            margin: 0 6px;
+            opacity: 0.4;
+        }
+
+        /* Button */
+        .btn {
+            background: linear-gradient(135deg, var(--color-ice-accent) 0%, #a8c8e0 100%);
+            color: var(--color-cold-black);
+            border: 1px solid var(--color-ice-accent);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-family: var(--font-body);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #c8e0f0 0%, #b8d4e8 100%);
+            box-shadow: 0 6px 20px rgba(184, 212, 232, 0.25);
+            transform: translateY(-1px);
+        }
+
+        /* Hjem Screen */
+        .featured-card {
+            background: linear-gradient(135deg, rgba(26, 34, 48, 0.8) 0%, rgba(20, 24, 32, 0.5) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(184, 212, 232, 0.2);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .featured-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(184, 212, 232, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .featured-event {
+            position: relative;
+            z-index: 1;
+        }
+
+        .featured-time {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--color-ice-accent);
+            margin-bottom: 6px;
+        }
+
+        .featured-title {
+            font-family: var(--font-serif);
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--color-ice-white);
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .featured-venue {
+            font-size: 12px;
+            color: var(--color-text-muted);
+        }
+
+        /* Map Screen Placeholder */
+        .map-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(26, 34, 48, 0.6) 0%, rgba(20, 24, 32, 0.4) 100%);
+            border: 1px solid rgba(184, 212, 232, 0.15);
+            border-radius: 14px;
+            margin: 8px 0 16px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-muted);
+            font-size: 12px;
+            font-family: var(--font-mono);
+        }
+
+        /* Invite Screen */
+        .invite-input {
+            background: rgba(26, 34, 48, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(184, 212, 232, 0.12);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-family: var(--font-body);
+            color: var(--color-text-pale);
+            font-size: 13px;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .invite-input:focus {
+            outline: none;
+            border-color: rgba(184, 212, 232, 0.3);
+            background: rgba(26, 34, 48, 0.8);
+            box-shadow: 0 0 20px rgba(184, 212, 232, 0.1);
+        }
+
+        /* User Profile */
+        .profile-section {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(184, 212, 232, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(184, 212, 232, 0.2) 0%, rgba(184, 212, 232, 0.05) 100%);
+            border: 2px solid rgba(184, 212, 232, 0.3);
+            border-radius: 16px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .profile-name {
+            font-family: var(--font-serif);
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--color-ice-white);
+            margin-bottom: 4px;
+        }
+
+        .profile-handle {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--color-text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .stat-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            background: rgba(26, 34, 48, 0.4);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(184, 212, 232, 0.12);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: var(--font-serif);
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-ice-accent);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--color-text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Settings Items */
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            background: rgba(26, 34, 48, 0.3);
+            border: 1px solid rgba(184, 212, 232, 0.08);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .settings-item:hover {
+            background: rgba(26, 34, 48, 0.5);
+            border-color: rgba(184, 212, 232, 0.15);
+        }
+
+        .settings-label {
+            font-size: 13px;
+            color: var(--color-text-pale);
+        }
+
+        .settings-value {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 24px;
+            background: rgba(184, 212, 232, 0.15);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--color-ice-accent);
+        }
+
+        .toggle-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 10px;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-indicator {
+            left: 18px;
+        }
+
+        /* Events List */
+        .event-list-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(26, 34, 48, 0.2);
+            border-radius: 10px;
+            border-left: 2px solid var(--color-ice-accent);
+        }
+
+        .event-list-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
+
+        .event-list-content {
+            flex: 1;
+            font-size: 12px;
+        }
+
+        .event-list-title {
+            color: var(--color-ice-white);
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+
+        .event-list-info {
+            color: var(--color-text-muted);
+            font-family: var(--font-mono);
+            font-size: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .phone-frame {
+                border-width: 8px;
+                border-radius: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="status-time">09:41</span>
+            <span>●●●●●</span>
+        </div>
+
+        <!-- Screen Container -->
+        <div class="screen-container">
+            <!-- SCREEN: Hjem (Home) -->
+            <div class="screen active" id="screen-hjem">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Hjem</h1>
+                        <p>København • I aften</p>
+                    </div>
+
+                    <div class="featured-card">
+                        <div class="featured-event">
+                            <div class="featured-time">KL. 22:00 • LA FONTAINE</div>
+                            <div class="featured-title">Jazz-aften</div>
+                            <div class="featured-venue">Livemusik & Cocktails</div>
+                        </div>
+                    </div>
+
+                    <div class="section-label">Kommende begivenheder</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎶</div>
+                            <div>
+                                <div class="card-title">Vinyl-aften</div>
+                                <div class="card-venue">JOLENE — House & Techno</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Klassisk vinyl samling fra 80'erne til i dag. DJ mixes klassikere med nye udgivelser.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">⏰ kl. 23:00</div>
+                            <div class="card-meta-item">👥 428 går</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🥂</div>
+                            <div>
+                                <div class="card-title">Brunch og Bobler</div>
+                                <div class="card-venue">VED STRANDEN 10 — Dansk Spiseri</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Søndag-brunch med udsendelse af champagne og friske småkager. Perfekt weekendstart.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">⏰ kl. 11:00</div>
+                            <div class="card-meta-item">👥 156 interesseret</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎭</div>
+                            <div>
+                                <div class="card-title">Comedy-open-mic</div>
+                                <div class="card-venue">KB3 — Kulturhus</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Ung stand-up med underholdning. Tilmeld dig eller bare kom og nyd udsendelse af unge talenter.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">⏰ kl. 20:00</div>
+                            <div class="card-meta-item">👥 87 går</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Udforsk (Explore) -->
+            <div class="screen" id="screen-udforsk">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Udforsk</h1>
+                        <p>Find begivenheder efter kategori</p>
+                    </div>
+
+                    <input type="text" class="search-bar" placeholder="Søg begivenheder...">
+
+                    <div class="section-label">Kategorier</div>
+                    <div class="filter-group">
+                        <div class="filter-pill active">Musik</div>
+                        <div class="filter-pill">Mad & Drikke</div>
+                        <div class="filter-pill">Kunst</div>
+                        <div class="filter-pill">Sport</div>
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="filter-pill">Kultur</div>
+                        <div class="filter-pill">Tech</div>
+                        <div class="filter-pill">Networking</div>
+                    </div>
+
+                    <div class="section-label">Populære omkring dig</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🍺</div>
+                            <div>
+                                <div class="card-title">Naturvin-smagning</div>
+                                <div class="card-venue">MIKKELLER — Ølbar</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Eksperter præsenterer italienske naturvine. Smag, lær og netværk med andre ølentusiaster.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 Lør 18/5</div>
+                            <div class="card-meta-item">⏰ 19:00</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎨</div>
+                            <div>
+                                <div class="card-title">Kunst-rundvisning</div>
+                                <div class="card-venue">CULTURE BOX — Kunstgalleri</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Guidet rundvisning gennem udstilling af moderne nordisk kunstnere. Gratis for medlemmer.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 Tir 14/5</div>
+                            <div class="card-meta-item">⏰ 17:00</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎸</div>
+                            <div>
+                                <div class="card-title">Indierock-festival</div>
+                                <div class="card-venue">RUST — Venue</div>
+                            </div>
+                        </div>
+                        <div class="card-description">To dage med uafhængige musikere fra hele Skandinavien. Camping, mad, øl og masser af musik.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 3-4 juni</div>
+                            <div class="card-meta-item">👥 2.1K går</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📚</div>
+                            <div>
+                                <div class="card-title">Literær netværks-aften</div>
+                                <div class="card-venue">BREMEN TEATER — Bibliotek</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Forfatter-panel og diskussion om samtidslitteratur. Mød andre bogelsker og få anbefalinger.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📅 Tors 16/5</div>
+                            <div class="card-meta-item">⏰ 19:30</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Kort (Map) -->
+            <div class="screen" id="screen-kort">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Kort</h1>
+                        <p>Steder i København</p>
+                    </div>
+
+                    <div class="map-placeholder">📍 Interaktivt kort indlæses her</div>
+
+                    <div class="section-label">Topsteder</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎭</div>
+                            <div>
+                                <div class="card-title">Culture Box</div>
+                                <div class="card-venue">Nørrebro • Kunstgalleri & Klub</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Mangefacetteret kunstrum med musik, kunst og kulturbegivenheder hele året.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📍 1,2 km væk</div>
+                            <div class="card-meta-item">🔗 Ses i dag</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🍴</div>
+                            <div>
+                                <div class="card-title">La Fontaine</div>
+                                <div class="card-venue">Vesterbro • Restaurant & Bar</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Klassisk København-bar med live jazzmusik og cocktails hver aften.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📍 0,8 km væk</div>
+                            <div class="card-meta-item">⭐ 4,8/5</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🎸</div>
+                            <div>
+                                <div class="card-title">Ideal Bar</div>
+                                <div class="card-venue">Nyhavn • Livemusik</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Intimt musikbar med rock, folk og indie bands. Hyggelig stemning og gode øl.</div>
+                        <div class="crystal-accent"></div>
+                        <div class="card-meta">
+                            <div class="card-meta-item">📍 1,5 km væk</div>
+                            <div class="card-meta-item">🔗 3 begivenheder i dag</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Invitér (Invite) -->
+            <div class="screen" id="screen-inviter">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Invitér</h1>
+                        <p>Del begivenheder med venner</p>
+                    </div>
+
+                    <div class="section-label">Tilføj kontakter</div>
+
+                    <input type="email" class="invite-input" placeholder="Venns email-adresse...">
+                    <input type="email" class="invite-input" placeholder="Eller telefonnummer...">
+
+                    <button class="btn">+ Tilføj kontakt</button>
+
+                    <div class="section-label" style="margin-top: 20px;">Kontakter der allerede bruger B·Social</div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Anna Larsen</div>
+                            <div class="event-list-info">@anna_larsen • Aktiv i dag</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Marcus Nielsen</div>
+                            <div class="event-list-info">@marcus_music • Jazz-entusiast</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Sofia Petersen</div>
+                            <div class="event-list-info">@sofia_art • Kunstner</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Erik Hansen</div>
+                            <div class="event-list-info">@erik_food • Foodie</div>
+                        </div>
+                    </div>
+
+                    <div class="event-list-item">
+                        <div class="event-list-icon">👤</div>
+                        <div class="event-list-content">
+                            <div class="event-list-title">Mia Andersen</div>
+                            <div class="event-list-info">@mia_culture • Kulturlover</div>
+                        </div>
+                    </div>
+
+                    <div class="section-label" style="margin-top: 20px;">Delte begivenheder</div>
+
+                    <div class="card" style="opacity: 0.7; cursor: default;">
+                        <div class="card-header">
+                            <div class="card-icon">🎶</div>
+                            <div>
+                                <div class="card-title">Vinyl-aften</div>
+                                <div class="card-venue">JOLENE</div>
+                            </div>
+                        </div>
+                        <div class="card-description">Delt med Anna, Marcus og Sofia</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- SCREEN: Dig (Profile) -->
+            <div class="screen" id="screen-dig">
+                <div class="screen-content">
+                    <div class="screen-header">
+                        <h1>Dig</h1>
+                        <p>Din profil & indstillinger</p>
+                    </div>
+
+                    <div class="profile-section">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-name">Alexandra Storm</div>
+                        <div class="profile-handle">@alexandra.storm</div>
+                    </div>
+
+                    <div class="stat-group">
+                        <div class="stat-item">
+                            <div class="stat-number">24</div>
+                            <div class="stat-label">Begivenheder</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">142</div>
+                            <div class="stat-label">Venner</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Gemte</div>
+                        </div>
+                    </div>
+
+                    <div class="section-label">Dine begivenheder</div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📋</div>
+                            <div>
+                                <div class="card-title">Tilmeldt (4)</div>
+                                <div class="card-venue">Kommende begivenheder</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">💭</div>
+                            <div>
+                                <div class="card-title">Interesseret (12)</div>
+                                <div class="card-venue">Måske gæst</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">👥</div>
+                            <div>
+                                <div class="card-title">Venner (142)</div>
+                                <div class="card-venue">Dit netværk</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-label">Indstillinger</div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Notifikationer</div>
+                        <div class="toggle-switch active">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Deling af placering</div>
+                        <div class="toggle-switch">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Privat profil</div>
+                        <div class="toggle-switch">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Mørkt tema</div>
+                        <div class="toggle-switch active">
+                            <div class="toggle-indicator"></div>
+                        </div>
+                    </div>
+
+                    <button class="btn" style="background: linear-gradient(135deg, #8c2e3e 0%, #6b1f2e 100%); color: white; border-color: #8c2e3e; margin-top: 20px;">Log ud</button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <button class="nav-button active" onclick="go('hjem')">
+                <div class="nav-icon">🏠</div>
+                <div>Hjem</div>
+            </button>
+            <button class="nav-button" onclick="go('udforsk')">
+                <div class="nav-icon">🔍</div>
+                <div>Udforsk</div>
+            </button>
+            <button class="nav-button" onclick="go('kort')">
+                <div class="nav-icon">📍</div>
+                <div>Kort</div>
+            </button>
+            <button class="nav-button" onclick="go('inviter')">
+                <div class="nav-icon">💌</div>
+                <div>Invitér</div>
+            </button>
+            <button class="nav-button" onclick="go('dig')">
+                <div class="nav-icon">👤</div>
+                <div>Dig</div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function go(screen) {
+            // Hide all screens
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
+
+            // Show selected screen
+            const targetScreen = document.getElementById(`screen-${screen}`);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                targetScreen.querySelector('.screen-content').scrollTop = 0;
+            }
+
+            // Update nav buttons
+            const buttons = document.querySelectorAll('.nav-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.nav-button').classList.add('active');
+        }
+
+        // Initialize
+        go('hjem');
+    </script>
+
+<script>
+/* UNIVERSAL_SCREEN_HASH_NAV_v2 - aggressive hash screen activator */
+(function(){
+  var COMMON_NAMES = [
+    ['home','hjem','feed','tonight','i-aften','iaften','start','index'],
+    ['explore','udforsk','discover','browse','places','steder','events','begivenheder'],
+    ['map','kort','location','locations'],
+    ['invite','inviter','invitaer','friends','venner','plan','rsvp'],
+    ['profile','dig','me','mig','settings','you']
+  ];
+  function forceShow(el){
+    el.style.display='';
+    el.style.visibility='visible';
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.classList.add('active','current','visible','on');
+    el.classList.remove('hidden','inactive','off');
+    el.removeAttribute('hidden');
+    el.removeAttribute('aria-hidden');
+  }
+  function forceHide(el){
+    el.style.display='none';
+    el.classList.remove('active','current','visible','on');
+    el.classList.add('inactive');
+  }
+  function activateByIndex(idx){
+    var selectors = [
+      '.screen',
+      '[data-screen]',
+      'section.screen',
+      '.phone .screen',
+      '.phone > section',
+      '.app-screen',
+      '.view',
+      '[class*="screen-"]'
+    ];
+    var screens = [];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 2){ screens = Array.from(list); break; }
+    }
+    if(screens.length < 2) return false;
+    idx = Math.max(0, Math.min(idx, screens.length-1));
+    screens.forEach(function(s,i){
+      if(i===idx) forceShow(s);
+      else forceHide(s);
+    });
+    return true;
+  }
+  function tryFunctionCall(idx){
+    var fnNames = ['go','switchScreen','showScreen','navigate','setScreen','show','openScreen','changeScreen'];
+    var names = COMMON_NAMES[idx] || [];
+    for(var fn of fnNames){
+      if(typeof window[fn] === 'function'){
+        for(var nm of names){
+          try { window[fn](nm); return true; } catch(e){}
+        }
+        try { window[fn](idx); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function tryNavClick(idx){
+    var selectors = [
+      '.bottom-nav button',
+      '.bottom-nav a',
+      'nav button',
+      'nav a',
+      '[role="tab"]',
+      '.tab',
+      '.nav-item',
+      'footer button',
+      'footer a',
+      '.tabs > *',
+      '.navbar button'
+    ];
+    for(var s of selectors){
+      var list = document.querySelectorAll(s);
+      if(list.length >= 4 && list[idx]){
+        try { list[idx].click(); return true; } catch(e){}
+      }
+    }
+    return false;
+  }
+  function fromHash(){
+    var n = parseInt(location.hash.replace('#',''), 10);
+    if(isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(n, 4));
+    // Try multiple times in case the page is still initializing
+    var attempts = 0;
+    function attempt(){
+      tryFunctionCall(n);
+      activateByIndex(n);
+      tryNavClick(n);
+      attempts++;
+      if(attempts < 3) setTimeout(attempt, 200);
+    }
+    attempt();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fromHash);
+  } else {
+    fromHash();
+  }
+  window.addEventListener('hashchange', fromHash);
+  // Run again after 500ms in case the page has delayed setup
+  setTimeout(fromHash, 500);
+  setTimeout(fromHash, 1200);
+})();
+</script>
+</body>
+</html>
