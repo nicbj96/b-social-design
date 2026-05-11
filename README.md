@@ -1,34 +1,33 @@
-# B-Social Pages
+# B-Social Design
 
-Cloudflare Pages deployment for [b-social.net](https://b-social.net)
+Design and concept app for Cloudflare Pages project `b-social-design`.
+
+This repository is not the production deployment source for `b-social.net`.
+Production traffic for `b-social.net` and `www.b-social.net` is served by the
+standalone Cloudflare Worker `b-social-pages`.
 
 ## Projekt Struktur
 
 ```
-b-social-pages/
-|-- public/                  # Deploy directory (upload til Cloudflare Pages)
-|   |-- css/                 # Stylesheets
-|   |-- js/                  # JavaScript filer
-|   |-- icons/               # PWA ikoner (alle stoerrelser)
-|   |-- _headers             # Cloudflare Pages custom headers
-|   |-- _redirects           # Cloudflare Pages redirects (SPA fallback)
-|   |-- index.html           # Hoved HTML fil (SPA entry point)
-|   |-- manifest.json        # PWA manifest
-|   |-- sw.js                # Service Worker
-|-- .gitignore
+b-social-design/
+|-- public/
+|-- source/
+|   |-- src/
+|   |-- public/
+|   |-- vite.config.ts
+|-- supabase/
+|-- .github/
 |-- README.md
 ```
 
 ## Deployment
 
-Dette projekt deployes til Cloudflare Pages.
+Dette projekt deployes til Cloudflare Pages-projektet `b-social-design`.
 
-**Build output directory:** `public/`
+**Build output directory:** `source/dist/public`
 
 **Domaener:**
-- b-social.net
-- www.b-social.net
-- b-social.pages.dev
+- b-social-design.pages.dev
 
 ## Vigtige Cloudflare Pages Filer
 
